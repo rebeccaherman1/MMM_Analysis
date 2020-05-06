@@ -35,9 +35,9 @@ Below are the scripts used to generate these data files.
 A bash script for concatenating montly netcdf files into one continuous file.
 
 ## [umbrella.mat](/umbrella.mat)
-A handmade matfile containing abbreviations (ABBREV) and full names (INSTITUTION) for
-the "umbrella" research institutions providing model simulations used in this
-study.
+A handmade matfile containing model name abbreviations (MODELS) and their corresponding 
+"umbrella" research institution abbreviations (ABBREV) and full names (INSTITUTION) for
+all models used in Herman et al 2020 and followup work.
 
 ## Model Lists
 Files ending in "\_models.txt" contain lists of the files iterated over when downloading data 

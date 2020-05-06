@@ -193,14 +193,10 @@ for i = 1:length(start_month)
         end
         fclose(models);
         full_model_names = model(:,2); %just the full model names
-        [num_repeats, umbrella_names] = find_repeats(full_model_names, umbrella);
-        umbrella_model_names = repelem(umbrella_names, num_repeats); %just umbrella names
+        umbrella_model_names = find_umbrella_names(full_model_names, umbrella);
         model(1:next_line-1,1) = umbrella_model_names;
         save(model_file_name, 'model', 'runs');
         clear model runs
-        %I think I don't need reps because of the way I'm doing this.
-        %repelem(umbrella_model_names, reps);
-        %reps is a num_runs array!
     end
 end
 
@@ -278,22 +274,11 @@ function [fname, run] = make_model_and_p_name(line)
     fname = [get_model_name(line), ' p', p];
 end
 
-function[num_repeats, umbrella_names] = find_repeats(used_models, umbrella)
-        num_repeats = zeros(length(umbrella.abbrev), 1);
-        for k = 1:length(umbrella.abbrev)
-            umb = umbrella.abbrev(k,:);
-            num_repeats(k) = sum(cell2mat(strfind(used_models, umb))==1);
-            %hardcode CCSM
-            if (strcmp(umb, 'CESM'))
-                num_repeats(k) = num_repeats(k) + ...
-                    sum(cell2mat(strfind(used_models, 'CCSM'))==1);
-            elseif (strcmp(umb, 'CCCma'))
-                num_repeats(k) = sum(cell2mat(strfind(used_models, 'CanAM4'))==1);
-            end 
-        end
-        repeated_models = num_repeats~=0;
-        num_repeats = num_repeats(repeated_models);
-        umbrella_names = umbrella.abbrev(repeated_models);
+function[umbrella_names] = find_umbrella_names(used_models, umbrella)
+   umbrella_names = {};
+   for k = 1:length(umbrella.models)
+       umbrella_names(contains(used_models, umbrella.models(k)), 1) = umbrella.abbrev(k);
+   end
 end
 
 %mm/month*month/avg#days*day/24hours*hour/60min*min/60s*m/1000mm*1000kg/m^3=kg/s/m^2
