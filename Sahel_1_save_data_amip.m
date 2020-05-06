@@ -1,14 +1,17 @@
-%could save years for the models and then be able to start the model output
-%before 1901 for smoothing later
-
 %{
-Downloads data for individual models and runs and saves them as separate files
-You can find a record of the models and runs used in "models.mat"
+Downloads data for all models and runs used in Herman et al. 2020 
+and in its followup paper (in progress), saveing them in a single file.
+
+TODO automate the log and the models.mat creation
+You can find a (not automated) record of the models and runs used in "models.mat."
 for piControl runs, you can see which runs were excluded and how many years
 are in each in "log.txt"
 Check why certain models were excluded
 single source of truth for piControl files
 %}
+%could save years for the models and then be able to start the model output
+%before 1901 for smoothing later
+
 
 %TODO If we re-run with smaller timeframe, might have to delete old data 
 %first or it won't delete tail data
@@ -17,16 +20,22 @@ single source of truth for piControl files
 %TODO: update checking old files mech in SST
 %TODO: add T to model files
 
+
+%Create MONTH_NAMES and MONTH_DAYS matrices for use in changing units later
 month_names = {'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'};
 month_days  = 31*ones(1,12); month_days(2)=28; %should it just be uniformly 30-day months? I think not in CESM
 month_days(ismember(month_names,{'Sep','Apr','Jun','Nov'}))=30;
+%{
+Simulations = {'Coupled', 'piC', 'AMIP', 'AMIP+RAD'};
+Variables = {'pr'; 'ts', 'pr'; 'ts', 'pr', 'pr'};
+SST_indices = {'NA', 'GT'};
+MIPs = {'CMIP5'; 'CMIP6', 'CMIP5'; 'CMIP6', 'AMIP5'; 'AMIP6pF', 'AMIP6'; 'ERA20CM'; 'NOAA'};
+%}
+scenarios = {'VanillaAMIP'};%'historical','historicalAerosol','historicalNat','historicalGHG','piControl'};%'historicalMisc' is volcanoes only.  
+shortcuts = {'v'};%'h', 'a', 'n', 'g', 'piC'};%, 'a6'};
 
-%misc is volcanoes only
-scenarios = {'amip6'};%'piControl',"historicalMisc", 'amip', 'historical', 'historicalAerosol','historicalGHG', 'historicalNat', 
-shortcut = {'a6'};
-start_month = [7];%, 6, 9];%
-end_month = [9];%"Jul", "Oct"];%
-%the running average will just have to start at 1905.
+start_month = [7];
+end_month = [9];
 start_year = 1901;%1979; %TODO put this back to 1901
 end_year = 2003;
 
@@ -37,11 +46,12 @@ n_lat = 18;
 
 mkdir('model_output')
 
-umbrella=load(make_umbrella_name('Jul', 'Sep'));
+umbrella=load('umbrella.mat');
 
 %url_setup = ['http://strega.ldeo.columbia.edu:81/expert',...
 %    '/CMIP5/.byScenario/.'];
-url_setup = 'http://carney.ldeo.columbia.edu:81/expert/home/.OTHER/.rebecca/.netcdf/.cmip6/.amip/.';
+%url_setup = 'http://carney.ldeo.columbia.edu:81/expert/home/.OTHER/.rebecca/.netcdf/.cmip6/.amip/.';
+url_setup = 'http://carney.ldeo.columbia.edu:81/expert/home/.OTHER/.rebecca/.netcdf/.cmip6/.amip-piForcing/.';
 space_range_average = [... also includes some background time stuff...
     '/.pr/',...   
     'time//T/renameGRID/',... rename grid if needed.
@@ -108,7 +118,7 @@ for i = 1:length(start_month)
         clear model
         scenario = scenarios{j};
         %TODO: update make scenario file name function
-        model_file_name = ['model_output/',shortcut{j},'_all.mat'];
+        model_file_name = ['model_output/',shortcuts{j},'_all.mat'];
         if(exist(model_file_name,'file')==2)
             load(model_file_name);
         end
@@ -138,7 +148,7 @@ for i = 1:length(start_month)
                 if(model_partially_saved && any(c_m & contains(model(:,3), run_name)))
                     %num_runs=num_runs+1; 
                     next_line=next_line+1;%sum(contains(model(:,2), mpname));
-                    fprintf("Already saved file %s\n", file_name);
+                    fprintf("Already saved run %s\n", file_name);
                 else
                     %file_name = [scenario, '/.atmos/.mon/.pr/.', model_name, '/.', run_name];
                     %file_name = ['pr_Amon_', model_name, '_amip_', run_name, '_gn_', years, '.nc'];
@@ -175,7 +185,7 @@ for i = 1:length(start_month)
                 %num_models = num_models + 1;
                 %TODO: does num_runs still need to be a thing at all?
                 %scenarioFile.num_runs(num_models, 1) = num_runs;
-                fprintf("Saved file %s with %u years.\n", file_name, l);
+                fprintf("Saved run %s with %u years.\n", file_name, l);
             else
                 fprintf("skipping file %s\n", file_name);
             end
@@ -269,9 +279,9 @@ function [fname, run] = make_model_and_p_name(line)
 end
 
 function[num_repeats, umbrella_names] = find_repeats(used_models, umbrella)
-        num_repeats = zeros(length(umbrella.models), 1);
-        for k = 1:length(umbrella.models)
-            umb = umbrella.models(k,:);
+        num_repeats = zeros(length(umbrella.abbrev), 1);
+        for k = 1:length(umbrella.abbrev)
+            umb = umbrella.abbrev(k,:);
             num_repeats(k) = sum(cell2mat(strfind(used_models, umb))==1);
             %hardcode CCSM
             if (strcmp(umb, 'CESM'))
@@ -283,7 +293,7 @@ function[num_repeats, umbrella_names] = find_repeats(used_models, umbrella)
         end
         repeated_models = num_repeats~=0;
         num_repeats = num_repeats(repeated_models);
-        umbrella_names = umbrella.models(repeated_models);
+        umbrella_names = umbrella.abbrev(repeated_models);
 end
 
 %mm/month*month/avg#days*day/24hours*hour/60min*min/60s*m/1000mm*1000kg/m^3=kg/s/m^2
