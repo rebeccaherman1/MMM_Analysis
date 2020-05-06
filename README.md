@@ -11,7 +11,7 @@ Multi-Model Mean Analysis of Climate Simulations for Detection and Attribution
 
 # Accessing the Data
 Observed JAS area-averaged Sahel precipitation from 
-[GPCC](/model_output/historical_precipitation) and from [CRU](/model_output/CRU_data.mat)
+[GPCC](/model_output/historical_precipitation.mat) and from [CRU](/model_output/CRU_data.mat)
 and SST indices are located in the [model_output](/model_output) folder. Seasonal and 
 area averaged simulated data, labelled by institution, model, and run,  are located in 
 the same folder, with file names ending in "\_all.mat." There is a different file for 
