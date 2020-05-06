@@ -51,7 +51,8 @@ umbrella=load('umbrella.mat');
 %url_setup = ['http://strega.ldeo.columbia.edu:81/expert',...
 %    '/CMIP5/.byScenario/.'];
 %url_setup = 'http://carney.ldeo.columbia.edu:81/expert/home/.OTHER/.rebecca/.netcdf/.cmip6/.amip/.';
-url_setup = 'http://carney.ldeo.columbia.edu:81/expert/home/.OTHER/.rebecca/.netcdf/.cmip6/.amip-piForcing/.';
+%url_setup = 'http://carney.ldeo.columbia.edu:81/expert/home/.OTHER/.rebecca/.netcdf/.cmip6/.amip-piForcing/.';
+url_setup = 'http://carney.ldeo.columbia.edu:81/expert/home/.OTHER/.rebecca/.netcdf/PSL-FACTS/.';
 space_range_average = [... also includes some background time stuff...
     '/.pr/',...   
     'time//T/renameGRID/',... rename grid if needed.
