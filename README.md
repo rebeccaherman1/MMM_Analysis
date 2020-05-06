@@ -46,3 +46,8 @@ all models used in Herman et al 2020 and followup work.
 ## Model Lists
 Files ending in "\_models.txt" contain lists of the files iterated over when downloading data 
 using Sahel_1_save_data...
+
+# Analysis
+
+## [Sahel_2_make_means.m](/Sahel_2_make_means.m)
+Performs a tiered MMM and saves the first tier under \*\_MM.mat and the second under \*\_GM.mat.
