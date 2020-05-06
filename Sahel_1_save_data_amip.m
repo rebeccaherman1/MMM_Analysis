@@ -20,6 +20,7 @@ single source of truth for piControl files
 %TODO: update checking old files mech in SST
 %TODO: add T to model files
 
+clear
 
 %Create MONTH_NAMES and MONTH_DAYS matrices for use in changing units later
 month_names = {'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'};
@@ -146,7 +147,8 @@ for i = 1:length(start_month)
             %num_runs = 0;
             %for run = 2:length(elements)
                 %run_name = char(elements(run));
-                if(model_partially_saved && any(c_m & contains(model(:,3), run_name)))
+                
+		if(model_partially_saved && any(c_m & contains(model(:,3), run_name)))
                     %num_runs=num_runs+1; 
                     next_line=next_line+1;%sum(contains(model(:,2), mpname));
                     fprintf("Already saved run %s\n", file_name);
@@ -259,7 +261,9 @@ end
 
 %Extracts name from line with name and runs
 function name = get_model_name(line)
-    name = line{:,3};
+    % special version for PSL-facts
+    name = line{:,2};
+    %name = line{:,3};
 end
 
 %Concatenates name with p number so that distinct p numbers will be saved as separate files.
@@ -268,11 +272,18 @@ end
 %TODO: changes here to include f can be general. dif between split and
 %strsplit seems to just be the dimension of the output array.
 function [fname, run] = make_model_and_p_name(line)
+% special version for PSL-FACTS
+    run = line{6};
+    run_stats = split(run, ["s","."]);
+    fname = get_model_name(line);
+    run = run_stats{2};
+%{
     run = line{5};    
     run_stats = split(run, 'p');
     p_and_f = split(run_stats(2), 'f');
     p = p_and_f{1}; 
     fname = [get_model_name(line), ' p', p];
+%}
 end
 
 function[umbrella_names] = find_umbrella_names(used_models, umbrella)
