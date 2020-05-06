@@ -31,8 +31,8 @@ Variables = {'pr'; 'ts', 'pr'; 'ts', 'pr', 'pr'};
 SST_indices = {'NA', 'GT'};
 MIPs = {'CMIP5'; 'CMIP6', 'CMIP5'; 'CMIP6', 'AMIP5'; 'AMIP6pF', 'AMIP6'; 'ERA20CM'; 'NOAA'};
 %}
-scenarios = {'VanillaAMIP'};%'historical','historicalAerosol','historicalNat','historicalGHG','piControl'};%'historicalMisc' is volcanoes only.  
-shortcuts = {'v'};%'h', 'a', 'n', 'g', 'piC'};%, 'a6'};
+scenarios = {'PSL_FACTS'};%'VanillaAMIP'};%'historical','historicalAerosol','historicalNat','historicalGHG','piControl'};%'historicalMisc' is volcanoes only.  
+shortcuts = {'p'};%'v'};%'h', 'a', 'n', 'g', 'piC'};%, 'a6'};
 
 start_month = [7];
 end_month = [9];
