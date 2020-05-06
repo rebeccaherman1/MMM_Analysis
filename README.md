@@ -26,7 +26,7 @@ e, ERA: ERA20CM (SST + ALL radiative forcings)
     an additional variable T keeping track of that.   
 a6: CMIP6 AMIP (includes radiative forcings)  
     - The files called 1901 include fewer simulations than those labelled 1950, reflecting 
-    the start times of those simulations.
+    the start times of those simulations.  
 v: CMIP6 "Vanilla" AMIP simulations (no radiative forcings)
 
 Below are the scripts used to generate these data files. 
