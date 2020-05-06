@@ -4,10 +4,7 @@ Multi-Model Mean Analysis of Climate Simulations for Detection and Attribution
 # TODO List
 * bring the historical pr and ts files over
 * add a T field to all data files, and modify script to do such
-* run the save data script on the NOAA database files, as well as on the CMIP6 "vanilla"
-  amip runs.
-* combine AMIP+ALL files: CMIP6, ERA20CM, NOAA
-* add additional models to the umbrella file -- make sure it has all CMIP6 and NOAA models
+* clean Sahel_2 and also turn it into a function for better bootstrapping.
 
 # Accessing the Data
 Observed JAS area-averaged Sahel precipitation (from 
@@ -51,3 +48,6 @@ using Sahel_1_save_data...
 
 ## [Sahel_2_make_means.m](/Sahel_2_make_means.m)
 Performs a tiered MMM and saves the first tier under \*\_MM.mat and the second under \*\_GM.mat.
+
+## [Sahel_2a_make_plots.m](/Sahel_2a_make_plots.m)
+Make the first half of Fig1 using the files created in Sahel_2.
