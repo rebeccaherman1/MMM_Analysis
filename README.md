@@ -16,15 +16,15 @@ and SST indices are located in the [model_output](/model_output) folder. Seasona
 area averaged simulated data, labelled by institution, model, and run,  are located in 
 the same folder, with file names ending in "\_all.mat." There is a different file for 
 each unique experiment type and data source, described below.  
-h: CMIP5 historical "ALL"
-a: CMIP5 historical Anthropogenic Aerosols "AA"
-n: CMIP5 historical Natural Forcings "NAT"
-g: CMIP5 historical Greenhouse Gases "GHG"
-amip: CMIP5 AMIP (from 1950)
-e, ERA: ERA20CM (SST + ALL radiative forcings)
+h: CMIP5 historical "ALL"  
+a: CMIP5 historical Anthropogenic Aerosols "AA"  
+n: CMIP5 historical Natural Forcings "NAT"  
+g: CMIP5 historical Greenhouse Gases "GHG"  
+amip: CMIP5 AMIP (from 1950)  
+e, ERA: ERA20CM (SST + ALL radiative forcings)  
     Currently, "e" uses 1901-2003, while "ERA" has the entire length of the time series and 
-    an additional variable T keeping track of that. 
-a6: CMIP6 AMIP (includes radiative forcings)
+    an additional variable T keeping track of that.   
+a6: CMIP6 AMIP (includes radiative forcings)  
 
 Below are the scripts used to generate these data files. 
 
