@@ -1,8 +1,8 @@
-pr_Amon_CanESM5_amip-piForcing_r1i1p2f1_gn_187001-201412	
-pr_Amon_CanESM5_amip-piForcing_r2i1p2f1_gn_187001-201412	
-pr_Amon_CanESM5_amip-piForcing_r3i1p2f1_gn_187001-201412	
-pr_Amon_CESM2_amip-piForcing_r1i1p1f1_gn_187001-201512	
-pr_Amon_CNRM-CM6-1_amip-piForcing_r1i1p1f2_gr_187001-201412	
-pr_Amon_HadGEM3-GC31-LL_amip-piForcing_r1i1p1f3_gn_187001-201412	
-pr_Amon_IPSL-CM6A-LR_amip-piForcing_r1i1p1f1_gr_187001-201412	
-pr_Amon_MRI-ESM2-0_amip-piForcing_r1i1p1f1_gn_187001-201412
+pr_Amon_CanESM5_amip-piForcing_r1i1p2f1_gn_187001-201412.nc
+pr_Amon_CanESM5_amip-piForcing_r2i1p2f1_gn_187001-201412.nc
+pr_Amon_CanESM5_amip-piForcing_r3i1p2f1_gn_187001-201412.nc
+pr_Amon_CESM2_amip-piForcing_r1i1p1f1_gn_187001-201512.nc
+pr_Amon_CNRM-CM6-1_amip-piForcing_r1i1p1f2_gr_187001-201412.nc
+pr_Amon_HadGEM3-GC31-LL_amip-piForcing_r1i1p1f3_gn_187001-201412.nc
+pr_Amon_IPSL-CM6A-LR_amip-piForcing_r1i1p1f1_gr_187001-201412.nc
+pr_Amon_MRI-ESM2-0_amip-piForcing_r1i1p1f1_gn_187001-201412.nc
