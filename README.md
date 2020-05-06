@@ -22,9 +22,11 @@ n: CMIP5 historical Natural Forcings "NAT"
 g: CMIP5 historical Greenhouse Gases "GHG"  
 amip: CMIP5 AMIP (from 1950)  
 e, ERA: ERA20CM (SST + ALL radiative forcings)  
-    Currently, "e" uses 1901-2003, while "ERA" has the entire length of the time series and 
+    - Currently, "e" uses 1901-2003, while "ERA" has the entire length of the time series and 
     an additional variable T keeping track of that.   
 a6: CMIP6 AMIP (includes radiative forcings)  
+    - The files called 1901 include fewer simulations than those labelled 1950, reflecting 
+    the start times of those simulations. 
 
 Below are the scripts used to generate these data files. 
 
