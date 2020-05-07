@@ -1,7 +1,7 @@
 save = true;
 short=false;%true;
 
-scenarios = {'r'};%'a6'};%'amip'};%'h'};%,"historicalAerosol","historicalNat","historicalGHG"  "historicalMisc", 
+scenarios = {'v'};%'r'};%'a6'};%'amip'};%'h'};%,"historicalAerosol","historicalNat","historicalGHG"  "historicalMisc", 
 if(short || strcmp(scenarios, 'amip'))
     start_year = 1950;% 
 else

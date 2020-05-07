@@ -4,7 +4,7 @@ short=false;
 
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
-scenarios = {'r'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
+scenarios = {'v'};%'r'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
 
 global start_year; 
 if(short)
