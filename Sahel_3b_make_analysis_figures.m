@@ -1,9 +1,9 @@
 mic=false;
 
-scenarios = {'r'};%'a6'};%'e'};%'h','a','n','g'};
-single_scenario='r';%'a6';%'e';%'amip';%'h';%
+scenarios = {'v'};%'r'};%'a6'};%'e'};%'h','a','n','g'};
+single_scenario='v';%'r';%'a6';%'e';%'amip';%'h';%
 short = false;%true; %TODO I've totally bastardized what this was supposed to mean -- redo later
-single_name = 'AMIP+RAD';%'CMIP6-AMIP';%'ERA-20CM';%'ALL';%'AMIP';%
+single_name = 'Vanilla AMIP';%'AMIP+RAD';%'CMIP6-AMIP';%'ERA-20CM';%'ALL';%'AMIP';%
 month0 = 'Jul';%, "Jun", "Sep"];
 month1 = 'Sep';%, "Jul", "Oct"];
 start_year = 1901;
@@ -11,14 +11,16 @@ start_year = 1901;
 dts = [""];%"detrended",    ,            This is implemented
 fls = ["last"];%, "first"       ,        This is implemented
 colors = 'bmrg';%[blue; magenta; red; green];
-names = [{'AMI+RAD'}];%[{'CMIP6-AMIP'}]; %[{'ERA-20CM'}]; %[{'ALL'}, {'AA'}, {'NAT'}, {'GHG'}];
+names = [{'Vanilla AMIP'}];%'AMIP+RAD'}];%[{'CMIP6-AMIP'}]; %[{'ERA-20CM'}]; %[{'ALL'}, {'AA'}, {'NAT'}, {'GHG'}];
 
 N = 500;
 
 load('model_output/historical_precipitation.mat')
 
 %% MAKE SECOND HALF OF FIGURE 1
-figure(1); hold on; %hold off; clf; 
+close all;
+openfig([single_scenario, '_Fig1.fig']);
+hold on; %hold off; clf; 
 aname = ['analysis/',single_scenario,'_N', num2str(N)]; %TODO
 if(short)
     aname = [aname, '_', num2str(start_year)];

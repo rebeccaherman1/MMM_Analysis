@@ -1,8 +1,8 @@
 clear; 
-scenarios = {'r'};%'a6'};%'e';%'hgna'; 
+scenarios = {'v'};%'r'};%'a6'};%'e';%'hgna'; 
 single_scenario = scenarios{1};
 colors = 'bgrm'; 
-names = [{'r'}];%'a6'}];%[{'e'}];%[{'ALL'}, {'GHG'}, {'NAT'}, {'AA'}];
+names = [{'v'}];%'r'}];%'a6'}];%[{'e'}];%[{'ALL'}, {'GHG'}, {'NAT'}, {'AA'}];
 global end_year start_year PAD; 
 start_year = 1901;%50; 
 end_year = 2003; 
