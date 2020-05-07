@@ -7,7 +7,8 @@ if(nargin < 7)
 end
 %MAX_PERIOD = 103; 
 hi_anomaly = hi - nanmean(hi,1);
-sz = size(hi_anomaly); N_scale = sum(~isnan(hi_anomaly),1); hi_anomaly(isnan(hi_anomaly))=0;
+sz = size(hi_anomaly); N_scale = sum(~isnan(hi_anomaly),1);
+hi_anomaly(isnan(hi_anomaly))=0;
 hi_pad = [hi_anomaly;zeros(PAD-sz(1),sz(2))];
 N = PAD;
 ft = fft(hi_pad); %uses columns!!!!
