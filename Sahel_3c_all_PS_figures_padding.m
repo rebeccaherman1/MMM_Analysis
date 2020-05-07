@@ -39,7 +39,6 @@ for i=1:length(scenarios)
     [periods, mp, low, high, ~, ~] = ps_multi(forced_mmm_anomalies', obsT, .17, PAD);
     fill([periods;flipud(periods)],[low';flipud(high')],c,'FaceAlpha', .3 ,'linestyle','none', 'DisplayName', ['95% CI ', names{i}, ' PS']);%scenarios==s
     hold on;
-    plot(periods, mp, ['r','-'], 'DisplayName', ['Mean ', names{i}, ' PS']);%scenarios==s
     %{
     if(s=='a')
         unforced_mmms = A.piC_resampled_bootstrapped.r_means;
