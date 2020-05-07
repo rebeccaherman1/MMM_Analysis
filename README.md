@@ -5,9 +5,7 @@ Multi-Model Mean Analysis of Climate Simulations for Detection and Attribution
 * bring the historical pr and ts files over
 * add a T field to all data files, and modify script to do such
 * clean Sahel_2 and also turn it into a function for better bootstrapping.
-* make figs for "Vanilla" AMIP runs
-* make PS figs for R runs
-* find bug in PS figs code
+* fix off-by-one error in CI (Fig5)
 
 # Accessing the Data
 Observed JAS area-averaged Sahel precipitation (from 
