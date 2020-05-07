@@ -4,11 +4,12 @@ function [periods, mean_periodogram, low, high, ml, mh, sds] = ps_multi(hi, ti, 
 %frequencies. Use add_to_fig=false to add to previously existing figure.
 %should come in with a mean of 0.
 grouping = true;
-if(nargin<=4)
+if(nargin<=5)
     groupings = nan; groupings2=nan;
     grouping = false;
 end
-sz = size(hi); N_scale = sum(~isnan(hi),1); hi(isnan(hi))=0;
+sz = size(hi); N_scale = sum(~isnan(hi),1);
+hi(isnan(hi))=0;
 %hi_pad = hi_pad(1:min(sum(~isnan(hi_pad),1)), :);%hi(~isnan(hi(:,1)),:); %TODO don't throw away data...
 hi_pad = [hi;zeros(PAD-sz(1),sz(2))];
 %length(hi_pad(:,1));
