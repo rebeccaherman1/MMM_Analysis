@@ -14,7 +14,7 @@ x = round(linspace(0, 255, 11))';
 map = interp1(x/255,wetdry,linspace(0,1,255));
 clear wetdry x;
 
-obs = load('model_output/historical_precipitation.mat'); 
+obs = load('data/historical_precipitation.mat'); 
 obsT = obs.T(obs.T>=start_year & obs.T<=end_year)'; obsP_o = obs.prcp(obs.T>=start_year & obs.T<=end_year)'; clear obs;
 obsP = [obsP_o;mean(obsP_o)*ones(PAD-length(obsP_o),1)];
 
@@ -87,7 +87,7 @@ A = load([aname,'.mat']);
 mmm = A.MMM.MMM'; 
 SCALE=1;%2.8;
 
-h_all = load(['model_output/', single_scenario, '_all.mat']); %TODO!  h vs e
+h_all = load(['data/', single_scenario, '_all.mat']); %TODO!  h vs e
 %TODO scaling
 h_runs = h_all.runs'+(SCALE-1)*(mmm-mean(mmm));%(:, 1:99)'; %so individual runs will be vertical for PS
 
@@ -120,7 +120,7 @@ hold on;
 for i=1:length(scenarios)
     s = scenarios{i};
     c = colors(i);%scenarios==s);
-    A = load(['model_output/', s, '_all.mat']);
+    A = load(['data/', s, '_all.mat']);
     %TODO scaling
     [~,l_idx,local_groupings] = unique(A.model(:,2), 'stable');
     [~,~,local_groupings2] = unique(A.model(l_idx,1), 'stable');
@@ -159,7 +159,7 @@ residual_pad = [residual;ones(PAD-length(residual),1)*mean(residual)];
 mmm_pad=[mmm;ones(PAD-length(mmm),1)*mean(mmm)];
 clear A mmm
 
-piC_all = load('model_output/piC_all.mat');
+piC_all = load('data/piC_all.mat');
 piC_models_old = piC_all.model; 
 [to_use, ~] = ismember(piC_models_old(:,2), scaling.models); %get rid of models that don't have ALL runs
 piC_runs_old = piC_all.runs(to_use,:)'; piC_models_old = piC_models_old(to_use, :);

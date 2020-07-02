@@ -15,7 +15,7 @@ names = [{'AMIP+RAD'}];%'Vanilla AMIP'}];%[{'CMIP6-AMIP'}]; %[{'ERA-20CM'}]; %[{
 
 N = 500;
 
-load('model_output/historical_precipitation.mat')
+load('data/historical_precipitation.mat')
 
 %% MAKE SECOND HALF OF FIGURE 1
 close all;
@@ -91,7 +91,7 @@ if(mic)
     %{
     [~, a_piC, ~] = calc_Mic(std_O, A.MMM.MMM, A.piC_resampled_bootstrapped.rs);
 
-    piC = load('model_output/piC_all.mat'); piC.runs(piC.runs==0)=NaN;
+    piC = load('data/piC_all.mat'); piC.runs(piC.runs==0)=NaN;
     piC_runs = piC_select(N,length(A.MMM.MMM), piC.runs);
     piC_rs = corr(A.MMM.MMM', piC_runs');
     piC_Bs_sq = 1-var(piC_runs,0,2)/var(prcp);

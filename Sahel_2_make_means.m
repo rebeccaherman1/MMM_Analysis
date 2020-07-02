@@ -8,14 +8,14 @@ start_year = 1901;%50;
 for j = 1:length(scenarios)
     scenario = scenarios{j};
     fprintf("Accessing scenario %s\n", scenario);
-    h = load(['model_output/', scenario, '_all.mat']); s = size(h.runs);
+    h = load(['data/', scenario, '_all.mat']); s = size(h.runs);
     [MM.model_names, I, model_groupings] = unique(h.model(:,2)); nMM = max(model_groupings);
     MM.MMs = splitapply(vert_mean, h.runs, model_groupings);
     MM.models = h.model(I,1);
     MM.trust = sqrt(histc(model_groupings, 1:nMM));
     
     if(tosave) 
-        fname = ['model_output/',scenario, '_MM'];
+        fname = ['data/',scenario, '_MM'];
         File = matfile(fname, 'Writable', true);
         fprintf("Writing file %s\n", fname);
         File.MMs(1:nMM, 1:s(2)) = MM.MMs; 
@@ -23,7 +23,7 @@ for j = 1:length(scenarios)
         File.trust (1:nMM,1) = MM.trust; 
     end
 %{
-    piC = load(['model_output/piC_all.mat']); piC.runs(piC.runs==0)=NaN; s = size(piC.runs);
+    piC = load(['data/piC_all.mat']); piC.runs(piC.runs==0)=NaN; s = size(piC.runs);
     relevant_pC_models = ismember(piC.model(:,1),h.model(:,1));
     piC.model = piC.model(relevant_pC_models,:); piC.runs = piC.runs(relevant_pC_models, :);
 
@@ -41,7 +41,7 @@ for j = 1:length(scenarios)
     MMM = mean(GM.trust.*GM.GMs/mean(GM.trust), 1);
 
     if(tosave)
-	fname = ['model_output/',scenario, '_GM'];
+	fname = ['data/',scenario, '_GM'];
         File = matfile(fname, 'Writable', true);
         fprintf("Writing file %s\n", fname);
         File.GMs(1:nGM, 1:s(2)) = GM.GMs; 
