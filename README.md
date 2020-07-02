@@ -19,7 +19,7 @@ each unique experiment type and data source, described below.
     - a: CMIP5 historical Anthropogenic Aerosols "AA"  
     - n: CMIP5 historical Natural Forcings "NAT"  
     - g: CMIP5 historical Greenhouse Gases "GHG"  
-* v: CMIP6 "Vanilla" AMIP simulations (forced with SST and no radiative forcings)
+* v: CMIP6 "Vanilla" AMIP simulations (forced with SST and preindustrial radiative forcings)
 * r: AMIP+RAD (SST + ALL radiative forcings). "r" includes data from all files below if the runs start by 1901. 
     - e, ERA: ERA20CM   
          - Currently, "e" uses 1901-2003, while "ERA" has the entire length of the time series and 
