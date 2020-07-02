@@ -11,8 +11,8 @@ end_year=2003;
 
 global ref_T_years ref_T_amip;
 
-obs = load('model_output/historical_precipitation.mat');
-cru = load('model_output/CRU_data.mat');%ncread('model_output/Jul-Sep/CRU_data.nc', 'aprod'); %mm/month *month/day
+obs = load('data/historical_precipitation.mat');
+cru = load('data/CRU_data.mat');%ncread('data/Jul-Sep/CRU_data.nc', 'aprod'); %mm/month *month/day
 cru=cru.prcp;
 %cru = cru/mean([31,31,30]); now we did this before we saved it
 timeframe_obs = (obs.T >= start_year & obs.T <= end_year);
@@ -32,7 +32,7 @@ for i = 1:length(scenarios)
         timeframe_m = timeframe_obs;
     end
     
-    G = load(['model_output/',scenario,'_GM.mat']);
+    G = load(['data/',scenario,'_GM.mat']);
     MMM = G.MMM(timeframe_m); %MMM = MMM(1:99);                
     MMM_anomaly = MMM - mean(MMM); 
     MMM_standardized = MMM_anomaly/std(MMM_anomaly);
@@ -41,7 +41,7 @@ for i = 1:length(scenarios)
     GM_anomalies = GM - mean(GM,2);   
     GM_standardized = GM_anomalies./std(GM_anomalies, 1, 2);
 
-    I = load(['model_output/',scenario,'_all.mat']);
+    I = load(['data/',scenario,'_all.mat']);
     runs = I.runs(:,timeframe_m);%(:,1:99); 
     runs_anomalies = runs - mean(runs,2);   
     runs_standardized = runs_anomalies./std(runs_anomalies, 1, 2);

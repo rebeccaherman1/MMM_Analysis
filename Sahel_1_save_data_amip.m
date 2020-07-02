@@ -45,7 +45,7 @@ n_lat = 18;
 
 %global ref_T_years;
 
-mkdir('model_output')
+mkdir('data')
 
 umbrella=load('umbrella.mat');
 
@@ -66,7 +66,7 @@ space_range_average = [... also includes some background time stuff...
 for i = 1:length(start_month)
     month0 = month_names{start_month(i)};
     month1 = month_names{end_month(i)};
-    mkdir(['model_output/', month0, '-', month1])
+    mkdir(['data/', month0, '-', month1])
     
     %TODO this is only true if models don't just use 30-day months....
     days_per_month = mean(month_days(start_month(i):end_month(i)));
@@ -113,14 +113,14 @@ for i = 1:length(start_month)
     %check that the years for the model outputs would have matched.
     ObsFile.T(1,1:L) = ref_T_years';
     
-    CRU_obs = matfile(['model_output/', month0, '-',month1,'/CRU_data.mat'], 'Writable', true);
+    CRU_obs = matfile(['data/', month0, '-',month1,'/CRU_data.mat'], 'Writable', true);
     CRU_obs.prcp(1,1:L) = rainfall_to_days(ncread(observations_url_CRU, 'pre')', days_per_month);
     %}
     for j = 1:length(scenarios)
         clear model
         scenario = scenarios{j};
         %TODO: update make scenario file name function
-        model_file_name = ['model_output/',shortcuts{j},'_all.mat'];
+        model_file_name = ['data/',shortcuts{j},'_all.mat'];
         if(exist(model_file_name,'file')==2)
             load(model_file_name);
         end

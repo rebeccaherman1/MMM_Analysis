@@ -17,7 +17,7 @@ global ref_T_years ref_T_amip
 
 mkdir('analysis')
 
-obs = load('model_output/historical_precipitation.mat');
+obs = load('data/historical_precipitation.mat');
 obs_anomaly = obs.prcp-mean(obs.prcp);
 ref_T_years = obs.T; ref_T_amip = start_year:end_year;
 
@@ -25,7 +25,7 @@ for j = 1:length(scenarios)
     scenario = scenarios{j};
     fprintf("Accessing scenario %s\n", scenario);
 
-    h = load(['model_output/', scenario,'_GM.mat']);
+    h = load(['data/', scenario,'_GM.mat']);
     num_models = length(h.models); %num_pC_models = length(h.piC_models); 
     fname = ['analysis/', scenario, '_N', num2str(N)];
     if(short)
@@ -47,7 +47,7 @@ for j = 1:length(scenarios)
     [r, e, mmm] = calc_stats(hm, trust, o);
     MMM.r = r; MMM.e = e; MMM.MMM = mmm; Analysis.MMM = mmm;
     
-    hall = load(['model_output/', scenario, '_all.mat']);
+    hall = load(['data/', scenario, '_all.mat']);
     runs = hall.runs(:,T_m);
     runs_r = m_corrcoef(runs, o); runs_e = rmse(runs, o);
     indiv_runs.r = runs_r; indiv_runs.e = runs_e; indiv.models = hall.model;
