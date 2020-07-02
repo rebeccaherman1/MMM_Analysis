@@ -19,9 +19,7 @@ each unique experiment type and data source, described below.
     - a: CMIP5 historical Anthropogenic Aerosols "AA"  
     - n: CMIP5 historical Natural Forcings "NAT"  
     - g: CMIP5 historical Greenhouse Gases "GHG"  
-* AMIP (SST)
-    - amip: CMIP5 AMIP (from 1950)  
-    - v: CMIP6 "Vanilla" AMIP simulations (no radiative forcings)
+* v: CMIP6 "Vanilla" AMIP simulations (forced with SST and no radiative forcings)
 * r: AMIP+RAD (SST + ALL radiative forcings). "r" includes data from all files below if the runs start by 1901. 
     - e, ERA: ERA20CM   
          - Currently, "e" uses 1901-2003, while "ERA" has the entire length of the time series and 
@@ -30,6 +28,7 @@ each unique experiment type and data source, described below.
         - The files called 1901 include fewer simulations than those labelled 1950, reflecting 
     the start times of those simulations.  
     - p: NOAA PSL-FACTS
+    - amip: CMIP5 AMIP (from 1950)  
 
 Below are the scripts used to generate these data files. 
 
