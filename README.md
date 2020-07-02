@@ -4,6 +4,7 @@ Multi-Model Mean Analysis of Climate Simulations for Detection and Attribution
 # TODO List
 * add a T field to all data files, and modify script to do such
 * clean Sahel_2 and also turn it into a function for better bootstrapping.
+* change the methodology for calculating PS from FFT to MTM.
 
 # Accessing the Data
 Observed JAS area-averaged Sahel precipitation (from 
