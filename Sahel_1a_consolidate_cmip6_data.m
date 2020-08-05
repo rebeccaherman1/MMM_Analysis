@@ -1,6 +1,6 @@
 clear
-model_file_name = 'data/cmip6_piC_all.mat';
-folder = '~/netcdf/cmip6/piC';%historical';
+model_file_name = 'data/cmip6_h_all.mat';
+folder = '~/netcdf/cmip6/historical';
 files = split(ls(folder));
 next_line = 1;
 T = 1850:1:2014;
@@ -15,9 +15,9 @@ for file = files(1:end-1)'
 	T_x = ones(size(Time));
 	T_save = Time;
     elseif Time(1)<=1901 && Time(end)>=2003
-	l = length(T);
-	T_x = ismember(Time, T);
-	T_save = T(T_x)
+	T_x = (Time >= 1901) & (Time <= 2003);
+	T_save = Time(T_x);
+	l = length(T_save);
     else
 	continue
     end
