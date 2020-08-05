@@ -7,12 +7,14 @@ for file = files(1:end-1)'
     names = make_model_and_p_name(file);
     model(next_line, 1:3) = names;
     fopen_name = [folder, '/', file{:}];
-    pr = ncread(fopen_name, 'pr');
-    l = length(pr);
-    runs(next_line,1:l)   = pr;
-    time(next_line,1:l)   = ncread(fopen_name, 'year');
-    next_line=next_line+1;
-    save(model_file_name,'model','runs', 'time');
+    T = ncread(fopen_name, 'year');
+    l = length(T);
+    if T(1)<=1901 && T(end)>=2003
+        runs(next_line,1:l)   = ncread(fopen_name, 'pr');
+        time(next_line,1:l)   = T;
+        next_line=next_line+1;
+        save(model_file_name,'model','runs', 'time');
+    end
 end
 
 function [model_names] = make_model_and_p_name(file)
