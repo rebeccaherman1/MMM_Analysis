@@ -1,6 +1,6 @@
 clear
-model_file_name = 'data/cmip6_h_all.mat';
-folder = '~/netcdf/cmip6/historical';
+model_file_name = 'data/cmip6_piC_all.mat';
+folder = '~/netcdf/cmip6/piC';%historical';
 files = split(ls(folder));
 next_line = 1;
 T = 1850:1:2014;
@@ -9,15 +9,20 @@ for file = files(1:end-1)'
     model(next_line, 1:3) = names;
     fopen_name = [folder, '/', file{:}];
     Time = ncread(fopen_name, 'year');
-    l = length(T);
-    if Time(1)<=1901 && Time(end)>=2003
+    pr = ncread(fopen_name, 'pr');
+    if contains(model_file_name, 'piC')
+	l = length(Time);
+	T_x = ones(size(Time));
+    elseif Time(1)<=1901 && Time(end)>=2003
+	l = length(T);
 	T_x = ismember(Time, T);
-	pr = ncread(fopen_name, 'pr');
-        runs(next_line,1:l)   = pr(T_x); 
-        time(next_line,1:l)   = T(T_x);
-        next_line=next_line+1;
-        save(model_file_name,'model','runs', 'time');
+    else
+	continue
     end
+    runs(next_line,1:l)   = pr(T_x); 
+    time(next_line,1:l)   = T(T_x);
+    next_line=next_line+1;
+    save(model_file_name,'model','runs', 'time');
 end
 
 function [model_names] = make_model_and_p_name(file)
