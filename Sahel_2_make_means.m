@@ -2,19 +2,17 @@
 tosave = true;
 
 scenarios = {'cmip6_h'};%'v'};%'r'};%'a6'};%'e'};%'h','a','n','g'};%'amip'};%, 
-vert_mean = @(X) mean(X,1); vert_sum = @(X) sum(X,1);
+vert_mean = @(X) nanmean(X,1); vert_sum = @(X) nansum(X,1);
 start_year = 1901;%50;
 
 for j = 1:length(scenarios)
     scenario = scenarios{j};
     fprintf("Accessing scenario %s\n", scenario);
     h = load(['data/', scenario, '_all.mat']); s = size(h.runs);
-    T = 1850:1:2014;
-    h.runs = h.runs(ismember(h.time, T));
     [MM.model_names, I, model_groupings] = unique(h.model(:,2)); nMM = max(model_groupings);
     MM.MMs = splitapply(vert_mean, h.runs, model_groupings);
     MM.models = h.model(I,1);
-    MM.trust = sqrt(histc(model_groupings, 1:nMM));
+    MM.trust = sqrt(histc(model_groupings(~isnan(h.runs(:,1))), 1:nMM));
     
     if(tosave) 
         fname = ['data/',scenario, '_MM'];
