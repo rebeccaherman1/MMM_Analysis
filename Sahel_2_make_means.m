@@ -12,7 +12,7 @@ for j = 1:length(scenarios)
     [MM.model_names, I, model_groupings] = unique(h.model(:,2)); nMM = max(model_groupings);
     MM.MMs = splitapply(vert_mean, h.runs, model_groupings);
     MM.models = h.model(I,1);
-    MM.trust = sqrt(histc(model_groupings(~any(isnan(h.runs,2))), 1:nMM));
+    MM.trust = sqrt(histc(model_groupings(~any(isnan(h.runs),2)), 1:nMM));
     
     if(tosave) 
         fname = ['data/',scenario, '_MM'];
@@ -21,6 +21,8 @@ for j = 1:length(scenarios)
         File.MMs(1:nMM, 1:s(2)) = MM.MMs; 
         File.models(1:nMM,2) = MM.model_names; File.models(1:nMM,1) = MM.models; 
         File.trust (1:nMM,1) = MM.trust; 
+        NanSims = h.model(any(isnan(h.runs),2),:)
+        File.NanSims = NanSims;
     end
 %{
     piC = load(['data/piC_all.mat']); piC.runs(piC.runs==0)=NaN; s = size(piC.runs);
