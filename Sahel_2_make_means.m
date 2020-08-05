@@ -12,7 +12,7 @@ for j = 1:length(scenarios)
     [MM.model_names, I, model_groupings] = unique(h.model(:,2)); nMM = max(model_groupings);
     MM.MMs = splitapply(vert_mean, h.runs, model_groupings);
     MM.models = h.model(I,1);
-    MM.trust = sqrt(histc(model_groupings(~isnan(h.runs(:,1))), 1:nMM));
+    MM.trust = sqrt(histc(model_groupings(~any(isnan(h.runs,2))), 1:nMM));
     
     if(tosave) 
         fname = ['data/',scenario, '_MM'];
