@@ -4,7 +4,7 @@ short=false;
 
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
-scenarios = {'v'};%'r'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
+scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%v'};%'r'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
 
 global start_year; 
 if(short)
@@ -42,7 +42,6 @@ for j = 1:length(scenarios)
     end
     hm = h.GMs(:,T_m); %TODO should actually add a T record to the data I save :/
     trust = h.trust; o = obs_anomaly(T_obs); 
-   % pC = h.piC_GM; pC_trust = h.piC_trust; %(:,~isnan(sum(h.piC_GM, 1))) removes columns with NaN
 
     [r, e, mmm] = calc_stats(hm, trust, o);
     MMM.r = r; MMM.e = e; MMM.MMM = mmm; Analysis.MMM = mmm;
@@ -64,9 +63,11 @@ for j = 1:length(scenarios)
     Analysis.MMM = MMM; Analysis.indiv = indiv; Analysis.sanity = sanity; Analysis.N = N; Analysis.indiv_runs = indiv_runs;
       
     Analysis.historical_bootstrapped = bootstrap_model(N, obs_anomaly, T_obs, hm, trust);
-    %Analysis.piC_resampled_bootstrapped = sample_model(N, obs_anomaly, T_obs, pC, pC_trust, dt);
     
-    %Analysis.piC_last = sample_model(N, obs_anomaly, T_obs, pC, pC_trust, dt, 'last');
+    %comment out for AMIP simulations.
+    [Analysis.piC_resampled_bootstrapped, skip_models] = sample_model(N, obs_anomaly, T_obs, h.piC_GMs, h.piC_trust, dt);
+    fprintf('skipping piC simulations which are too short:')
+    h.piC_models(skip_models,:)
 end
 
 %T can be a logical array or a range.
@@ -123,11 +124,16 @@ function [all] = bootstrap_model(N, obs, T, GMs, trust, fl, dt)
     all.N = N; all.num_models = num_models; all.mids = mids;
 end
 
-function [all] = sample_model(N, obs, T, GMs, trust, dt, fl)
-    num_models=length(trust);
-    idx_raw = cumsum(ones(size(GMs)), 2);
+function [all, too_short] = sample_model(N, obs, T, GMs, trust, dt, fl)
     length_run = sum(T);
     length_of_GMs = sum(~isnan(GMs),2);
+    too_short = length_of_GMs<length_run;
+    
+    length_of_GMs = length_of_GMs(~too_short);
+    GMs = GMs(~too_short,:); trust = trust(~too_short);
+    idx_raw = cumsum(ones(size(GMs)), 2);
+    
+    num_models=length(trust);
 
     rs = zeros(N,1); es = zeros(N,1); 
     mmms = zeros(N, length_run);

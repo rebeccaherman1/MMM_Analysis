@@ -1,9 +1,10 @@
-mic=false;
+mic=true;
+tosave = false;
 
-scenarios = {'r'};%'v'};%'a6'};%'e'};%'h','a','n','g'};
-single_scenario='r';%'v';%'a6';%'e';%'amip';%'h';%
+scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%{'r'};%'v'};%'a6'};%'e'};%'h','a','n','g'};
+single_scenario='cmip6_h';%'v';%'a6';%'e';%'amip';%'h';%
 short = false;%true; %TODO I've totally bastardized what this was supposed to mean -- redo later
-single_name = 'AMIP+RAD';%'Vanilla AMIP';%'CMIP6-AMIP';%'ERA-20CM';%'ALL';%'AMIP';%
+single_name = 'ALL 6';%'AMIP+RAD';%'Vanilla AMIP';%'CMIP6-AMIP';%'ERA-20CM';%'ALL';%'AMIP';%
 month0 = 'Jul';%, "Jun", "Sep"];
 month1 = 'Sep';%, "Jul", "Oct"];
 start_year = 1901;
@@ -11,7 +12,7 @@ start_year = 1901;
 dts = [""];%"detrended",    ,            This is implemented
 fls = ["last"];%, "first"       ,        This is implemented
 colors = 'bmrg';%[blue; magenta; red; green];
-names = [{'AMIP+RAD'}];%'Vanilla AMIP'}];%[{'CMIP6-AMIP'}]; %[{'ERA-20CM'}]; %[{'ALL'}, {'AA'}, {'NAT'}, {'GHG'}];
+names = [{'ALL 6'}, {'AA 6'}, {'NAT 6'}, {'GHG 6'}];%[{'AMIP+RAD'}];%'Vanilla AMIP'}];%[{'CMIP6-AMIP'}]; %[{'ERA-20CM'}]; %
 
 N = 500;
 
@@ -33,9 +34,10 @@ indiv_plot(r_indiv, 3); hold on; analysis_plot(r, r_bootstrap, 'b', 'MMM', 1, 2,
 indiv_plot(e_indiv, 4); hold on; analysis_plot(e, e_bootstrap, 'b', 'MMM', 1, 2, 4);
 finishfig(1,2,3,'c. Correlation with 20C Observations', '', 0, 'northwest'); 
 finishfig(1,2,4,'d. RMSE with 20C Observations', 'Fraction of Observed Variance', 1, 'northeast');
-savefig([single_scenario, '_Fig1_all.fig']);
-%{
-% % MAKE FIGURE 4
+if(tosave)
+    savefig([single_scenario, '_Fig1_all.fig']);
+end
+%% MAKE FIGURE 4
 if(~mic)
     F = 4; figure(F); hold off; clf;
     for j = 1:length(scenarios)
@@ -51,26 +53,28 @@ if(~mic)
                 if(short)
                     aname = [aname, '_', num2str(start_year)];
 	        end
-		A = load([aname, '.mat']);
+            A = load([aname, '.mat']);
 
-                r = A.MMM.r; r_indiv = A.indiv.r; r_bootstrap = A.historical_bootstrapped.rs; 
-                e = A.MMM.e; e_indiv = A.indiv.e; e_bootstrap = A.historical_bootstrapped.es; 
+            r = A.MMM.r; r_indiv = A.indiv.r; r_bootstrap = A.historical_bootstrapped.rs; 
+            e = A.MMM.e; e_indiv = A.indiv.e; e_bootstrap = A.historical_bootstrapped.es; 
 
-                analysis_plot(r, r_bootstrap, color, name, F, 1, 1);
-                analysis_plot(e, e_bootstrap, color, name, F, 1, 2); 
-%    {
-                r_resample = A.piC_resampled_bootstrapped.rs; e_resample = A.piC_resampled_bootstrapped.es; 
-                analysis_plot(r, r_resample, color, 'Pre-Industrial Control', F, 1, 1)
-                analysis_plot(e, e_resample, color, 'Pre-Industrial Control', F, 1, 2)
-%  }
+            analysis_plot(r, r_bootstrap, color, name, F, 1, 1);
+            analysis_plot(e, e_bootstrap, color, name, F, 1, 2); 
+
+            r_resample = A.piC_resampled_bootstrapped.rs; e_resample = A.piC_resampled_bootstrapped.es; 
+            analysis_plot(r, r_resample, color, 'Pre-Industrial Control', F, 1, 1)
+            analysis_plot(e, e_resample, color, 'Pre-Industrial Control', F, 1, 2)
+
             end
         end
     end
     finishfig(F,1,1,'a. Correlation with 20C Observations', '', 0); 
     finishfig(F,1,2,'b. Scaled RMSE with 20C Observations', '', 1);
-    savefig([scenario, '_Fig4.fig']);
+    if(tosave)
+        savefig([single_scenario, '_Fig4.fig']);
+    end
 end
-%}
+
 %% MAKE MIC's figures
 if(mic)
     F = 20; figure(F); clf; hold off; clf;
@@ -88,10 +92,10 @@ if(mic)
     std_O = std(prcp); 
     [rs_nf, as_uncorr, Bs] = calc_Mic(std_O, A.historical_bootstrapped.b_means, A.historical_bootstrapped.rs);
     [r_nf, a_uncorr, B] = calc_Mic(std_O, A.MMM.MMM, A.MMM.r);
-    %{
+    
     [~, a_piC, ~] = calc_Mic(std_O, A.MMM.MMM, A.piC_resampled_bootstrapped.rs);
 
-    piC = load('data/piC_all.mat'); piC.runs(piC.runs==0)=NaN;
+    piC = load('data/cmip6_piC_all.mat'); piC.runs(piC.runs==0)=NaN;
     piC_runs = piC_select(N,length(A.MMM.MMM), piC.runs);
     piC_rs = corr(A.MMM.MMM', piC_runs');
     piC_Bs_sq = 1-var(piC_runs,0,2)/var(prcp);
@@ -99,10 +103,10 @@ if(mic)
 
     piC_Bs_a_sq = 1-a_uncorr^2.*var(piC_runs,0,2)/var(prcp);
     piC_B_a_sq = 1-a_uncorr^2*mean(var(piC_runs,0,2))/var(prcp);
-    %}
+    
 
     analysis_plot(r_nf, rs_nf, 'b', [single_name,' MMM'], F, 1, 1);
-    %analysis_plot(r_nf, piC_rs', 'y', 'piC runs', F, 1, 1);
+    analysis_plot(r_nf, piC_rs', 'y', 'piC runs', F, 1, 1);
     analysis_plot(a_uncorr, as_uncorr, 'b', [single_name,' MMM'], F, 1, 2); 
     %analysis_plot(a_uncorr, a_piC, 'y', 'piC MMMs', F, 1, 2); 
 
@@ -121,11 +125,17 @@ end
 
 %% Functions
 function [runs] = piC_select(N, T, GMs)
+    length_run = sum(T);    
+    length_of_GMs = sum(~isnan(GMs),2);
+    too_short = length_of_GMs<length_run;
+    
+    length_of_GMs = length_of_GMs(~too_short);
+    GMs = GMs(~too_short,:); 
+
     s = size(GMs); num_models=s(1);
     N_times = floor(N/num_models); N=N_times*num_models;
     idx_raw = cumsum(ones(s), 2);
-    length_run = sum(T);
-    length_of_GMs = sum(~isnan(GMs),2);  
+    
     runs = nan(N, length_run);
     for i=1:N_times
         rand_end_offset = nan(num_models, 1);
