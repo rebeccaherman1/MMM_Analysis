@@ -1,6 +1,6 @@
 clear
-model_file_name = 'data/cmip6_piC_all.mat';
-folder = '~/netcdf/cmip6/piControl';
+model_file_name = 'data/cmip6_g_all.mat';
+folder = '~/netcdf/cmip6/hist-GHG';
 files = split(ls(folder));
 next_line = 1;
 T = 1850:1:2014;
