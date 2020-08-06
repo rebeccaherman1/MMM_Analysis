@@ -16,9 +16,12 @@ for file = files(1:end-1)'
 	Time = ncread(fopen_name, 'year');
     end
     pr = ncread(fopen_name, 'pr');
+    Time_Size = size(Time)
+    pr_size = size(pr)
+    sum(pr==pr(1))
     if contains(model_file_name, 'piC')
 	l = length(Time);
-	T_x = ones(size(Time));
+	T_x = ones(1, length(Time));
 	T_save = Time;
     elseif Time(1)<=1901 && Time(end)>=2003
 	T_x = (Time >= 1901) & (Time <= 2003);
