@@ -9,7 +9,12 @@ for file = files(1:end-1)'
     model(next_line, 1:3) = names;
     fopen_name = [folder, '/', file{:}];
     %ncdisp(fopen_name)
-    Time = ncread(fopen_name, 'year');
+    INFO = ncinfo(fopen_name);
+    if any(contains({INFO.Variables.Name}, {'time'}))
+    	Time = ncread(fopen_name, 'time');
+    else
+	Time = ncread(fopen_name, 'year');
+    end
     pr = ncread(fopen_name, 'pr');
     if contains(model_file_name, 'piC')
 	l = length(Time);
