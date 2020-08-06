@@ -1,6 +1,6 @@
 clear
-model_file_name = 'data/cmip6_piC_all.mat';
-folder = '~/netcdf/cmip6/piC';%historical';
+model_file_name = 'data/cmip6_h_all.mat';
+folder = '~/netcdf/cmip6/historical';
 files = split(ls(folder));
 next_line = 1;
 T = 1850:1:2014;
