@@ -1,7 +1,7 @@
 %saves weighted mean anomalies. (Why do I say it's anomalies? It's not!)
 tosave = true;
 
-scenarios = {'cmip6_h'};%'v'};%'r'};%'a6'};%'e'};%'h','a','n','g'};%'amip'};%, 
+scenarios = {'cmip6_a', 'cmip6_n', 'cmip6_g'};%'cmip6_h', 'v'};%'r'};%'a6'};%'e'};%'h','a','n','g'};%'amip'};%, 
 %vert_nanmean = @(X) nanmean(X,1); 
 vert_mean = @(X) mean(X,1); vert_sum = @(X) sum(X,1);
 start_year = 1901;%50;
