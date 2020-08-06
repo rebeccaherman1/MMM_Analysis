@@ -18,17 +18,19 @@ for file = files(1:end-1)'
     pr = ncread(fopen_name, 'pr');
     if contains(model_file_name, 'piC')
 	l = length(Time);
-	T_save = Time;
     elseif Time(1)<=1901 && Time(end)>=2003
 	T_x = (Time >= 1901) & (Time <= 2003);
-	T_save = Time(T_x);
-	l = length(T_save);
+	Time = Time(T_x);
 	pr = pr(T_x);
+	l = length(pr);
+	if(length(Time)~=length(pr))
+	    fprintf('pr contains fill values');
+        end
     else
 	continue
     end
     runs(next_line,1:l)   = pr; 
-    time(next_line,1:l)   = T_save;
+    time(next_line,1:l)   = Time;
     next_line=next_line+1;
     save(model_file_name,'model','runs', 'time');
 end
