@@ -21,16 +21,16 @@ for file = files(1:end-1)'
     sum(pr==pr(1))
     if contains(model_file_name, 'piC')
 	l = length(Time);
-	T_x = ones(1, length(Time));
 	T_save = Time;
     elseif Time(1)<=1901 && Time(end)>=2003
 	T_x = (Time >= 1901) & (Time <= 2003);
 	T_save = Time(T_x);
 	l = length(T_save);
+	pr = pr(T_x);
     else
 	continue
     end
-    runs(next_line,1:l)   = pr(T_x); 
+    runs(next_line,1:l)   = pr; 
     time(next_line,1:l)   = T_save;
     next_line=next_line+1;
     save(model_file_name,'model','runs', 'time');
