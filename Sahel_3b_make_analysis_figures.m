@@ -1,5 +1,5 @@
 mic=false;
-tosave = true;
+tosave = false;
 
 scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%{'r'};%'v'};%'a6'};%'e'};%'h','a','n','g'};
 single_scenario='cmip6_h';%'v';%'a6';%'e';%'amip';%'h';%
@@ -19,6 +19,7 @@ N = 500;
 load('data/historical_precipitation.mat')
 
 %% MAKE SECOND HALF OF FIGURE 1
+%{
 close all;
 openfig([single_scenario, '_Fig1.fig']);
 hold on; %hold off; clf; 
@@ -37,6 +38,7 @@ finishfig(1,2,4,'d. RMSE with 20C Observations', 'Fraction of Observed Variance'
 if(tosave)
     savefig([single_scenario, '_Fig1_all.fig']);
 end
+%}
 %% MAKE FIGURE 4
 if(true)%~mic)
     F = 4; figure(F); hold off; clf;
@@ -76,7 +78,7 @@ if(true)%~mic)
 end
 
 %% MAKE MIC's figures
-if(true)%mic)
+if(false)%mic)
     F = 20; figure(F); clf; hold off; clf;
 
     aname = ['analysis/', single_scenario, '_N', num2str(N)];%
