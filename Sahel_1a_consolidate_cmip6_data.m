@@ -1,5 +1,5 @@
 clear
-model_file_name = 'data/cmip6_g_all.mat';
+model_file_name = 'data/cmip6_g_all_extended.mat';
 folder = '~/netcdf/cmip6/hist-GHG';
 files = split(ls(folder));
 next_line = 1;
@@ -18,8 +18,8 @@ for file = files(1:end-1)'
     pr = ncread(fopen_name, 'pr');
     if contains(model_file_name, 'piC')
 	l = length(Time);
-    elseif Time(1)<=1901 && Time(end)>=2003
-	T_x = (Time >= 1901) & (Time <= 2003);
+    elseif Time(1)<=1901 && Time(end)>=2014
+	T_x = (Time >= 1901) & (Time <= 2014);
 	Time = Time(T_x);
 	pr = pr(T_x);
 	l = length(pr);
