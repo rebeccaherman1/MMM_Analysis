@@ -1,5 +1,5 @@
-mic=true;
-tosave = false;
+mic=false;
+tosave = true;
 
 scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%{'r'};%'v'};%'a6'};%'e'};%'h','a','n','g'};
 single_scenario='cmip6_h';%'v';%'a6';%'e';%'amip';%'h';%
@@ -38,7 +38,7 @@ if(tosave)
     savefig([single_scenario, '_Fig1_all.fig']);
 end
 %% MAKE FIGURE 4
-if(~mic)
+if(true)%~mic)
     F = 4; figure(F); hold off; clf;
     for j = 1:length(scenarios)
         scenario = scenarios{j};
@@ -76,7 +76,7 @@ if(~mic)
 end
 
 %% MAKE MIC's figures
-if(mic)
+if(true)%mic)
     F = 20; figure(F); clf; hold off; clf;
 
     aname = ['analysis/', single_scenario, '_N', num2str(N)];%
@@ -113,8 +113,10 @@ if(mic)
     finishfig(F,1,1,'a. Correlation between Noise and Forced Signal if \alpha = 1', '', 0); 
     finishfig(F,1,2,'b. \alpha (Scaling of Forced Signal) for Uncorrelated Noise', '', 1);
     legend('location', 'northwest');
-    savefig([single_scenario, '_', num2str(start_year), '_MicFig.fig']);
-
+    if(tosave)
+        savefig([single_scenario, '_MicFig.fig']);
+    end
+    
     figure(F+1); clf; hold on;
     analysis_plot(B^2, Bs.^2, 'b', 'ALL MMM', F+1, 1, 1);
     %analysis_plot(piC_B_sq, piC_Bs_sq, 'y', 'piC runs', F+1, 1, 1);
