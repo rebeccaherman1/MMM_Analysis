@@ -1,7 +1,7 @@
 clear
 variable = 'ts';
-model_file_name = ['data/cmip6_', variable, '_h_all.mat'];
-folder = '~/netcdf/cmip6/preprocessed/historical';
+model_file_name = ['data/cmip6_', variable, '_piC_all.mat'];
+folder = '~/netcdf/cmip6/preprocessed/piControl';
 files = split(ls(folder));
 files = files(contains(files, [variable, '_']));
 next_line = 1;
