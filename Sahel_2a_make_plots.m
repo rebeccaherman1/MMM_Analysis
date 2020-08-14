@@ -1,50 +1,42 @@
 save = true;
-short=false;%true;
+variable = 'pr';
+start_year=1901;
+end_year=2014;
+%should work with TS if I pick a basin now, but no need to make this figure
+%for that.
 
 scenarios = {'cmip6_h'};%v'};%'r'};%'a6'};%'amip'};%'h'};%,"historicalAerosol","historicalNat","historicalGHG"  "historicalMisc", 
-if(short || strcmp(scenarios, 'amip'))
-    start_year = 1950;% 
-else
-    start_year = 1901;%
-end
-end_year=2003;
 
-global ref_T_years ref_T_amip;
+global ref_T_years
 
-obs = load('data/historical_precipitation.mat');
-cru = load('data/CRU_data.mat');%ncread('data/Jul-Sep/CRU_data.nc', 'aprod'); %mm/month *month/day
-cru=cru.prcp;
-%cru = cru/mean([31,31,30]); now we did this before we saved it
+obs = load(['data/', variable, '/observations.mat']);
+%this is still short
+%cru = load(['data/', variable, '/CRU_data.mat']);%ncread('data/Jul-Sep/CRU_data.nc', 'aprod'); %mm/month *month/day
+%cru=cru.prcp;
 timeframe_obs = (obs.T >= start_year & obs.T <= end_year);
-ref_T_amip = start_year:end_year;
 ref_T_years = obs.T(timeframe_obs);
-prcp = obs.prcp(timeframe_obs); cru=cru(timeframe_obs);
-prcp_anomaly = prcp - mean(prcp); cru_anomaly = cru - mean(cru);
-prcp_standardized = prcp_anomaly/std(prcp); cru_standardized = cru_anomaly/std(cru);
+prcp = obs.var(:,ismember(obs.T, ref_T_years),:); %cru=cru(timeframe_obs);
+prcp_anomaly = prcp - mean(prcp); %cru_anomaly = cru - mean(cru);
+prcp_standardized = prcp_anomaly./std(prcp,0,2); %cru_standardized = cru_anomaly/std(cru);
     
 for i = 1:length(scenarios)
     scenario = char(scenarios(i));
     fprintf("Accessing historical scenario %s\n", scenario);
-
-    if(short || strcmp(scenario, 'amip'))
-        timeframe_m = ref_T_amip>=start_year & ref_T_amip<=end_year;
-    else
-        timeframe_m = timeframe_obs;
-    end
+    G = load(['data/', variable, '/',scenario,'_GM.mat']);
+    timeframe_m = ismember(single(G.time), ref_T_years);
     
-    G = load(['data/',scenario,'_GM.mat']);
-    MMM = G.MMM(timeframe_m); %MMM = MMM(1:99);                
-    MMM_anomaly = MMM - mean(MMM); 
-    MMM_standardized = MMM_anomaly/std(MMM_anomaly);
+    MMM = G.MMM(:,timeframe_m,:);                
+    MMM_anomaly = MMM - mean(MMM,2); 
+    MMM_standardized = MMM_anomaly./std(MMM_anomaly,0,2);
 
-    GM = G.GMs(:,timeframe_m);%(:,1:99); 
+    GM = G.GMs(:,timeframe_m,:);
     GM_anomalies = GM - mean(GM,2);   
-    GM_standardized = GM_anomalies./std(GM_anomalies, 1, 2);
-
-    I = load(['data/',scenario,'_all.mat']);
-    runs = I.runs(:,timeframe_m);%(:,1:99); 
+    GM_standardized = GM_anomalies./std(GM_anomalies, 0, 2);
+    
+    I = load(['data/', variable, '/',scenario,'_all.mat']);
+    runs = I.runs(:,timeframe_m); 
     runs_anomalies = runs - mean(runs,2);   
-    runs_standardized = runs_anomalies./std(runs_anomalies, 1, 2);
+    runs_standardized = runs_anomalies./std(runs_anomalies, 0, 2);
 
     figure(1); hold off; clf;
 
@@ -56,7 +48,7 @@ for i = 1:length(scenarios)
     plot(ref_T_years,GM_standardized, 'c-', 'LineWidth', 1, 'HandleVisibility', 'off');
     plot(ref_T_years,MMM_standardized,'b-', 'LineWidth', 2, 'HandleVisibility', 'off');
     plot(ref_T_years,prcp_standardized, 'k-', 'LineWidth', 2, 'HandleVisibility', 'off');
-    plot(ref_T_years,cru_standardized, '--', 'Color', .8*[1,1,1], 'HandleVisibility', 'off');
+    %plot(ref_T_years,cru_standardized, '--', 'Color', .8*[1,1,1], 'HandleVisibility', 'off');
     ylim([-4,4]); xlim([start_year, end_year]);
 
     subplot(2,2,2); hold on; %yikes again
@@ -67,12 +59,12 @@ for i = 1:length(scenarios)
     p_gm_s = plot(ref_T_years,GM_anomalies, 'c-', 'LineWidth', 1);
     p_mmm_s = plot(ref_T_years,MMM_anomaly,'b-', 'LineWidth', 2);
     p_actual_s = plot(ref_T_years,prcp_anomaly, 'k-', 'LineWidth', 2);
-    p_actual_s_cru = plot(ref_T_years,cru_anomaly, '--', 'Color', .8*[1,1,1]);
+    %p_actual_s_cru = plot(ref_T_years,cru_anomaly, '--', 'Color', .8*[1,1,1]);
     xlim([start_year, end_year]); ylim([-2,2]);
 
-    legend([p_runs_s(1), p_gm_s(1), p_mmm_s, p_actual_s, p_actual_s_cru], 'Runs', 'IMs', 'MMM', 'GPCC', 'CRU', 'Location', 'south');%'northwest'); %
+    legend([p_runs_s(1), p_gm_s(1), p_mmm_s, p_actual_s], 'Runs', 'IMs', 'MMM', 'GPCC', 'Location', 'south');%, p_actual_s_cru]'northwest'); 'CRU', %
 
     if(save)
-        savefig([scenario,'_Fig1']);
+        savefig(['Fig1p_', scenario, '_', variable, '_', num2str(ref_T_years(1)), '-', num2str(ref_T_years(end))]);
     end
 end
