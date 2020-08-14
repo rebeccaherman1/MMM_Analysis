@@ -1,10 +1,12 @@
 clear
-model_file_name = 'data/cmip6_g_all_extended.mat';
-folder = '~/netcdf/cmip6/hist-GHG';
+variable = 'ts';
+model_file_name = ['data/cmip6_', variable, '_h_all.mat'];
+folder = '~/netcdf/cmip6/preprocessed/historical';
 files = split(ls(folder));
+files = files(contains(files, [variable, '_']));
 next_line = 1;
 T = 1850:1:2014;
-for file = files(1:end-1)'
+for file = files'
     names = make_model_and_p_name(file);
     model(next_line, 1:3) = names;
     fopen_name = [folder, '/', file{:}];
@@ -15,13 +17,17 @@ for file = files(1:end-1)'
     else
 	Time = ncread(fopen_name, 'year');
     end
-    pr = ncread(fopen_name, 'pr');
+    %pr = ncread(fopen_name, 'pr');
+    NA = ncread(fopen_name, 'NA');
+    GT = ncread(fopen_name, 'GT');
+    NARI = ncread(fopen_name, 'NARI');
+    pr = cat(3, NA, GT, NARI);
     if contains(model_file_name, 'piC')
 	l = length(Time);
     elseif Time(1)<=1901 && Time(end)>=2014
 	T_x = (Time >= 1901) & (Time <= 2014);
 	Time = Time(T_x);
-	pr = pr(T_x);
+	pr = pr(T_x,:,:);
 	l = length(pr);
 	if(length(Time)~=length(pr))
 	    fprintf('pr contains fill values');
@@ -29,7 +35,7 @@ for file = files(1:end-1)'
     else
 	continue
     end
-    runs(next_line,1:l)   = pr; 
+    runs(next_line,1:l,1:3)   = pr; 
     time(next_line,1:l)   = Time;
     next_line=next_line+1;
     save(model_file_name,'model','runs', 'time');
