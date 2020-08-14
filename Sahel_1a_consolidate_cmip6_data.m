@@ -39,11 +39,11 @@ for i = 1:length(scenarios)
         else
             continue
         end
+        runs(next_line,1:l,1:3)   = pr; 
+        time(next_line,1:l)   = Time;
+        next_line=next_line+1;
+        save(model_file_name,'model','runs', 'time');
     end
-    runs(next_line,1:l,1:3)   = pr; 
-    time(next_line,1:l)   = Time;
-    next_line=next_line+1;
-    save(model_file_name,'model','runs', 'time');
 end
 
 function [model_names] = make_model_and_p_name(file)
