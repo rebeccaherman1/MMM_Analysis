@@ -4,7 +4,7 @@ N = 500;
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
 scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%v'};%'r'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
-variables = {'pr', 'ts'};
+variables = {'ts'};%'pr', 
 
 global start_year end_year ref_T_years
 start_year = 1901;
@@ -59,6 +59,10 @@ for v = 1:length(variables)
         [Analysis.piC_resampled_bootstrapped, skip_models] = sample_model(N, o, timeframe_obs, h.piC_GMs, h.piC_trust, dt);
         fprintf('skipping piC simulations which are too short:')
         h.piC_models(skip_models,:)
+        
+        if(isfield(h, 'indices'))
+            Analysis.indices = h.indices;
+        end
     end
 end
 
