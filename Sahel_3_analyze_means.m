@@ -4,60 +4,62 @@ N = 500;
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
 scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%v'};%'r'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
-variable = 'ts';
+variables = {'pr', 'ts'};
 
 global start_year end_year ref_T_years
 start_year = 1901;
 end_year = 2014; 
 
 mkdir('analysis')
-mkdir(['analysis/', variable])
 
-obs = load(['data/', variable, '/observations.mat']);
-obs_anomaly = obs.var-mean(obs.var);
-timeframe_obs = (obs.T >= start_year & obs.T <= end_year);
-ref_T_years = obs.T(timeframe_obs);
-o = obs_anomaly(:,timeframe_obs,:);
+for v = 1:length(variables)
+    variable = variables{v};
+    mkdir(['analysis/', variable])
+    obs = load(['data/', variable, '/observations.mat']);
+    obs_anomaly = obs.var-mean(obs.var);
+    timeframe_obs = (obs.T >= start_year & obs.T <= end_year);
+    ref_T_years = obs.T(timeframe_obs);
+    o = obs_anomaly(:,timeframe_obs,:);
+    for j = 1:length(scenarios)
+        scenario = scenarios{j};
+        fprintf("Accessing scenario %s\n", scenario);
 
-for j = 1:length(scenarios)
-    scenario = scenarios{j};
-    fprintf("Accessing scenario %s\n", scenario);
+        h = load(['data/', variable, '/', scenario,'_GM.mat']);
+        fname = ['analysis/', variable, '/', scenario, '_', num2str(ref_T_years(1)), '-', num2str(ref_T_years(end)), '_N', num2str(N)];
+        hall = load(['data/', variable, '/', scenario, '_all.mat']);
+        num_models = length(h.models); %num_pC_models = length(h.piC_models); 
+        Analysis = matfile(fname, 'Writable', true);
 
-    h = load(['data/', variable, '/', scenario,'_GM.mat']);
-    fname = ['analysis/', variable, '/', scenario, '_', num2str(ref_T_years(1)), '-', num2str(ref_T_years(end)), '_N', num2str(N)];
-    hall = load(['data/', variable, '/', scenario, '_all.mat']);
-    num_models = length(h.models); %num_pC_models = length(h.piC_models); 
-    Analysis = matfile(fname, 'Writable', true);
+        T_m = ismember(single(h.time(1,:)),ref_T_years);
+        hm = h.GMs(:,T_m, :); %TODO should actually add a T record to the data I save :/
+        trust = h.trust;
 
-    T_m = ismember(single(h.time(1,:)),ref_T_years);
-    hm = h.GMs(:,T_m, :); %TODO should actually add a T record to the data I save :/
-    trust = h.trust;
+        [r, e, mmm] = calc_stats(hm, trust, o);
+        MMM.r = r; MMM.e = e; MMM.MMM = mmm; Analysis.MMM = mmm;
 
-    [r, e, mmm] = calc_stats(hm, trust, o);
-    MMM.r = r; MMM.e = e; MMM.MMM = mmm; Analysis.MMM = mmm;
-    
-    %hall
-    runs = hall.runs(:,T_m,:);
-    runs_r = m_corrcoef(runs, o); runs_e = rmse(runs, o);
-    indiv_runs.r = runs_r; indiv_runs.e = runs_e; indiv.models = hall.model;
-    
-    ir = m_corrcoef(hm, o); ie = rmse(hm, o);
-    indiv.r = ir; indiv.e = ie; indiv.models = h.models;
-    [~, r_order] = sort(ir, 'descend'); best_r = h.models(r_order);
-    [~, e_order] = sort(ie, 'ascend'); best_e = h.models(e_order);
-    indiv.best_models_r = best_r; indiv.best_models_e = best_e;
-    
-    [r_sanity, e_sanity, ~] = calc_stats(zeros(size(o)), 1, o);
-    sanity.r = r_sanity; sanity.e = e_sanity;
-    
-    Analysis.MMM = MMM; Analysis.indiv = indiv; Analysis.sanity = sanity; Analysis.N = N; Analysis.indiv_runs = indiv_runs;
-      
-    Analysis.historical_bootstrapped = bootstrap_model(N, o, timeframe_obs, hm, trust);
-    
-    %comment out for AMIP simulations.
-    [Analysis.piC_resampled_bootstrapped, skip_models] = sample_model(N, o, timeframe_obs, h.piC_GMs, h.piC_trust, dt);
-    fprintf('skipping piC simulations which are too short:')
-    h.piC_models(skip_models,:)
+        %hall
+        runs = hall.runs(:,T_m,:);
+        runs_r = m_corrcoef(runs, o); runs_e = rmse(runs, o);
+        indiv_runs.r = runs_r; indiv_runs.e = runs_e; indiv.models = hall.model;
+
+        ir = m_corrcoef(hm, o); ie = rmse(hm, o);
+        indiv.r = ir; indiv.e = ie; indiv.models = h.models;
+        [~, r_order] = sort(ir, 'descend'); best_r = h.models(r_order);
+        [~, e_order] = sort(ie, 'ascend'); best_e = h.models(e_order);
+        indiv.best_models_r = best_r; indiv.best_models_e = best_e;
+
+        [r_sanity, e_sanity, ~] = calc_stats(zeros(size(o)), 1, o);
+        sanity.r = r_sanity; sanity.e = e_sanity;
+
+        Analysis.MMM = MMM; Analysis.indiv = indiv; Analysis.sanity = sanity; Analysis.N = N; Analysis.indiv_runs = indiv_runs;
+
+        Analysis.historical_bootstrapped = bootstrap_model(N, o, timeframe_obs, hm, trust);
+
+        %comment out for AMIP simulations.
+        [Analysis.piC_resampled_bootstrapped, skip_models] = sample_model(N, o, timeframe_obs, h.piC_GMs, h.piC_trust, dt);
+        fprintf('skipping piC simulations which are too short:')
+        h.piC_models(skip_models,:)
+    end
 end
 
 %% functions
