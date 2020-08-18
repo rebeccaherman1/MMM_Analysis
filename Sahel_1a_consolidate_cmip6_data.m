@@ -4,6 +4,7 @@ variable = 'ts';
 scenarios = {'historical'};%, 'hist-aer', 'hist-nat', 'hist-GHG', 'piControl'};
 short_names = {'h', 'a', 'n', 'g', 'piC'};
 for i = 1:length(scenarios)
+    clear model runs time
     model_file_name = ['data/', variable, '/cmip6_', short_names{i}, '_all.mat']
     folder = ['~/netcdf/cmip6/preprocessed/', scenarios{i}];
     files = split(ls(folder));
