@@ -1,7 +1,7 @@
 clear
-variable = 'ts';
+variable = 'pr';
 
-scenarios = {'historical'};%, 'hist-aer', 'hist-nat', 'hist-GHG', 'piControl'};
+scenarios = {'historical', 'hist-aer', 'hist-nat', 'hist-GHG', 'piControl'};
 short_names = {'h', 'a', 'n', 'g', 'piC'};
 for i = 1:length(scenarios)
     clear model runs time
@@ -22,11 +22,16 @@ for i = 1:length(scenarios)
         else
             Time = ncread(fopen_name, 'year');
         end
-        %pr = ncread(fopen_name, 'pr');
-        NA = ncread(fopen_name, 'NA');
-        GT = ncread(fopen_name, 'GT');
-        NARI = ncread(fopen_name, 'NARI');
-        pr = cat(3, NA, GT, NARI);
+	if(strcmp(variable, 'pr'))
+            pr = ncread(fopen_name, 'pr');
+	    s3=1;
+        else
+	    NA = ncread(fopen_name, 'NA');
+       	    GT = ncread(fopen_name, 'GT');
+            NARI = ncread(fopen_name, 'NARI');
+            pr = cat(3, NA, GT, NARI);
+	    s3=3;
+        end
         if contains(model_file_name, 'piC')
             l = length(Time);
         elseif Time(1)<=1901 && Time(end)>=2014
@@ -40,8 +45,8 @@ for i = 1:length(scenarios)
         else
             continue
         end
-        runs(next_line,1:l,1:3)   = pr; 
-        time(next_line,1:l)   = Time;
+        runs(next_line,1:l,1:s3) = pr; 
+        time(next_line,1:l) = Time;
         next_line=next_line+1;
         save(model_file_name,'model','runs', 'time');
     end
