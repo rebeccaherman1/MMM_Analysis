@@ -1,7 +1,7 @@
 clear
 variable = 'ts';
 
-scenarios = {'historical', 'hist-aer', 'hist-nat', 'hist-GHG', 'piControl'};
+scenarios = {'historical'};%, 'hist-aer', 'hist-nat', 'hist-GHG', 'piControl'};
 short_names = {'h', 'a', 'n', 'g', 'piC'};
 for i = 1:length(scenarios)
     model_file_name = ['data/', variable, '/cmip6_', short_names{i}, '_all.mat']
