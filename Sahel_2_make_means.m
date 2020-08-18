@@ -3,7 +3,7 @@ tosave = true;
 
 scenarios = {'cmip6_h','cmip6_a', 'cmip6_n', 'cmip6_g'};%'cmip6_h', 'v'};%'r'};%'a6'};%'e'};%'h','a','n','g'};%'amip'};%, 
 vert_mean = @(X) mean(X,1); vert_sum = @(X) sum(X,1);
-variables = {'pr'};%'ts'};%, 
+variables = {'pr'};%, 'ts'};%, 
 
 for v = 1:length(variables)
     var = variables{v};
@@ -21,7 +21,8 @@ for v = 1:length(variables)
         end
 
         if(tosave) 
-            fname = ['data/', var, '/',scenario, '_MM'];    
+            fname = ['data/', var, '/',scenario, '_MM'];
+            delete([fname, '.mat']);
             File = matfile(fname, 'Writable', true);
             fprintf("Writing file %s\n", fname);
             File.MMs(1:nMM, 1:s2, 1:s3) = MM.MMs; 
@@ -55,6 +56,7 @@ for v = 1:length(variables)
         GM.MMM = mean(GM.trust.*GM.GMs/mean(GM.trust), 1);
         if(tosave)
             fname = ['data/',var, '/', scenario, '_GM'];
+            delete([fname, '.mat']);
             File = matfile(fname, 'Writable', true);
             fprintf("Writing file %s\n", fname);
             File.GMs(1:nGM, 1:s2, 1:s3) = GM.GMs; 
