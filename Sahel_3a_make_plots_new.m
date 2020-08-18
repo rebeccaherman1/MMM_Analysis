@@ -59,11 +59,6 @@ for j = 1:length(scenarios)
             pC_up   = A.piC_resampled_bootstrapped.high;
             pC_scale = mean(std(A.piC_resampled_bootstrapped.r_means, 0, 2));
         end
-        if(standardize)
-            pC_down = pC_down./pC_scale;
-            pC_up = pC_up./pC_scale;
-            ylim([-5,5])
-        end
     end
     if(historical)
         mmm = A.MMM.MMM; mmm = mmm-mean(mmm,2); r = A.MMM.r; rmsd = A.MMM.e;
@@ -73,14 +68,16 @@ for j = 1:length(scenarios)
     
     %which PC do we want?
     for i=1:I
-        if(I==1)
-            yn = 2; xn = 2;
+        if(~contains(realm, 'cmip'))
+            yn = 1; xn = 1;
+        elseif(I==1)
+            %only works if perfect square!
+            yn = length(scenarios)^.5; xn = yn;
         	subplot(yn, xn, j); 
         else
             yn = 4; xn = I;
             subplot(yn,xn, I*(j-1)+i)
         end
-        
         plot(ref_T_years, zeros(size(ref_T_years)), 'k--'); 
         hold on; set(gca,'FontSize',15); 
         if(I==1)
