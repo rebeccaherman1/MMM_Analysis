@@ -3,7 +3,7 @@ tosave = true;
 
 scenarios = {'cmip6_h','cmip6_a', 'cmip6_n', 'cmip6_g'};%'cmip6_h', 'v'};%'r'};%'a6'};%'e'};%'h','a','n','g'};%'amip'};%, 
 vert_mean = @(X) mean(X,1); vert_sum = @(X) sum(X,1);
-variables = {'pr'};%, 'ts'};%, 
+variables = {'ts'};%, 'pr'};%, 
 
 for v = 1:length(variables)
     var = variables{v};
@@ -31,6 +31,9 @@ for v = 1:length(variables)
             NanSims = h.model(any(any(isnan(h.runs),2),3),:);
             File.NanSims = NanSims;
             File.time = h.time(1,:);
+            if(isfield(h, 'indices'))
+                File.indices = h.indices;
+            end
         end
 
         %use for historical simulations; comment out for amip simulations. 
@@ -64,6 +67,9 @@ for v = 1:length(variables)
             File.trust (1:nGM,1) = GM.trust; 
             File.MMM(1, 1:s2, 1:s3) = GM.MMM;
             File.time=h.time(1,:);
+            if(isfield(h, 'indices'))
+                File.indices = h.indices;
+            end
         end	  
         [~,s2,s3] = size(MM.piC_MMs);
         [GM.piC_models, I, model_groupings] = unique(MM.piC_models(:,1)); nGM = max(model_groupings);
