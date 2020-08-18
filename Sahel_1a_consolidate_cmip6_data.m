@@ -1,5 +1,5 @@
 clear
-variable = 'pr';
+variable = 'ts';
 
 scenarios = {'historical', 'hist-aer', 'hist-nat', 'hist-GHG', 'piControl'};
 short_names = {'h', 'a', 'n', 'g', 'piC'};
@@ -18,7 +18,7 @@ for i = 1:length(scenarios)
         %ncdisp(fopen_name)
         INFO = ncinfo(fopen_name);
         if any(contains({INFO.Variables.Name}, {'time'}))
-        	Time = ncread(fopen_name, 'time');
+            Time = ncread(fopen_name, 'time');
         else
             Time = ncread(fopen_name, 'year');
         end
@@ -31,6 +31,7 @@ for i = 1:length(scenarios)
             NARI = ncread(fopen_name, 'NARI');
             pr = cat(3, NA, GT, NARI);
 	    s3=3;
+	    indices = permute({'NA', 'GT', 'NARI'},[1,3,2]);
         end
         if contains(model_file_name, 'piC')
             l = length(Time);
@@ -48,7 +49,11 @@ for i = 1:length(scenarios)
         runs(next_line,1:l,1:s3) = pr; 
         time(next_line,1:l) = Time;
         next_line=next_line+1;
-        save(model_file_name,'model','runs', 'time');
+	if(strcmp(variable, 'ts'))
+	    save(model_file_name, 'model', 'runs', 'time', 'indices')
+        else
+            save(model_file_name,'model','runs', 'time');
+        end
     end
 end
 
