@@ -2,8 +2,8 @@ historical = true;
 pC = true;
 tosave = false;
 start_year = 1901;
-end_year = 2014;
-variable = 'ts';
+end_year = 2013;
+variable = 'pr';
 realm = 'cmip6';
 
 scenario_colors = 'bmrgc';
@@ -27,7 +27,7 @@ global ref_T_years;
 obs = load(['data/', variable, '/observations.mat']);
 
 timeframe = (obs.T >= start_year & obs.T <= end_year);
-ref_T_years = obs.T(timeframe)';
+ref_T_years = obs.T(timeframe); %TODO this is inconsistent
 start_year = max(start_year, ref_T_years(1));
 end_year = min(end_year, ref_T_years(end));
 var_unstandardized = obs.var(:,timeframe,:);
@@ -37,7 +37,12 @@ var_standardized = var_anomaly./var_std;
 
 figure(2); hold off; clf; hold on; 
 g_GM = load(['data/', variable, '/', scenarios{contains(scenarios, 'g')}, '_GM.mat']);
-no_ghg = var_anomaly - (g_GM.MMM - mean(g_GM.MMM, 2));
+gt = single(g_GM.time);
+g_tf = ismember(gt, ref_T_years);
+no_ghg = var_anomaly - (g_GM.MMM(:,g_tf,:) - mean(g_GM.MMM(:,g_tf,:), 2));
+if(strcmp(variable, 'ts'))
+    no_ghg(:,:,3) = var_anomaly(:,:,3);
+end
 
 N_indiv = nan(1,length(scenarios));
 for j = 1:length(scenarios)
@@ -64,6 +69,8 @@ for j = 1:length(scenarios)
         mmm = A.MMM.MMM; mmm = mmm-mean(mmm,2); r = A.MMM.r; rmsd = A.MMM.e;
         up   = A.historical_bootstrapped.high;
         down = A.historical_bootstrapped.low;
+        r_no_ghg = permute(diag(corr(permute(mmm, [2,3,1]), permute(no_ghg, [2,3,1]))),[2,3,1]);
+        e_no_ghg = mean((mmm-no_ghg).^2,2).^.5./std(no_ghg,0,2);
     end
     
     %which PC do we want?
@@ -80,28 +87,32 @@ for j = 1:length(scenarios)
         end
         plot(ref_T_years, zeros(size(ref_T_years)), 'k--'); 
         hold on; set(gca,'FontSize',15); 
-        if(I==1)
-            title([scenario_names{j}, ', N=', num2str(N_indiv(j))], 'color', scenario_colors(j))
+        if(strcmp(variable, 'ts') && (contains(scenario, 'a') || contains(scenario, 'n')) && i<3)
+            p_actual = plot(ref_T_years, no_ghg(:,:,i), '-', 'color', [.5 0 .6]);%, 'LineWidth', 2);
+            r_ttl = r_no_ghg(:,:,i); e_ttl = e_no_ghg(:,:,i);
         else
-            ttl = '';
+            p_actual = plot(ref_T_years, var_anomaly(:,:,i), 'k-');%, 'LineWidth', 2);
+            r_ttl = r(:,:,i); e_ttl = rmsd(:,:,i);
+        end
+        if(I==1)
+            title([scenario_names{j}, ', N=', num2str(N_indiv(j)), ', r=', num2str(r_ttl, '%5.2f'), ', rmse=', num2str(rmsd, '%5.2f')], 'color', scenario_colors(j))
+            ylabel('Precipitation Anomaly (mm/day)')
+        else
             if(i==1)
-                ttl = ['\color{', long_colors{j}, '}', scenario_names{j}, ', N=', num2str(N_indiv(j))];
+                ylabel([scenario_names{j}, ', N=', num2str(N_indiv(j))], 'color', scenario_colors(j))
             end
+            ttl = ['\color{', long_colors{j}, '} r=', num2str(r_ttl, '%5.2f'), ', rmse=', num2str(e_ttl, '%5.2f')];
             if(j==1)
                 ttl = [ttl, ' \color{black}', A.indices{i}];
             end
             title(ttl)
         end 
-        if(strcmp(variable, 'ts') && (contains(scenario, 'a') || contains(scenario, 'n')) && i<3)
-            p_actual = plot(ref_T_years, no_ghg(:,:,i), '-', 'color', [.5 0 .6]);%, 'LineWidth', 2);
-        else
-            p_actual = plot(ref_T_years, var_anomaly(:,:,i), 'k-');%, 'LineWidth', 2);
-        end
         if(zoom)
             yyaxis right
             set(gca, 'ycolor', scenario_colors(j))
             ylim([-.375,.375])
         else
+            set(gca, 'ycolor', scenario_colors(j))
             ylim([-1,1])
         end
         %pC
@@ -122,21 +133,10 @@ for j = 1:length(scenarios)
         %seem.
     end
 end
-if(strcmp(variable, 'pr'))
-    lbl = 'Precipitation Anomaly (mm/day)';
-else
-    lbl = 'SST Anomaly (C)';
-end
-for y = 1:yn
-    subplot(yn,xn,1+(y-1)*xn)
-    if zoom
-        yyaxis left
-    end
-    ylabel(lbl)
-end
 
 if(tosave)
     savefig(2, ['figures/', variable, '/', scenarios{1}, '_Fig2_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N)]);
+    saveas(2, ['figures/', variable, '/', scenarios{1}, '_Fig2_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N)], 'png');
 else
     fprintf(['figures/', variable, '/', scenarios{1}, '_Fig2_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '\n']);
 end

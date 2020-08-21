@@ -4,7 +4,7 @@ N = 500;
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
 scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%v'};%'r'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
-variables = {'ts'};%'pr', 
+variables = {'pr'};%'pr', 
 
 global start_year end_year ref_T_years
 start_year = 1901;
@@ -71,19 +71,14 @@ end
 %T can be a logical array or a range.
 %TODO put detrending in here
 function [r, e, mmm] = calc_stats(means, trust, obs)
-    weights = trust / mean(trust);
+    weights = trust / sum(trust);
     %mmm_std = mean(std(means,0,2));
-    mmm = mean(weights.*means,1);
+    mmm = sum(weights.*means,1);
     e = rmse(mmm, obs);
     [~,~,s3]=size(means);
     r=nan([1,1,s3]);
     for i=1:s3
-        R = corrcoef(mmm(:,:,i), obs(:,:,i));
-        R = R(1,2);
-        if(isnan(r))
-            R = 0;
-        end
-        r(i)=R;
+        r(:,:,i) = corr(mmm(:,:,i)', obs(:,:,i)');
     end
 end
 
