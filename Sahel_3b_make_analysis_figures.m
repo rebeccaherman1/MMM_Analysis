@@ -1,13 +1,19 @@
 mic=false;
-tosave = false;
+tosave = true;
+extended=true;
 
 scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%{'r'};%'v'};%'a6'};%'e'};%'h','a','n','g'};
 single_scenario='cmip6_h';%'v';%'a6';%'e';%'amip';%'h';%
+variable = 'pr';
 short = false;%true; %TODO I've totally bastardized what this was supposed to mean -- redo later
 single_name = 'ALL 6';%'AMIP+RAD';%'Vanilla AMIP';%'CMIP6-AMIP';%'ERA-20CM';%'ALL';%'AMIP';%
 month0 = 'Jul';%, "Jun", "Sep"];
 month1 = 'Sep';%, "Jul", "Oct"];
 start_year = 1901;
+end_year = 2013;
+if(short)
+    end_year = 2003;
+end
 
 dts = [""];%"detrended",    ,            This is implemented
 fls = ["last"];%, "first"       ,        This is implemented
@@ -16,18 +22,18 @@ names = [{'ALL 6'}, {'AA 6'}, {'NAT 6'}, {'GHG 6'}];%[{'AMIP+RAD'}];%'Vanilla AM
 
 N = 500;
 
-load('data/historical_precipitation.mat')
+%load('data/', variable, '/observations.mat')
 
 %% MAKE SECOND HALF OF FIGURE 1
-%{
+
 close all;
-openfig([single_scenario, '_Fig1.fig']);
-hold on; %hold off; clf; 
-aname = ['analysis/',single_scenario,'_N', num2str(N)]; %TODO
-if(short)
-    aname = [aname, '_', num2str(start_year)];
-end
+ %hold off; clf; 
+
+aname = ['analysis/',variable, '/', single_scenario,'_',num2str(start_year), '-', num2str(end_year), '_N', num2str(N)];
 A = load([aname, '.mat']);
+openfig(['figures/', variable, '/', single_scenario, '_Fig1p_', num2str(start_year), '-', num2str(end_year), '.fig']);
+hold on;
+
 r = A.MMM.r; r_indiv = A.indiv.r; r_bootstrap = A.historical_bootstrapped.rs; r_r = A.indiv_runs.r; 
 e = A.MMM.e; e_indiv = A.indiv.e; e_bootstrap = A.historical_bootstrapped.es; e_r = A.indiv_runs.e;
 %indiv_plot(r_r, 3); hold on; indiv_plot(e_r, 4); hold on;
@@ -36,9 +42,9 @@ indiv_plot(e_indiv, 4); hold on; analysis_plot(e, e_bootstrap, 'b', 'MMM', 1, 2,
 finishfig(1,2,3,'c. Correlation with 20C Observations', '', 0, 'northwest'); 
 finishfig(1,2,4,'d. RMSE with 20C Observations', 'Fraction of Observed Variance', 1, 'northeast');
 if(tosave)
-    savefig([single_scenario, '_Fig1_all.fig']);
+    savefig(['figures/', variable, '/', single_scenario, '_Fig1', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.fig']);
 end
-%}
+
 %% MAKE FIGURE 4
 if(true)%~mic)
     F = 4; figure(F); hold off; clf;
@@ -51,45 +57,42 @@ if(true)%~mic)
             for l = 1:length(dts)
                 dt = char(dts(l));
 
-                aname = ['analysis/', scenario, '_N', num2str(N)];
-                if(short)
-                    aname = [aname, '_', num2str(start_year)];
-	        end
-            A = load([aname, '.mat']);
+                aname = ['analysis/', variable, '/', scenario, '_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N)];
+                A = load([aname, '.mat']);
 
-            r = A.MMM.r; r_indiv = A.indiv.r; r_bootstrap = A.historical_bootstrapped.rs; 
-            e = A.MMM.e; e_indiv = A.indiv.e; e_bootstrap = A.historical_bootstrapped.es; 
+                r = A.MMM.r; r_indiv = A.indiv.r; r_bootstrap = A.historical_bootstrapped.rs; 
+                e = A.MMM.e; e_indiv = A.indiv.e; e_bootstrap = A.historical_bootstrapped.es; 
 
-            analysis_plot(r, r_bootstrap, color, name, F, 1, 1);
-            analysis_plot(e, e_bootstrap, color, name, F, 1, 2); 
+                analysis_plot(r, r_bootstrap, color, name, F, 1, 1);
+                analysis_plot(e, e_bootstrap, color, name, F, 1, 2); 
 
-            r_resample = A.piC_resampled_bootstrapped.rs; e_resample = A.piC_resampled_bootstrapped.es; 
-            analysis_plot(r, r_resample, color, 'Pre-Industrial Control', F, 1, 1)
-            analysis_plot(e, e_resample, color, 'Pre-Industrial Control', F, 1, 2)
-
+                r_resample = A.piC_resampled_bootstrapped.rs; e_resample = A.piC_resampled_bootstrapped.es; 
+                analysis_plot(r, r_resample, color, 'Pre-Industrial Control', F, 1, 1)
+                analysis_plot(e, e_resample, color, 'Pre-Industrial Control', F, 1, 2)
             end
         end
     end
     finishfig(F,1,1,'a. Correlation with 20C Observations', '', 0); 
     finishfig(F,1,2,'b. Scaled RMSE with 20C Observations', '', 1);
     if(tosave)
-        savefig([single_scenario, '_Fig4.fig']);
+        savefig(['figures/', variable, '/', single_scenario, '_Fig4', '_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.fig']);
     end
 end
 
+
 %% MAKE MIC's figures
-if(false)%mic)
+%{
+if(true)%mic)
     F = 20; figure(F); clf; hold off; clf;
 
-    aname = ['analysis/', single_scenario, '_N', num2str(N)];%
-    if(strcmp(single_scenario, 'amip'))
-        aname=[aname,'.mat'];
-    elseif(short)
-        aname=[aname, '_', num2str(start_year), '.mat'];% '_short.mat'];
+    if(short && ~strcmp(single_scenario, 'amip'))
+        aname = ['analysis/',single_scenario,'_N', num2str(N), '_', num2str(start_year)];
+    elseif(extended)
+        aname = ['analysis/',single_scenario,'_N', num2str(N), '_extended']; %TODO
     else
-        aname=[aname,'.mat'];
+        aname = ['analysis/',single_scenario,'_N', num2str(N)]; %TODO
     end
-    A = load(aname);
+    A = load([aname, '.mat']);
 
     std_O = std(prcp); 
     [rs_nf, as_uncorr, Bs] = calc_Mic(std_O, A.historical_bootstrapped.b_means, A.historical_bootstrapped.rs);
@@ -126,7 +129,7 @@ if(false)%mic)
     finishfig(F+1,1,1,'\beta^2 (Ratio of the Forced to Observed Variance) according to the...', '', 0); 
     legend('location', 'northeast');
 end
-
+%}
 %% Functions
 function [runs] = piC_select(N, T, GMs)
     length_run = sum(T);    
@@ -189,7 +192,7 @@ function[] = analysis_plot(v, bootstrap, color, name, fig_num, sp_x, sp_num)%ind
             plot(low*[1,1], get(gca, 'ylim'), [color, '--'], 'HandleVisibility', 'off');
         end
     else
-        plot(x, y, [color, '-*'], 'MarkerIndices', [idx_v], 'LineWidth', 2, 'DisplayName', [name, ' = ', num2str(v)]);
+        plot(x, y, [color, '-*'], 'MarkerIndices', [idx_v], 'LineWidth', 2, 'DisplayName', [name, ' = ', num2str(v, '%5.2f')]);
     end
     hold on;
 end
