@@ -1,6 +1,6 @@
 historical = true;
 pC = true;
-tosave = false;
+tosave = true;
 start_year = 1901;
 end_year = 2013;
 variable = 'pr';
@@ -90,6 +90,7 @@ for j = 1:length(scenarios)
         if(strcmp(variable, 'ts') && (contains(scenario, 'a') || contains(scenario, 'n')) && i<3)
             p_actual = plot(ref_T_years, no_ghg(:,:,i), '-', 'color', [.5 0 .6]);%, 'LineWidth', 2);
             r_ttl = r_no_ghg(:,:,i); e_ttl = e_no_ghg(:,:,i);
+            fprintf('no ghg!')
         else
             p_actual = plot(ref_T_years, var_anomaly(:,:,i), 'k-');%, 'LineWidth', 2);
             r_ttl = r(:,:,i); e_ttl = rmsd(:,:,i);

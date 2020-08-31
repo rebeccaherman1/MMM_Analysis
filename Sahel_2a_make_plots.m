@@ -65,6 +65,6 @@ for i = 1:length(scenarios)
     legend([p_runs_s(1), p_gm_s(1), p_mmm_s, p_actual_s], 'Runs', 'IMs', 'MMM', 'GPCC', 'Location', 'south');%, p_actual_s_cru]'northwest'); 'CRU', %
 
     if(save)
-        savefig(['Fig1p_', scenario, '_', variable, '_', num2str(ref_T_years(1)), '-', num2str(ref_T_years(end))]);
+        savefig(['figures/', variable, '/cmip6_', scenario, '_Fig1p_', num2str(ref_T_years(1)), '-', num2str(ref_T_years(end))]);
     end
 end
