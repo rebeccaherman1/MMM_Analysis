@@ -3,7 +3,7 @@ N = 500;
 
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
-scenarios = {'cmip6_r'};%'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%'r'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
+scenarios = {'cmip6_r', 'v'};%'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%'r'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
 variables = {'pr'};%'pr', 
 realm = 'amip';
 
@@ -107,8 +107,9 @@ function [all] = bootstrap_model(N, obs, T, GMs, trust, fl, dt)
         rs = NA; es = NA; 
         return
     end
-    %WHY DID I REMOVE THE MEANS HERE?! I DON'T WANT TO!
-    %means = means - mean(means, 2);
+    %I do want to remove the means during analysis because the difference 
+    %in mean state from different models makes too much noise.
+    means = means - mean(means, 2);
     if(nargin>6 && strcmp(dt, "detrended"))
         means = permute(detrend(permute(means,[2,1,3])), [2,1,3]);
     end
