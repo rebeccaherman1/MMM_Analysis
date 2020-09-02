@@ -1,4 +1,4 @@
-scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};
+scenarios = {'cmip6_r'};%'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};
 remove_models = {'CIESM', 'MCM-UA-1-0'};
 for s = 1:length(scenarios)
     fname = ['data/pr/', scenarios{s}, '_all.mat'];
