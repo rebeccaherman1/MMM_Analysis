@@ -3,10 +3,10 @@ tosave = true;
 extended=true;
 
 scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%{'r'};%'v'};%'a6'};%'e'};%'h','a','n','g'};
-single_scenario='cmip6_h';%'v';%'a6';%'e';%'amip';%'h';%
+single_scenario='v';%'cmip6_h';%'v';%'a6';%'e';%'amip';%'h';%
 variable = 'pr';
 short = false;%true; %TODO I've totally bastardized what this was supposed to mean -- redo later
-single_name = 'ALL 6';%'AMIP+RAD';%'Vanilla AMIP';%'CMIP6-AMIP';%'ERA-20CM';%'ALL';%'AMIP';%
+single_name = 'Vanilla AMIP';%'ALL 6';%'AMIP+RAD';%'CMIP6-AMIP';%'ERA-20CM';%'ALL';%'AMIP';%
 month0 = 'Jul';%, "Jun", "Sep"];
 month1 = 'Sep';%, "Jul", "Oct"];
 start_year = 1901;
@@ -18,13 +18,15 @@ end
 dts = [""];%"detrended",    ,            This is implemented
 fls = ["last"];%, "first"       ,        This is implemented
 colors = 'bmrg';%[blue; magenta; red; green];
-names = [{'ALL 6'}, {'AA 6'}, {'NAT 6'}, {'GHG 6'}];%[{'AMIP+RAD'}];%'Vanilla AMIP'}];%[{'CMIP6-AMIP'}]; %[{'ERA-20CM'}]; %
+names = {'Vanilla AMIP'};%'ALL 6'}, {'AA 6'}, {'NAT 6'}, {'GHG 6'};%{'AMIP+RAD'};%{'CMIP6-AMIP'}; %{'ERA-20CM'}; %
 
 N = 500;
 
 %load('data/', variable, '/observations.mat')
 
 %% MAKE SECOND HALF OF FIGURE 1
+
+%TODO add NARI for amip figures.
 
 close all;
  %hold off; clf; 
@@ -42,11 +44,11 @@ indiv_plot(e_indiv, 4); hold on; analysis_plot(e, e_bootstrap, 'b', 'MMM', 1, 2,
 finishfig(1,2,3,'c. Correlation with 20C Observations', '', 0, 'northwest'); 
 finishfig(1,2,4,'d. RMSE with 20C Observations', 'Fraction of Observed Variance', 1, 'northeast');
 if(tosave)
-    savefig(['figures/', variable, '/', single_scenario, '_Fig1', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.fig']);
+    savefig(['figures/', variable, '/', single_scenario, '_Fig1_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.fig']);
 end
 
 %% MAKE FIGURE 4
-if(true)%~mic)
+if(false)%~mic)
     F = 4; figure(F); hold off; clf;
     for j = 1:length(scenarios)
         scenario = scenarios{j};

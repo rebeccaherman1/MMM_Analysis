@@ -3,8 +3,9 @@ N = 500;
 
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
-scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%v'};%'r'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
+scenarios = {'v'};%'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%'r'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
 variables = {'pr'};%'pr', 
+realm = 'amip';
 
 global start_year end_year ref_T_years
 start_year = 1901;
@@ -55,10 +56,13 @@ for v = 1:length(variables)
 
         Analysis.historical_bootstrapped = bootstrap_model(N, o, timeframe_obs, hm, trust);
 
-        %comment out for AMIP simulations.
-        [Analysis.piC_resampled_bootstrapped, skip_models] = sample_model(N, o, timeframe_obs, h.piC_GMs, h.piC_trust, dt);
-        fprintf('skipping piC simulations which are too short:')
-        h.piC_models(skip_models,:)
+        %TODO could alternately use ISFIELD and then I wouldn't have to
+        %define the realm at the top...
+        if(~strcmp(realm, 'amip'))
+            [Analysis.piC_resampled_bootstrapped, skip_models] = sample_model(N, o, timeframe_obs, h.piC_GMs, h.piC_trust, dt);
+            fprintf('skipping piC simulations which are too short:')
+            h.piC_models(skip_models,:)
+        end
         
         if(isfield(h, 'indices'))
             Analysis.indices = h.indices;

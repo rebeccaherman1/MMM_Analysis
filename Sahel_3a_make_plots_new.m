@@ -1,23 +1,26 @@
 historical = true;
-pC = true;
 tosave = true;
 start_year = 1901;
 end_year = 2013;
 variable = 'pr';
-realm = 'cmip6';
+realm = 'amip';%'cmip6';
 
 scenario_colors = 'bmrgc';
 long_colors = {'blue', 'magenta', 'red', 'green', 'cyan'};
 if(strcmp(realm, 'cmip6'))
     scenarios = {'cmip6_h','cmip6_a','cmip6_n','cmip6_g'};%'amip'};%,; 
     scenario_names = {'ALL 6', 'AA 6', 'NAT 6', 'GHG 6'};
+    pC = true;
 elseif(strcmp(realm, 'cmip5'))
     scenarios = {'h', 'a', 'n', 'g'};
     scenario_names = {'ALL', 'AA', 'NAT', 'GHG'};
+    pC = true;
 else
-    scenarios = {realm};
+    scenarios = {'v'}; %TODO: add other amip scenarios...
+    scenario_names = {'amip-piForcing'};
+    pC = false;
 end
-zoom = strcmp(variable, 'pr');
+zoom = strcmp(variable, 'pr') && ~strcmp(realm, 'amip');
 
 fl = '';%'last';
 N=500;
@@ -36,11 +39,11 @@ var_std = std(var_unstandardized,0,2);
 var_standardized = var_anomaly./var_std;
 
 figure(2); hold off; clf; hold on; 
-g_GM = load(['data/', variable, '/', scenarios{contains(scenarios, 'g')}, '_GM.mat']);
-gt = single(g_GM.time);
-g_tf = ismember(gt, ref_T_years);
-no_ghg = var_anomaly - (g_GM.MMM(:,g_tf,:) - mean(g_GM.MMM(:,g_tf,:), 2));
 if(strcmp(variable, 'ts'))
+    g_GM = load(['data/', variable, '/', scenarios{contains(scenarios, 'g')}, '_GM.mat']);
+    gt = single(g_GM.time);
+    g_tf = ismember(gt, ref_T_years);
+    no_ghg = var_anomaly - (g_GM.MMM(:,g_tf,:) - mean(g_GM.MMM(:,g_tf,:), 2));
     no_ghg(:,:,3) = var_anomaly(:,:,3);
 end
 
@@ -69,8 +72,10 @@ for j = 1:length(scenarios)
         mmm = A.MMM.MMM; mmm = mmm-mean(mmm,2); r = A.MMM.r; rmsd = A.MMM.e;
         up   = A.historical_bootstrapped.high;
         down = A.historical_bootstrapped.low;
-        r_no_ghg = permute(diag(corr(permute(mmm, [2,3,1]), permute(no_ghg, [2,3,1]))),[2,3,1]);
-        e_no_ghg = mean((mmm-no_ghg).^2,2).^.5./std(no_ghg,0,2);
+        if(strcmp(variable, 'ts'))
+            r_no_ghg = permute(diag(corr(permute(mmm, [2,3,1]), permute(no_ghg, [2,3,1]))),[2,3,1]);
+            e_no_ghg = mean((mmm-no_ghg).^2,2).^.5./std(no_ghg,0,2);
+        end
     end
     
     %which PC do we want?

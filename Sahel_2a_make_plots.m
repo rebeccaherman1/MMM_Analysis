@@ -5,7 +5,7 @@ end_year=2014;
 %should work with TS if I pick a basin now, but no need to make this figure
 %for that.
 
-scenarios = {'cmip6_h'};%v'};%'r'};%'a6'};%'amip'};%'h'};%,"historicalAerosol","historicalNat","historicalGHG"  "historicalMisc", 
+scenarios = {'v'};%'cmip6_h'};%'r'};%'a6'};%'amip'};%'h'};%,"historicalAerosol","historicalNat","historicalGHG"  "historicalMisc", 
 
 global ref_T_years
 
@@ -20,7 +20,7 @@ prcp_anomaly = prcp - mean(prcp); %cru_anomaly = cru - mean(cru);
 prcp_standardized = prcp_anomaly./std(prcp,0,2); %cru_standardized = cru_anomaly/std(cru);
     
 for i = 1:length(scenarios)
-    scenario = char(scenarios(i));
+    scenario = scenarios{i};
     fprintf("Accessing historical scenario %s\n", scenario);
     G = load(['data/', variable, '/',scenario,'_GM.mat']);
     timeframe_m = ismember(single(G.time), ref_T_years);
@@ -65,6 +65,6 @@ for i = 1:length(scenarios)
     legend([p_runs_s(1), p_gm_s(1), p_mmm_s, p_actual_s], 'Runs', 'IMs', 'MMM', 'GPCC', 'Location', 'south');%, p_actual_s_cru]'northwest'); 'CRU', %
 
     if(save)
-        savefig(['figures/', variable, '/cmip6_', scenario, '_Fig1p_', num2str(ref_T_years(1)), '-', num2str(ref_T_years(end))]);
+        savefig(['figures/', variable, '/', scenario, '_Fig1p_', num2str(ref_T_years(1)), '-', num2str(ref_T_years(end))]);
     end
 end

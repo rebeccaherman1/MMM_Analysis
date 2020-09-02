@@ -1,9 +1,10 @@
 %saves weighted mean anomalies. (Why do I say it's anomalies? It's not!)
 tosave = true;
 
-scenarios = {'cmip6_h','cmip6_a', 'cmip6_n', 'cmip6_g'};%'cmip6_h', 'v'};%'r'};%'a6'};%'e'};%'h','a','n','g'};%'amip'};%, 
+realm = 'amip';
+scenarios = {'v'};%'cmip6_h','cmip6_a', 'cmip6_n', 'cmip6_g'};%'cmip6_h', 'v'};%'r'};%'a6'};%'e'};%'h','a','n','g'};%'amip'};%, 
 vert_mean = @(X) mean(X,1); vert_sum = @(X) sum(X,1);
-variables = {'ts'};%, 'pr'};%, 
+variables = {'pr'};%,'ts'};%,  
 
 for v = 1:length(variables)
     var = variables{v};
@@ -36,19 +37,20 @@ for v = 1:length(variables)
             end
         end
 
-        %use for historical simulations; comment out for amip simulations. 
-        piC = load(['data/', var, '/cmip6_piC_all.mat']); piC.runs(piC.runs==0)=NaN; 
-        [~,s2,s3] = size(piC.runs);
-        relevant_pC_models = ismember(piC.model(:,1),h.model(:,1));
-        piC.model = piC.model(relevant_pC_models,:); piC.runs = piC.runs(relevant_pC_models, :,:);
-        [model_names, I, model_groupings] = unique(piC.model(:,2)); nMM = max(model_groupings);
-        MM.piC_MMs = splitapply(vert_mean, piC.runs, model_groupings);
-        MM.piC_models = [piC.model(I,1), model_names]; 
-        MM.piC_trust = sqrt(histc(model_groupings, 1:nMM));
-        if(tosave)  
-            File.piC_MMs(1:nMM, 1:s2,1:s3) = MM.piC_MMs;
-            File.piC_models(1:nMM,1:2) = MM.piC_models; 
-            File.piC_trust (1:nMM,1) = MM.piC_trust;
+        if(~strcmp(realm, 'amip'))
+            piC = load(['data/', var, '/cmip6_piC_all.mat']); piC.runs(piC.runs==0)=NaN; 
+            [~,s2,s3] = size(piC.runs);
+            relevant_pC_models = ismember(piC.model(:,1),h.model(:,1));
+            piC.model = piC.model(relevant_pC_models,:); piC.runs = piC.runs(relevant_pC_models, :,:);
+            [model_names, I, model_groupings] = unique(piC.model(:,2)); nMM = max(model_groupings);
+            MM.piC_MMs = splitapply(vert_mean, piC.runs, model_groupings);
+            MM.piC_models = [piC.model(I,1), model_names]; 
+            MM.piC_trust = sqrt(histc(model_groupings, 1:nMM));
+            if(tosave)  
+                File.piC_MMs(1:nMM, 1:s2,1:s3) = MM.piC_MMs;
+                File.piC_models(1:nMM,1:2) = MM.piC_models; 
+                File.piC_trust (1:nMM,1) = MM.piC_trust;
+            end
         end
 
         [~,s2,s3] = size(MM.MMs);
@@ -70,16 +72,18 @@ for v = 1:length(variables)
             if(isfield(h, 'indices'))
                 File.indices = h.indices;
             end
-        end	  
-        [~,s2,s3] = size(MM.piC_MMs);
-        [GM.piC_models, I, model_groupings] = unique(MM.piC_models(:,1)); nGM = max(model_groupings);
-        weights=splitapply(vert_sum, MM.piC_trust, model_groupings);
-        GM.piC_GMs = splitapply(vert_sum, MM.piC_trust.*MM.piC_MMs./weights(model_groupings), model_groupings);
-        GM.piC_trust = splitapply(@sum, MM.piC_trust, model_groupings)./sqrt(histc(model_groupings, 1:nGM));
-        if(tosave)
-            File.piC_GMs(1:nGM,1:s2, 1:s3) = GM.piC_GMs;
-            File.piC_models(1:nGM,1) = GM.piC_models;
-            File.piC_trust(1:nGM,1) = GM.piC_trust;
+        end
+        if(~strcmp(realm, 'amip'))
+            [~,s2,s3] = size(MM.piC_MMs);
+            [GM.piC_models, I, model_groupings] = unique(MM.piC_models(:,1)); nGM = max(model_groupings);
+            weights=splitapply(vert_sum, MM.piC_trust, model_groupings);
+            GM.piC_GMs = splitapply(vert_sum, MM.piC_trust.*MM.piC_MMs./weights(model_groupings), model_groupings);
+            GM.piC_trust = splitapply(@sum, MM.piC_trust, model_groupings)./sqrt(histc(model_groupings, 1:nGM));
+            if(tosave)
+                File.piC_GMs(1:nGM,1:s2, 1:s3) = GM.piC_GMs;
+                File.piC_models(1:nGM,1) = GM.piC_models;
+                File.piC_trust(1:nGM,1) = GM.piC_trust;
+            end
         end
     end
 end
