@@ -5,7 +5,7 @@ end_year=2014;
 %should work with TS if I pick a basin now, but no need to make this figure
 %for that.
 
-scenarios = {'v'};%'cmip6_h'};%'r'};%'a6'};%'amip'};%'h'};%,"historicalAerosol","historicalNat","historicalGHG"  "historicalMisc", 
+scenarios = {'v'};%'cmip6_r'};%'cmip6_h'};%'r'};%'a6'};%'amip'};%'h'};%,"historicalAerosol","historicalNat","historicalGHG"  "historicalMisc", 
 
 global ref_T_years
 
@@ -24,6 +24,18 @@ for i = 1:length(scenarios)
     fprintf("Accessing historical scenario %s\n", scenario);
     G = load(['data/', variable, '/',scenario,'_GM.mat']);
     timeframe_m = ismember(single(G.time), ref_T_years);
+    switch(scenario)
+        case 'cmip6_r'
+            clr = [0, 127, 0]/255;
+            mdgnd = max(min(clr*2, [1,1,1]), [.4,.4,.6]);
+            bckgnd = max(clr/max(clr), [.9,.8,.8]);
+        case {'cmip6_h', 'h'}
+            clr = 'b'; mdgnd = 'c'; bckgnd = [.8, .8, 1];
+        case 'v'
+            clr = [1,.7,0];
+            mdgnd = max(min(clr*1.5, [1,1,1]), [.4,.6,.4]);
+            bckgnd = max(clr/max(clr), [.9,.8,.8]);
+    end
     
     MMM = G.MMM(:,timeframe_m,:);                
     MMM_anomaly = MMM - mean(MMM,2); 
@@ -44,9 +56,9 @@ for i = 1:length(scenarios)
     set(gca,'FontSize',16); %set(gca,'LineWidth',2);
     title('a. Standardized');
     ylabel("Standardized Precipitation Anomaly");
-    plot(ref_T_years,runs_standardized, '-', 'Color', [.8, .8, 1], 'LineWidth', .1, 'HandleVisibility', 'off');
-    plot(ref_T_years,GM_standardized, 'c-', 'LineWidth', 1, 'HandleVisibility', 'off');
-    plot(ref_T_years,MMM_standardized,'b-', 'LineWidth', 2, 'HandleVisibility', 'off');
+    plot(ref_T_years,runs_standardized, '-', 'Color', bckgnd, 'LineWidth', .1, 'HandleVisibility', 'off');
+    plot(ref_T_years,GM_standardized, 'Color', mdgnd, 'LineStyle', '-', 'LineWidth', 1, 'HandleVisibility', 'off');
+    plot(ref_T_years,MMM_standardized,'Color', clr, 'LineStyle', '-', 'LineWidth', 2, 'HandleVisibility', 'off');
     plot(ref_T_years,prcp_standardized, 'k-', 'LineWidth', 2, 'HandleVisibility', 'off');
     %plot(ref_T_years,cru_standardized, '--', 'Color', .8*[1,1,1], 'HandleVisibility', 'off');
     ylim([-4,4]); xlim([start_year, end_year]);
@@ -55,9 +67,9 @@ for i = 1:length(scenarios)
     set(gca,'FontSize',16); %set(gca,'LineWidth',2);
     title('b. Anomalies');
     ylabel("Precipitation Anomaly (mm/day)"); 
-    p_runs_s = plot(ref_T_years,runs_anomalies, '-', 'Color', [.8, .8, 1], 'LineWidth', .1);
-    p_gm_s = plot(ref_T_years,GM_anomalies, 'c-', 'LineWidth', 1);
-    p_mmm_s = plot(ref_T_years,MMM_anomaly,'b-', 'LineWidth', 2);
+    p_runs_s = plot(ref_T_years,runs_anomalies, '-', 'Color', bckgnd, 'LineWidth', .1);
+    p_gm_s = plot(ref_T_years,GM_anomalies, '-', 'Color', mdgnd, 'LineWidth', 1);
+    p_mmm_s = plot(ref_T_years,MMM_anomaly,'-', 'Color', clr, 'LineWidth', 2);
     p_actual_s = plot(ref_T_years,prcp_anomaly, 'k-', 'LineWidth', 2);
     %p_actual_s_cru = plot(ref_T_years,cru_anomaly, '--', 'Color', .8*[1,1,1]);
     xlim([start_year, end_year]); ylim([-2,2]);
