@@ -86,6 +86,7 @@ for v = 1:length(variables)
         R = matfile(['analysis/', variable, '/cmip6_fast_', num2str(ref_T_years(1)), '-', num2str(ref_T_years(end)), '_N', num2str(N)], 'Writable', true);
         HB.b_means = HBs{1}.b_means - HBs{2}.b_means;
         [HB.low, HB.high] = confidence_interval(HB.b_means);
+        [HB.rs, HB.es, ~] = calc_stats(HB.b_means, 1, o);
         M.MMM = Ms{1}.MMM - Ms{2}.MMM; M.MMM = M.MMM - mean(M.MMM, 2);
         [M.r, M.e, M.mmm] = calc_stats(M.MMM, 1, o);
         R.historical_bootstrapped = HB; R.MMM = M;
