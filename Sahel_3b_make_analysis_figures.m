@@ -4,16 +4,16 @@ tosave = false;
 extended=true;
 
 realm = 'cmip6';
-variable = 'ts';
+variable = 'pr';
 start_year = 1901;
-end_year = 2014;
 
 switch realm
     case 'cmip6'
-        scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g', 'cmip6_r', 'v'}; %add the amip ones too???
-        colors = {'b', 'm', 'r', 'g', [0, 127, 0]/255, [1,.7,0]};
-        names = {'ALL 6', 'AA 6', 'NAT 6', 'GHG 6', 'amip-hist', 'amip-piF'};
+        scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g', 'amip-hist', 'amip-piF'};% The Fast component is SUPER WIDE! 'cmip6_fast'};
+        colors = {'b', 'm', 'r', 'g', [0, 127, 0]/255, [1,.7,0],[126, 47, 142]/255};
+        names = {'ALL 6', 'AA 6', 'NAT 6', 'GHG 6', 'amip-hist', 'amip-piF', 'Implied Fast Component'};
         mdgnd = [0,1,1]; %cyan
+        end_year = 2013;
         %I COULD automate adding cmip5, but I don't feel like it...
         if strcmp(variable, 'ts')
             scenarios = scenarios(1:4); %the others will get automatically shortened. 
@@ -23,17 +23,20 @@ switch realm
         colors = {'b', 'm', 'r', 'g'};
         names = {'ALL', 'AA', 'VA', 'GHG'};
         mdgnd = [0,1,1]; %cyan
+        end_year = 2003;
     case 'r'
         %scenarios = {'cmip6_r', 'v'};
         scenarios = {'cmip6_r'};
         colors = {[0, 127, 0]/255};
         names = {'amip-hist'};
         mdgnd = max(min(colors{1}*2, [1,1,1]), [.4,.4,.6]);
+        end_year = 2014;
     case 'v'
         scenarios = {'v'};
         colors = {[1,.7,0]};
         names = {'amip-piF'};
         mdgnd = max(min(colors{1}*1.5, [1,1,1]), [.4,.6,.4]);
+        end_year = 2014;
     otherwise
         %a6? e? p? amip? (that last one's cmip5)
 end
@@ -95,8 +98,8 @@ if(contains(realm, 'cmip'))
                 aname = ['analysis/', variable, '/', scenario, '_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N)];
                 A = load([aname, '.mat']);
 
-                r = A.MMM.r; r_indiv = A.indiv.r; r_bootstrap = A.historical_bootstrapped.rs; 
-                e = A.MMM.e; e_indiv = A.indiv.e; e_bootstrap = A.historical_bootstrapped.es; 
+                r = A.MMM.r; r_bootstrap = A.historical_bootstrapped.rs; 
+                e = A.MMM.e; e_bootstrap = A.historical_bootstrapped.es; 
 
                 analysis_plot(r, r_bootstrap, color, name, F, 1, 1);
                 analysis_plot(e, e_bootstrap, color, name, F, 1, 2); 
@@ -220,7 +223,7 @@ function[] = analysis_plot(v, bootstrap, color, name, fig_num, sp_x, sp_num)%ind
     idx_v = find(abs(x - v) == min(abs(x - v)));
     if(contains(name, 'piC')||contains(name, 'Control'))
         plot(x, y, ':', 'Color', color, 'LineWidth', 2, 'DisplayName', name); hold on;
-        [low, high] = confidence_interval(bootstrap, .05); 
+        [low, high] = confidence_interval(bootstrap, 1, .05); 
         if(v > median(bootstrap))
             plot(high*[1,1], get(gca, 'ylim'), '--', 'Color', color, 'HandleVisibility', 'off');
         else
