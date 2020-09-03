@@ -6,7 +6,7 @@ clear
 variable = 'pr';
 
 scenarios = {'amip-hist'};%'historical', 'hist-aer', 'hist-nat', 'hist-GHG', 'piControl'};
-short_names = {'cmip6_r'};%'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g', 'cmip6_piC'};
+short_names = {'amip-hist'};%'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g', 'cmip6_piC'};
 
 for i = 1:length(scenarios)
     clear model runs time

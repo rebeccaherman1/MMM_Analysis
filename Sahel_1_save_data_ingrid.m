@@ -35,7 +35,7 @@ SST_indices = {'NA', 'GT'};
 MIPs = {'CMIP5'; 'CMIP6', 'CMIP5'; 'CMIP6', 'AMIP5'; 'AMIP6pF', 'AMIP6'; 'ERA20CM'; 'NOAA'};
 %}
 scenarios = {'VanillaAMIP'};%'PSL_FACTS'};%'historical','historicalAerosol','historicalNat','historicalGHG','piControl'};%'historicalMisc' is volcanoes only.  
-shortcuts = {'v'};%'p'};%'h', 'a', 'n', 'g', 'piC'};%, 'a6'};
+shortcuts = {'amip-piF'};%'p'};%'h', 'a', 'n', 'g', 'piC'};%, 'a6'};
 Generation = 6;
 variable = 'pr';
 
