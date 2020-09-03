@@ -1,24 +1,52 @@
+%DOESN'T WORK FOR TS. 
 mic=false;
-tosave = true;
+tosave = false;
 extended=true;
 
-scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%{'r'};%'v'};%'a6'};%'e'};%'h','a','n','g'};
-single_scenario='v';%'cmip6_h';%'v';%'a6';%'e';%'amip';%'h';%
-variable = 'pr';
-short = false;%true; %TODO I've totally bastardized what this was supposed to mean -- redo later
-single_name = 'Vanilla AMIP';%'ALL 6';%'AMIP+RAD';%'CMIP6-AMIP';%'ERA-20CM';%'ALL';%'AMIP';%
-month0 = 'Jul';%, "Jun", "Sep"];
-month1 = 'Sep';%, "Jul", "Oct"];
+realm = 'cmip6';
+variable = 'ts';
 start_year = 1901;
-end_year = 2013;
+end_year = 2014;
+
+switch realm
+    case 'cmip6'
+        scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g', 'cmip6_r', 'v'}; %add the amip ones too???
+        colors = {'b', 'm', 'r', 'g', [0, 127, 0]/255, [1,.7,0]};
+        names = {'ALL 6', 'AA 6', 'NAT 6', 'GHG 6', 'amip-hist', 'amip-piF'};
+        mdgnd = [0,1,1]; %cyan
+        %I COULD automate adding cmip5, but I don't feel like it...
+        if strcmp(variable, 'ts')
+            scenarios = scenarios(1:4); %the others will get automatically shortened. 
+        end
+    case 'cmip5'
+        scenarios = {'h', 'a', 'n', 'g'};
+        colors = {'b', 'm', 'r', 'g'};
+        names = {'ALL', 'AA', 'VA', 'GHG'};
+        mdgnd = [0,1,1]; %cyan
+    case 'r'
+        %scenarios = {'cmip6_r', 'v'};
+        scenarios = {'cmip6_r'};
+        colors = {[0, 127, 0]/255};
+        names = {'amip-hist'};
+        mdgnd = max(min(colors{1}*2, [1,1,1]), [.4,.4,.6]);
+    case 'v'
+        scenarios = {'v'};
+        colors = {[1,.7,0]};
+        names = {'amip-piF'};
+        mdgnd = max(min(colors{1}*1.5, [1,1,1]), [.4,.6,.4]);
+    otherwise
+        %a6? e? p? amip? (that last one's cmip5)
+end
+single_scenario = scenarios{1};
+
+short = false;%true; %TODO I've totally bastardized what this was supposed to mean -- redo later
+%single_name = 'Vanilla AMIP';%'ALL 6';%'AMIP+RAD';%'CMIP6-AMIP';%'ERA-20CM';%'ALL';%'AMIP';%
 if(short)
     end_year = 2003;
 end
 
 dts = [""];%"detrended",    ,            This is implemented
 fls = ["last"];%, "first"       ,        This is implemented
-colors = 'bmrg';%[blue; magenta; red; green];
-names = {'Vanilla AMIP'};%'ALL 6'}, {'AA 6'}, {'NAT 6'}, {'GHG 6'};%{'AMIP+RAD'};%{'CMIP6-AMIP'}; %{'ERA-20CM'}; %
 
 N = 500;
 
@@ -27,32 +55,37 @@ N = 500;
 %% MAKE SECOND HALF OF FIGURE 1
 
 %TODO add NARI for amip figures.
+%TODO do I want to see fig 1 for SST? or the other figures are enough?
 
 close all;
  %hold off; clf; 
 
-aname = ['analysis/',variable, '/', single_scenario,'_',num2str(start_year), '-', num2str(end_year), '_N', num2str(N)];
-A = load([aname, '.mat']);
-openfig(['figures/', variable, '/', single_scenario, '_Fig1p_', num2str(start_year), '-', num2str(end_year), '.fig']);
-hold on;
+if(strcmp(variable, 'pr'))
+    aname = ['analysis/',variable, '/', single_scenario,'_',num2str(start_year), '-', num2str(end_year), '_N', num2str(N)];
+    A = load([aname, '.mat']);
+    openfig(['figures/', variable, '/', single_scenario, '_Fig1p_', num2str(start_year), '-', num2str(end_year), '.fig']);
+    hold on;
 
-r = A.MMM.r; r_indiv = A.indiv.r; r_bootstrap = A.historical_bootstrapped.rs; r_r = A.indiv_runs.r; 
-e = A.MMM.e; e_indiv = A.indiv.e; e_bootstrap = A.historical_bootstrapped.es; e_r = A.indiv_runs.e;
-%indiv_plot(r_r, 3); hold on; indiv_plot(e_r, 4); hold on;
-indiv_plot(r_indiv, 3); hold on; analysis_plot(r, r_bootstrap, 'b', 'MMM', 1, 2, 3);
-indiv_plot(e_indiv, 4); hold on; analysis_plot(e, e_bootstrap, 'b', 'MMM', 1, 2, 4);
-finishfig(1,2,3,'c. Correlation with 20C Observations', '', 0, 'northwest'); 
-finishfig(1,2,4,'d. RMSE with 20C Observations', 'Fraction of Observed Variance', 1, 'northeast');
-if(tosave)
-    savefig(['figures/', variable, '/', single_scenario, '_Fig1_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.fig']);
+    r = A.MMM.r; r_indiv = A.indiv.r; r_bootstrap = A.historical_bootstrapped.rs; r_r = A.indiv_runs.r; 
+    e = A.MMM.e; e_indiv = A.indiv.e; e_bootstrap = A.historical_bootstrapped.es; e_r = A.indiv_runs.e;
+    %indiv_plot(r_r, 3); hold on; indiv_plot(e_r, 4); hold on;
+    indiv_plot(r_indiv, 3, mdgnd); hold on; analysis_plot(r, r_bootstrap, colors{1}, 'MMM', 1, 2, 3);
+    indiv_plot(e_indiv, 4, mdgnd); hold on; analysis_plot(e, e_bootstrap, colors{1}, 'MMM', 1, 2, 4);
+    finishfig(1,2,3,'c. Correlation with 20C Observations', '', 0, 'northwest'); 
+    finishfig(1,2,4,'d. RMSE with 20C Observations', 'Fraction of Observed Variance', 1, 'northeast');
+    if(tosave)
+        savefig(['figures/', variable, '/', single_scenario, '_Fig1_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.fig']);
+    end
 end
 
 %% MAKE FIGURE 4
-if(false)%~mic)
+%TODO if I want to be able to make these figures for TS, I have to make
+%multiple subplots and add a for loop over I. 
+if(contains(realm, 'cmip'))
     F = 4; figure(F); hold off; clf;
     for j = 1:length(scenarios)
         scenario = scenarios{j};
-        color = colors(j);
+        color = colors{j};
         name = names{j};
         for k = 1:length(fls)
             fl = char(fls(k));
@@ -67,10 +100,12 @@ if(false)%~mic)
 
                 analysis_plot(r, r_bootstrap, color, name, F, 1, 1);
                 analysis_plot(e, e_bootstrap, color, name, F, 1, 2); 
-
-                r_resample = A.piC_resampled_bootstrapped.rs; e_resample = A.piC_resampled_bootstrapped.es; 
-                analysis_plot(r, r_resample, color, 'Pre-Industrial Control', F, 1, 1)
-                analysis_plot(e, e_resample, color, 'Pre-Industrial Control', F, 1, 2)
+                
+                if(isfield(A, 'piC_resampled_bootstrapped')) %UMMMM why does amip-piF have piC??? it shouldn't....
+                    r_resample = A.piC_resampled_bootstrapped.rs; e_resample = A.piC_resampled_bootstrapped.es; 
+                    analysis_plot(r, r_resample, color, 'Pre-Industrial Control', F, 1, 1)
+                    analysis_plot(e, e_resample, color, 'Pre-Industrial Control', F, 1, 2)
+                end
             end
         end
     end
@@ -165,12 +200,10 @@ function[r_nf, a, Bs] = calc_Mic(std_O, means, rs)
     a = rs./Bs; r_nf = (rs-Bs)./(1+Bs.^2-2*rs.*Bs);
 end
 
-function[] = indiv_plot(indiv, sp_num)
-    colorList = get(gca,'ColorOrder');
-    cyan = colorList(6,:);
+function[] = indiv_plot(indiv, sp_num, clr)
     subplot(2,2,sp_num);
     histogram(indiv, 'Normalization', 'pdf',...
-        'FaceColor', cyan,...
+        'FaceColor', clr,...
         'DisplayName', 'IMs',...
         ...%'BinWidth', .05);
         'NumBins', 7);
@@ -182,19 +215,19 @@ function[] = analysis_plot(v, bootstrap, color, name, fig_num, sp_x, sp_num)%ind
     h = histfit(bootstrap, [], 'kernel');
     %TODO I won't always want this number of subplots...
     figure(fig_num);
-    if(fig_num ~= 21); subplot(sp_x,2,sp_num); end %oyoyoy
+    if(fig_num ~= 21); subplot(sp_x,2,sp_num); end %oyoyoy When TH do I put 21?
     lineplot = h(2); x = lineplot.XData; y = lineplot.YData; y = y / ((x(2) - x(1)) * sum(y));
     idx_v = find(abs(x - v) == min(abs(x - v)));
     if(contains(name, 'piC')||contains(name, 'Control'))
-        plot(x, y, [color, ':'], 'LineWidth', 2, 'DisplayName', name); hold on;
+        plot(x, y, ':', 'Color', color, 'LineWidth', 2, 'DisplayName', name); hold on;
         [low, high] = confidence_interval(bootstrap, .05); 
         if(v > median(bootstrap))
-            plot(high*[1,1], get(gca, 'ylim'), [color, '--'], 'HandleVisibility', 'off');
+            plot(high*[1,1], get(gca, 'ylim'), '--', 'Color', color, 'HandleVisibility', 'off');
         else
-            plot(low*[1,1], get(gca, 'ylim'), [color, '--'], 'HandleVisibility', 'off');
+            plot(low*[1,1], get(gca, 'ylim'), '--', 'Color', color, 'HandleVisibility', 'off');
         end
     else
-        plot(x, y, [color, '-*'], 'MarkerIndices', [idx_v], 'LineWidth', 2, 'DisplayName', [name, ' = ', num2str(v, '%5.2f')]);
+        plot(x, y, '-*', 'Color', color, 'MarkerIndices', idx_v, 'LineWidth', 2, 'DisplayName', [name, ' = ', num2str(v, '%5.2f')]);
     end
     hold on;
 end

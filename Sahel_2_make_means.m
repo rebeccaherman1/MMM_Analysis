@@ -2,7 +2,7 @@
 tosave = true;
 
 realm = 'amip';
-scenarios = {'cmip6_r'};%'cmip6_h','cmip6_a', 'cmip6_n', 'cmip6_g'};%'cmip6_h', 'v'};%'r'};%'a6'};%'e'};%'h','a','n','g'};%'amip'};%, 
+scenarios = {'v'};%'cmip6_h','cmip6_a', 'cmip6_n', 'cmip6_g'};%'cmip6_h', 'v'};%'r'};%'a6'};%'e'};%'h','a','n','g'};%'amip'};%, 
 vert_mean = @(X) mean(X,1); vert_sum = @(X) sum(X,1);
 variables = {'pr'};%,'ts'};%,  
 

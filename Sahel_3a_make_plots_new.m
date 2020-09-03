@@ -4,6 +4,7 @@ start_year = 1901;
 end_year = 2013;
 variable = 'pr';
 realm = 'amip';%'cmip6';
+%TODO add NARI for amip figures.
 
 switch realm
     case 'cmip6'
