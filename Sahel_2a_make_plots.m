@@ -5,7 +5,8 @@ end_year=2014;
 %should work with TS if I pick a basin now, but no need to make this figure
 %for that.
 
-scenarios = {'v'};%'cmip6_r'};%'cmip6_h'};%'r'};%'a6'};%'amip'};%'h'};%,"historicalAerosol","historicalNat","historicalGHG"  "historicalMisc", 
+%TODO put colors other than blue for the different scenarios!
+scenarios = {'amip-piF', 'amip-hist', 'cmip6_h', 'cmip6'};
 
 global ref_T_years
 
