@@ -1,10 +1,21 @@
 %saves weighted mean anomalies. (Why do I say it's anomalies? It's not!)
 tosave = true;
 
-realm = 'amip';
-scenarios = {'v'};%'cmip6_h','cmip6_a', 'cmip6_n', 'cmip6_g'};%'cmip6_h', 'v'};%'r'};%'a6'};%'e'};%'h','a','n','g'};%'amip'};%, 
-vert_mean = @(X) mean(X,1); vert_sum = @(X) sum(X,1);
 variables = {'pr'};%,'ts'};%,  
+realm = 'amip';
+switch realm
+    case 'amip'
+        scenarios = {'amip-piF', 'amip-hist'};
+    case 'cmip5'
+        scenarios = {'h', 'a', 'n', 'g'};
+        piCs = 'piC';
+    case 'cmip6'
+        scenarios = {'cmip6_h','cmip6_a', 'cmip6_n', 'cmip6_g'};
+        piCs = 'cmip6_piC';
+    otherwise
+        fprintf("what do you want?")
+end
+vert_mean = @(X) mean(X,1); vert_sum = @(X) sum(X,1);
 
 for v = 1:length(variables)
     var = variables{v};
@@ -38,7 +49,7 @@ for v = 1:length(variables)
         end
 
         if(~strcmp(realm, 'amip'))
-            piC = load(['data/', var, '/cmip6_piC_all.mat']); piC.runs(piC.runs==0)=NaN; 
+            piC = load(['data/', var, '/', piCs, '_all.mat']); piC.runs(piC.runs==0)=NaN; 
             [~,s2,s3] = size(piC.runs);
             relevant_pC_models = ismember(piC.model(:,1),h.model(:,1));
             piC.model = piC.model(relevant_pC_models,:); piC.runs = piC.runs(relevant_pC_models, :,:);
