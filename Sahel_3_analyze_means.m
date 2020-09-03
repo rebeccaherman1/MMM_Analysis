@@ -3,14 +3,26 @@ N = 500;
 
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
-scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%'r'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
-variables = {'ts'};%'pr', 
+variables = {'pr'};%'ts'};%, 
+realm = 'amip';
 
 global start_year end_year ref_T_years
 start_year = 1901;
-end_year = 2014; 
+switch realm
+    case 'cmip5'
+        scenarios = {'h', 'a', 'n', 'g'};
+        end_year = 2003;
+    case 'cmip6'
+        scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};
+        end_year = 2014; 
+    case 'amip'
+        scenarios = {'amip-hist', 'amip-piF'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
+        end_year = 2014; 
+end
 
 mkdir('analysis')
+HBs = cell(length(scenarios), 1);
+Ms = cell(length(scenarios), 1);
 
 for v = 1:length(variables)
     variable = variables{v};
@@ -18,7 +30,7 @@ for v = 1:length(variables)
     obs = load(['data/', variable, '/observations.mat']);
     obs_anomaly = obs.var-mean(obs.var);
     timeframe_obs = (obs.T >= start_year & obs.T <= end_year);
-    ref_T_years = obs.T(timeframe_obs);
+    ref_T_years = obs.T(timeframe_obs); 
     o = obs_anomaly(:,timeframe_obs,:);
     for j = 1:length(scenarios)
         scenario = scenarios{j};
@@ -57,15 +69,25 @@ for v = 1:length(variables)
 
         %TODO could alternately use ISFIELD and then I wouldn't have to
         %define the realm at the top...
-        if(~any([strcmp(scenario, 'amip-hist'), strcmp(scenario, 'v')]))
+        if(~strcmp(realm, 'amip'))
             [Analysis.piC_resampled_bootstrapped, skip_models] = sample_model(N, o, timeframe_obs, h.piC_GMs, h.piC_trust, dt);
             fprintf('skipping piC simulations which are too short:')
             h.piC_models(skip_models,:)
+        else
+            HBs{j} = Analysis.historical_bootstrapped;
+            Ms{j} = Analysis.MMM;
         end
         
         if(isfield(h, 'indices'))
             Analysis.indices = h.indices;
         end
+    end
+    if(strcmp(realm, 'amip'))
+        R = matfile(['analysis/', variable, '/cmip6_fast_', num2str(ref_T_years(1)), '-', num2str(ref_T_years(end)), '_N', num2str(N)], 'Writable', true);
+        HB.b_means = HBs{1}.b_means - HBs{2}.b_means;
+        [HB.low, HB.high] = confidence_interval(HB.b_means);
+        M.MMM = Ms{1}.MMM - Ms{2}.MMM; M.MMM = M.MMM - mean(M.MMM, 2);
+        R.historical_bootstrapped = HB; R.MMM = M;
     end
 end
 
