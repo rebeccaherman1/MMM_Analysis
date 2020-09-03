@@ -87,6 +87,7 @@ for v = 1:length(variables)
         HB.b_means = HBs{1}.b_means - HBs{2}.b_means;
         [HB.low, HB.high] = confidence_interval(HB.b_means);
         M.MMM = Ms{1}.MMM - Ms{2}.MMM; M.MMM = M.MMM - mean(M.MMM, 2);
+        [M.r, M.e, M.mmm] = calc_stats(M.MMM, 1, o);
         R.historical_bootstrapped = HB; R.MMM = M;
     end
 end
