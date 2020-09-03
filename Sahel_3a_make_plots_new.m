@@ -1,5 +1,5 @@
 historical = true;
-tosave = true;
+tosave = false;
 start_year = 1901;
 end_year = 2013;
 variable = 'pr';
@@ -20,11 +20,10 @@ switch realm
         scenario_colors = 'bmrgc';
         long_colors = {'blue', 'magenta', 'red', 'green', 'cyan'};
     case 'amip'
-        scenarios = {'cmip6_r', 'v'}; %TODO: add other amip scenarios...
-        scenario_names = {'amip-hist', 'amip-piForcing'};
+        scenarios = {'amip-hist', 'amip-piF', 'cmip6_fast'}; %TODO: add other amip scenarios...
+        scenario_names = {'amip-hist', 'amip-piForcing','Implied Fast Component'};
         pC = false;
-        scenario_colors = {[0, 127, 0]/255, [1,.7,0]};
-        long_colors = {'green', 'yellow'};
+        scenario_colors = {[0, 127, 0]/255, [1,.7,0],[126, 47, 142]/255};
     otherwise
         fprintf('undefined realm!')
 end
@@ -60,11 +59,13 @@ N_indiv = nan(1,length(scenarios));
 for j = 1:length(scenarios)
     scenario = char(scenarios(j));
     fprintf("Accessing historical scenario %s\n", scenario);
-    GM = load(['data/', variable, '/', scenario, '_GM.mat']);
     A = load(['Analysis/', variable, '/', scenario, '_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.mat']);
     As{j} = A;
-    N_indiv(j) = length(GM.models);
-    clear GM;
+    if(isfield(A, 'indiv'))
+        N_indiv(j) = length(A.indiv.models);
+    else
+        N_indiv(j) = 0;
+    end
     [~,~,I] = size(A.MMM.MMM);
 
     if(pC)
@@ -96,7 +97,7 @@ for j = 1:length(scenarios)
                     yn = length(scenarios)^.5; xn = yn;
                     subplot(yn, xn, j); 
                 case 'amip'
-                    yn = length(scenarios)+1; xn = 1;
+                    yn = length(scenarios); xn = 1;
                     subplot(yn, xn, j)
                 otherwise
                     yn = 1; xn = 1;
@@ -154,24 +155,13 @@ for j = 1:length(scenarios)
 end
 
 if(strcmp(realm, 'amip'))
-    R.diffs = As{1}.historical_bootstrapped.b_means - As{2}.historical_bootstrapped.b_means;
-    %R.MMM = mean(R.diffs, 1);
-    R.MMM = As{1}.MMM.MMM - As{2}.MMM.MMM; 
-    R.MMM = R.MMM - mean(R.MMM, 2);
-    [R.low, R.high] = confidence_interval(R.diffs);
-    subplot(yn, xn, yn); hold on; set(gca,'FontSize',15); 
-    plot(ref_T_years, zeros(size(ref_T_years)), 'k--'); 
-    r_stds = fill([ref_T_years';flipud(ref_T_years')],[R.low(:,:,i)';flipud(R.high(:,:,i)')],[191, 0, 191]/255, 'FaceAlpha', .3 ,'linestyle','none');
-    r_stds.HandleVisibility = 'off';
-    p_mmm = plot(ref_T_years,R.MMM(:,:,i),'-', 'Color', [126, 47, 142]/255);%, 'LineWidth', 2);%, 'DisplayName', );
-    xlim([start_year, end_year]); ylim([-1,1])
     n = load('data/pr/cmip6_n_GM.mat');
-    mmm = n.MMM - mean(n.MMM);
-    plot(ref_T_years, mmm(ismember(single(n.time(1,:)), ref_T_years)), 'r-')
-    title('Implied Fast Component', 'Color', [126, 47, 142]/255)
-
+    mmm = n.MMM(ismember(single(n.time(1,:)), ref_T_years));
+    mmm = mmm - mean(mmm);
+    plot(ref_T_years, mmm, 'r-')
+    corr(mmm', A.MMM.MMM')
 end
-
+%}
 if(tosave)
     savefig(2, ['figures/', variable, '/', realm, '_Fig2_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N)]);
     saveas(2, ['figures/', variable, '/', realm, '_Fig2_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N)], 'png');
