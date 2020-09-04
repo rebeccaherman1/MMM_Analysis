@@ -24,7 +24,7 @@ switch realm
     case 'cmip5'
         scenarios = {'h', 'a', 'n', 'g'};
         colors = {'b', 'm', 'r', 'g'};
-        names = {'CMIP5 ALL', 'CMIP5 AA', 'CMIP5 NAT', 'CMIP5 GHG'};
+        names = {'ALL', 'AA', 'VA', 'GHG'};
         end_year = 2003;
     case 'amip'
         scenarios = {'amip-hist','amip-piF', 'cmip6_fast'};
