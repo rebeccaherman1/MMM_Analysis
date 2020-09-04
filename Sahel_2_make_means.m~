@@ -56,10 +56,7 @@ for v = 1:length(variables)
             T_piC = table(piC.model, piC.runs, piC.time, piC_lengths, 'VariableNames', {'model', 'runs', 'time', 'length'});
             
             relevant_pC_models = ismember(T_piC.model(:,1),h.model(:,1));
-            T_piC = T_piC(relevant_pC_models, :); %TODO this table might not work with my ts code... 
-            %BUT I could just put the different indices as separate entries
-            %in the table! Wouldn't that be so much better?! And maybe I
-            %could do pr and ts at the same time...
+            T_piC = T_piC(relevant_pC_models, :, :);
             %before I do this! let me pretend I have more runs!!!!!
             [Lia, Locb] = ismember(T_piC.model(:,2), model_names);
             Locb2 = Locb; Locb2(~Lia)=1; %momentarily lose the 0s so that matlab doesn't crash
@@ -68,9 +65,7 @@ for v = 1:length(variables)
             offsets = arrayfun(@randi, T_piC.length);
             %now I will scramble them a bit!
             for row = 1:size(T_piC.model, 1)
-                if(offsets(row)>1)
-                    T_piC.runs(row, 1:T_piC.length(row)) = [T_piC.runs(row, offsets(row):T_piC.length(row)), T_piC.runs(row, 1:offsets(row)-1)];
-                end
+                T_piC.runs(row, 1:piC_lengths(row)) = [T_piC.runs(row, offsets(row):piC_lengths(row)), T_piC.runs(row, 1:offsets(row)-1)];
             end            
             [model_names, I, model_groupings] = unique(T_piC.model(:,2)); nMM = max(model_groupings);
             MM.piC_MMs = splitapply(vert_mean, T_piC.runs, model_groupings);

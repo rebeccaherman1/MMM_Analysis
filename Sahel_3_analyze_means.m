@@ -4,7 +4,7 @@ N = 500;
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
 variables = {'pr'};%'ts'};%, 
-realm = 'amip';
+realm = 'cmip6';
 
 global start_year end_year ref_T_years
 start_year = 1901;
