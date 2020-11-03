@@ -1,52 +1,58 @@
-%DOESN'T WORK FOR TS. 
+%For TS just looks at NARI.
 mic=false;
 tosave = false;
-extended=true;
 
 realm = 'cmip6';
 variable = 'pr';
 start_year = 1901;
+short = true;
 
 switch realm
     case 'cmip6'
         scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g', 'amip-hist', 'amip-piF'};% The Fast component is SUPER WIDE! 'cmip6_fast'};
-        colors = {'b', 'm', 'r', 'g', [0, 127, 0]/255, [1,.7,0],[126, 47, 142]/255};
+        colors = {'b', 'm', [0.60,0.20,0.00], 'g', [0, 127, 0]/255, [1,.7,0],[126, 47, 142]/255};
+        styles = {'-', '-', '-', '-', '-', '-'};
         names = {'ALL 6', 'AA 6', 'NAT 6', 'GHG 6', 'amip-hist', 'amip-piF', 'Implied Fast Component'};
         mdgnd = [0,1,1]; %cyan
         end_year = 2013;
         %I COULD automate adding cmip5, but I don't feel like it...
         if strcmp(variable, 'ts')
             scenarios = scenarios(1:4); %the others will get automatically shortened. 
+            end_year = 2014;
+        end
+        if(short)
+            scenarios = [scenarios(1:4), {'h', 'a', 'n', 'g'}];
+            colors = [colors(1:4), {[0.00,0.45,0.74], [0.75,0.00,0.75], 'r', [0.47,0.67,0.19]}];
+            styles = [styles(1:4), {'-.','-.','-.','-.'}];
+            names = [names(1:4), {'ALL', 'AA', 'VA', 'GHG'}];
+            end_year = 2003;
         end
     case 'cmip5'
         scenarios = {'h', 'a', 'n', 'g'};
-        colors = {'b', 'm', 'r', 'g'};
+        colors = {'b', 'm', [0.60,0.20,0.00], 'g'};
+        styles = {'-', '-', '-', '-'};
         names = {'ALL', 'AA', 'VA', 'GHG'};
         mdgnd = [0,1,1]; %cyan
         end_year = 2003;
     case 'r'
         %scenarios = {'cmip6_r', 'v'};
-        scenarios = {'cmip6_r'};
+        scenarios = {'amip-hist'};
+        styles = {'-'};
         colors = {[0, 127, 0]/255};
         names = {'amip-hist'};
         mdgnd = max(min(colors{1}*2, [1,1,1]), [.4,.4,.6]);
-        end_year = 2014;
+        end_year = 2013;
     case 'v'
-        scenarios = {'v'};
+        scenarios = {'amip-piF'};
         colors = {[1,.7,0]};
+        styles = {'-'};
         names = {'amip-piF'};
         mdgnd = max(min(colors{1}*1.5, [1,1,1]), [.4,.6,.4]);
-        end_year = 2014;
+        end_year = 2013;
     otherwise
         %a6? e? p? amip? (that last one's cmip5)
 end
 single_scenario = scenarios{1};
-
-short = false;%true; %TODO I've totally bastardized what this was supposed to mean -- redo later
-%single_name = 'Vanilla AMIP';%'ALL 6';%'AMIP+RAD';%'CMIP6-AMIP';%'ERA-20CM';%'ALL';%'AMIP';%
-if(short)
-    end_year = 2003;
-end
 
 dts = [""];%"detrended",    ,            This is implemented
 fls = ["last"];%, "first"       ,        This is implemented
@@ -63,7 +69,7 @@ N = 500;
 close all;
  %hold off; clf; 
 
-if(strcmp(variable, 'pr'))
+if(strcmp(variable, 'pr') && ~short)
     aname = ['analysis/',variable, '/', single_scenario,'_',num2str(start_year), '-', num2str(end_year), '_N', num2str(N)];
     A = load([aname, '.mat']);
     openfig(['figures/', variable, '/', single_scenario, '_Fig1p_', num2str(start_year), '-', num2str(end_year), '.fig']);
@@ -72,23 +78,27 @@ if(strcmp(variable, 'pr'))
     r = A.MMM.r; r_indiv = A.indiv.r; r_bootstrap = A.historical_bootstrapped.rs; r_r = A.indiv_runs.r; 
     e = A.MMM.e; e_indiv = A.indiv.e; e_bootstrap = A.historical_bootstrapped.es; e_r = A.indiv_runs.e;
     %indiv_plot(r_r, 3); hold on; indiv_plot(e_r, 4); hold on;
-    indiv_plot(r_indiv, 3, mdgnd); hold on; analysis_plot(r, r_bootstrap, colors{1}, 'MMM', 1, 2, 3);
-    indiv_plot(e_indiv, 4, mdgnd); hold on; analysis_plot(e, e_bootstrap, colors{1}, 'MMM', 1, 2, 4);
+    indiv_plot(r_indiv, 3, mdgnd); hold on; analysis_plot(r, r_bootstrap, colors{1}, styles{1}, 'MMM', 1, 2, 3);
+    indiv_plot(e_indiv, 4, mdgnd); hold on; analysis_plot(e, e_bootstrap, colors{1}, styles{1}, 'MMM', 1, 2, 4);
     finishfig(1,2,3,'c. Correlation with 20C Observations', '', 0, 'northwest'); 
     finishfig(1,2,4,'d. RMSE with 20C Observations', 'Fraction of Observed Variance', 1, 'northeast');
     if(tosave)
         savefig(['figures/', variable, '/', single_scenario, '_Fig1_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.fig']);
+        saveas(1, ['figures/', variable, '/', single_scenario, '_Fig1_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N)], 'png');
     end
 end
 
 %% MAKE FIGURE 4
 %TODO if I want to be able to make these figures for TS, I have to make
 %multiple subplots and add a for loop over I. 
+
+%Just NARI.
 if(contains(realm, 'cmip'))
     F = 4; figure(F); hold off; clf;
     for j = 1:length(scenarios)
         scenario = scenarios{j};
         color = colors{j};
+        style = styles{j};
         name = names{j};
         for k = 1:length(fls)
             fl = char(fls(k));
@@ -100,14 +110,22 @@ if(contains(realm, 'cmip'))
 
                 r = A.MMM.r; r_bootstrap = A.historical_bootstrapped.rs; 
                 e = A.MMM.e; e_bootstrap = A.historical_bootstrapped.es; 
+                
+                if(strcmp(variable, 'ts'))
+                    r = r(:,:,3); r_bootstrap = r_bootstrap(:,:,3);
+                    e = e(:,:,3); e_bootstrap = e_bootstrap(:,:,3);
+                end
 
-                analysis_plot(r, r_bootstrap, color, name, F, 1, 1);
-                analysis_plot(e, e_bootstrap, color, name, F, 1, 2); 
+                analysis_plot(r, r_bootstrap, color, style, name, F, 1, 1);
+                analysis_plot(e, e_bootstrap, color, style, name, F, 1, 2); 
                 
                 if(isfield(A, 'piC_resampled_bootstrapped')) %UMMMM why does amip-piF have piC??? it shouldn't....
                     r_resample = A.piC_resampled_bootstrapped.rs; e_resample = A.piC_resampled_bootstrapped.es; 
-                    analysis_plot(r, r_resample, color, 'Pre-Industrial Control', F, 1, 1)
-                    analysis_plot(e, e_resample, color, 'Pre-Industrial Control', F, 1, 2)
+                    if(strcmp(variable, 'ts'))
+                        r_resample = r_resample(:,:,3); e_resample = e_resample(:,:,3);
+                    end
+                    analysis_plot(r, r_resample, color, style, 'Pre-Industrial Control', F, 1, 1)
+                    analysis_plot(e, e_resample, color, style, 'Pre-Industrial Control', F, 1, 2)
                 end
             end
         end
@@ -115,10 +133,9 @@ if(contains(realm, 'cmip'))
     finishfig(F,1,1,'a. Correlation with 20C Observations', '', 0); 
     finishfig(F,1,2,'b. Scaled RMSE with 20C Observations', '', 1);
     if(tosave)
-        savefig(['figures/', variable, '/', single_scenario, '_Fig4', '_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.fig']);
+        savefig(['figures/', variable, '/', realm, '_Fig4', '_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.fig']);
     end
 end
-
 
 %% MAKE MIC's figures
 %{
@@ -213,7 +230,7 @@ function[] = indiv_plot(indiv, sp_num, clr)
     hold on;
 end
 
-function[] = analysis_plot(v, bootstrap, color, name, fig_num, sp_x, sp_num)%indiv)
+function[] = analysis_plot(v, bootstrap, color, style, name, fig_num, sp_x, sp_num)%indiv)
     figure(10)
     h = histfit(bootstrap, [], 'kernel');
     %TODO I won't always want this number of subplots...
@@ -230,7 +247,7 @@ function[] = analysis_plot(v, bootstrap, color, name, fig_num, sp_x, sp_num)%ind
             plot(low*[1,1], get(gca, 'ylim'), '--', 'Color', color, 'HandleVisibility', 'off');
         end
     else
-        plot(x, y, '-*', 'Color', color, 'MarkerIndices', idx_v, 'LineWidth', 2, 'DisplayName', [name, ' = ', num2str(v, '%5.2f')]);
+        plot(x, y, [style, '*'], 'Color', color, 'MarkerIndices', idx_v, 'LineWidth', 2, 'DisplayName', [name, ' = ', num2str(v, '%5.2f')]);
     end
     hold on;
 end
