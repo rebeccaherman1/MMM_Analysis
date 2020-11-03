@@ -1,5 +1,7 @@
 scenarios = {'amip-hist'};%'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};
-remove_models = {'CIESM', 'MCM-UA-1-0'};
+remove_models = {... prcp values 3 orders of magnitude too...
+    'CIESM',... small, in piC and historical simulations. 
+    'MCM-UA-1-0'}; %large, in piC simlations.
 for s = 1:length(scenarios)
     fname = ['data/pr/', scenarios{s}, '_all.mat'];
     h = load(fname); sz = size(h.runs);
