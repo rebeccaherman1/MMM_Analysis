@@ -1,18 +1,24 @@
-%saves weighted mean anomalies. (Why do I say it's anomalies? It's not!)
-tosave = true;
-Max_Length = 114; %hardcoded here oops
+%saves weighted MMs (model means) and IMs (institution means) as 
+%"<scenario>_XM.mat". Weights to use for the following tier are stored in 
+%TRUST.
 
-variables = {'pr'};%,'ts'};%,  
-realm = 'cmip6';
+%TODO: if I remove the year constraints in 1_save_data, my year checking
+%here might not work...
+tosave = true;
+
+realm = 'cmip5';
 switch realm
     case 'amip'
         scenarios = {'amip-piF', 'amip-hist'};
+        variables = {'pr'};
     case 'cmip5'
         scenarios = {'h', 'a', 'n', 'g'};
         piCs = 'piC';
+        variables = {'pr', 'ts'}; 
     case 'cmip6'
         scenarios = {'cmip6_h','cmip6_a', 'cmip6_n', 'cmip6_g'};
         piCs = 'cmip6_piC';
+        variables = {'pr', 'ts'};
     otherwise
         fprintf("what do you want?")
 end
@@ -26,7 +32,7 @@ for v = 1:length(variables)
         h = load(['data/', var, '/', scenario, '_all.mat']); 
         [~,s2,s3] = size(h.runs);
         [model_names, I, model_groupings] = unique(h.model(:,2)); nMM = max(model_groupings);
-        num_runs = histc(model_groupings(~any(any(isnan(h.runs),2),3)), 1:nMM);
+        num_runs = histcounts(model_groupings(~any(any(isnan(h.runs),2),3)), 1:nMM);
         MM.MMs = splitapply(vert_mean, h.runs, model_groupings);
         MM.models = [h.model(I,1), model_names];
         MM.trust = sqrt(num_runs);
@@ -56,10 +62,7 @@ for v = 1:length(variables)
             T_piC = table(piC.model, piC.runs, piC.time, piC_lengths, 'VariableNames', {'model', 'runs', 'time', 'length'});
             
             relevant_pC_models = ismember(T_piC.model(:,1),h.model(:,1));
-            T_piC = T_piC(relevant_pC_models, :); %TODO this table might not work with my ts code... 
-            %BUT I could just put the different indices as separate entries
-            %in the table! Wouldn't that be so much better?! And maybe I
-            %could do pr and ts at the same time...
+            T_piC = T_piC(relevant_pC_models, :); 
             %before I do this! let me pretend I have more runs!!!!!
             [Lia, Locb] = ismember(T_piC.model(:,2), model_names);
             Locb2 = Locb; Locb2(~Lia)=1; %momentarily lose the 0s so that matlab doesn't crash
@@ -75,7 +78,7 @@ for v = 1:length(variables)
             [model_names, I, model_groupings] = unique(T_piC.model(:,2)); nMM = max(model_groupings);
             MM.piC_MMs = splitapply(vert_mean, T_piC.runs, model_groupings);
             MM.piC_models = [T_piC.model(I,1), model_names]; 
-            MM.piC_trust = sqrt(histc(model_groupings, 1:nMM));
+            MM.piC_trust = sqrt(histcounts(model_groupings, 1:nMM));
             if(tosave)  
                 File.piC_MMs(1:nMM, 1:s2,1:s3) = MM.piC_MMs;
                 File.piC_models(1:nMM,1:2) = MM.piC_models; 
@@ -87,8 +90,7 @@ for v = 1:length(variables)
         [GM.models, ~, model_groupings] = unique(MM.models(:,1)); nGM = max(model_groupings);
         weights=splitapply(vert_sum, MM.trust, model_groupings);
         GM.GMs = splitapply(vert_sum, MM.trust.*MM.MMs./weights(model_groupings), model_groupings);
-        GM.trust = splitapply(@sum, MM.trust, model_groupings)./sqrt(histc(model_groupings, 1:nGM));
-        GM.MMM = mean(GM.trust.*GM.GMs/mean(GM.trust), 1);
+        GM.trust = splitapply(@sum, MM.trust, model_groupings)./sqrt(histcounts(model_groupings, 1:nGM));
         if(tosave)
             fname = ['data/',var, '/', scenario, '_GM'];
             delete([fname, '.mat']);
@@ -108,7 +110,7 @@ for v = 1:length(variables)
             [GM.piC_models, I, model_groupings] = unique(MM.piC_models(:,1)); nGM = max(model_groupings);
             weights=splitapply(vert_sum, MM.piC_trust, model_groupings);
             GM.piC_GMs = splitapply(vert_sum, MM.piC_trust.*MM.piC_MMs./weights(model_groupings), model_groupings);
-            GM.piC_trust = splitapply(@sum, MM.piC_trust, model_groupings)./sqrt(histc(model_groupings, 1:nGM));
+            GM.piC_trust = splitapply(@sum, MM.piC_trust, model_groupings)./sqrt(histcounts(model_groupings, 1:nGM));
             if(tosave)
                 File.piC_GMs(1:nGM,1:s2, 1:s3) = GM.piC_GMs;
                 File.piC_models(1:nGM,1) = GM.piC_models;
