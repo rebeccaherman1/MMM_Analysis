@@ -3,8 +3,8 @@ N = 500;
 
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
-variables = {'pr'};%'ts'};%, 
-realm = 'cmip6';
+realm = 'amip';
+short = false;
 
 global start_year end_year ref_T_years
 start_year = 1901;
@@ -12,12 +12,18 @@ switch realm
     case 'cmip5'
         scenarios = {'h', 'a', 'n', 'g'};
         end_year = 2003;
+        variables = {'pr', 'ts'};
     case 'cmip6'
         scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};
         end_year = 2014; 
+        variables = {'pr', 'ts'};
     case 'amip'
         scenarios = {'amip-hist', 'amip-piF'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
         end_year = 2014; 
+        variables = {'pr'};
+end
+if(short)
+    end_year = 2003;
 end
 
 mkdir('analysis')
@@ -26,6 +32,14 @@ Ms = cell(length(scenarios), 1);
 
 for v = 1:length(variables)
     variable = variables{v};
+    s2 = load(['data/', variable, '/', scenarios{2}, '_GM.mat']);
+    if(~strcmp(realm, 'amip'))
+        common_models = s2.piC_models; %AA
+    else
+        s1 = load(['data/', variable, '/', scenarios{1}, '_GM.mat']);
+        common_models = intersect(s1.models, s2.models);
+    end
+    
     mkdir(['analysis/', variable])
     obs = load(['data/', variable, '/observations.mat']);
     obs_anomaly = obs.var-mean(obs.var);
@@ -39,7 +53,47 @@ for v = 1:length(variables)
         h = load(['data/', variable, '/', scenario,'_GM.mat']);
         fname = ['analysis/', variable, '/', scenario, '_', num2str(ref_T_years(1)), '-', num2str(ref_T_years(end)), '_N', num2str(N)];
         hall = load(['data/', variable, '/', scenario, '_all.mat']);
-        num_models = length(h.models); %num_pC_models = length(h.piC_models); 
+        if(isfield(h, 'indices'))
+            h_indices = h.indices;
+            h = rmfield(h, 'indices');
+            hall = rmfield(hall, 'indices');
+        end
+        if(isfield(h, 'piC_GMs'))
+            h_T_piC = struct2table(rmfield(h, {'MMM', 'GMs', 'models', 'trust', 'time'}));
+            h = rmfield(h, {'piC_GMs', 'piC_models', 'piC_trust'});
+        end
+        %create table for h
+        h_T = struct2table(rmfield(h, {'MMM', 'time'}));
+        if(exist('h_T_piC', 'var'))
+            %doing it this way disgards models which don't provide a piC
+            %simulation. These will be disregarded anyway because common
+            %models is defined by AA piC simulations.
+            h_new = join(h_T_piC, h_T, 'LeftKeys', 'piC_models', 'RightKeys', 'models');
+            h_new.models = h_new.piC_models;
+        else
+            h_new = h_T;
+        end
+        if(size(h.time, 1) < length(h.models))
+            h.time = repmat(h.time, length(h_new.models), 1);
+        end
+        h_new.time = h.time;
+        
+        %create table for h_all
+        hall = struct2table(hall);
+        
+        %select relevant models
+        h_new = h_new(ismember(h_new.models, common_models),:);
+        hall = hall(ismember(hall.model(:,1), common_models),:);
+        if(exist('h_indices', 'var'))
+            h_new = table2struct(h_new, 'ToScalar', true);
+            hall = table2struct(hall, 'ToScalar', true);
+            h_new.indices = h_indices;
+            hall.indices = h_indices;
+            clear h_indices
+        end
+        h = h_new;
+            
+        %num_models = length(h.models); %num_pC_models = length(h.piC_models); 
         Analysis = matfile(fname, 'Writable', true);
 
         T_m = ismember(single(h.time(1,:)),ref_T_years);
@@ -65,12 +119,12 @@ for v = 1:length(variables)
 
         Analysis.MMM = MMM; Analysis.indiv = indiv; Analysis.sanity = sanity; Analysis.N = N; Analysis.indiv_runs = indiv_runs;
 
-        Analysis.historical_bootstrapped = bootstrap_model(N, o, timeframe_obs, hm, trust);
+        Analysis.historical_bootstrapped = bootstrap_model(N, o, hm, trust);
 
         %TODO could alternately use ISFIELD and then I wouldn't have to
         %define the realm at the top...
         if(~strcmp(realm, 'amip'))
-            [Analysis.piC_resampled_bootstrapped, skip_models] = sample_model(N, o, timeframe_obs, h.piC_GMs, h.piC_trust, dt);
+            [Analysis.piC_resampled_bootstrapped, skip_models] = sample_model(N, o, h.piC_GMs, h.piC_trust, dt);
             fprintf('skipping piC simulations which are too short:')
             h.piC_models(skip_models,:)
         else
@@ -109,8 +163,8 @@ function [r, e, mmm] = calc_stats(means, trust, obs)
     end
 end
 
-function [all] = bootstrap_model(N, obs, T, GMs, trust, fl, dt)
-    run_length = sum(T);
+function [all] = bootstrap_model(N, obs, GMs, trust, fl, dt)
+    run_length = length(obs); %sum(T);
     num_models=length(trust);
     [s1,s2,s3]=size(GMs);
     if(nargin<6)
@@ -143,7 +197,7 @@ function [all] = bootstrap_model(N, obs, T, GMs, trust, fl, dt)
         index=randi(num_models,num_models,1);
         reordered_means=means(index,:,:);
         reordered_trust=trust(index);
-        [r, e, mmm] = calc_stats(reordered_means, reordered_trust, obs(:,T,:));
+        [r, e, mmm] = calc_stats(reordered_means, reordered_trust, obs);%(:,T,:));
         mmms(bs,:,:) = mmm; 
         rs(bs,:,:) = r; es(bs,:,:) = e;
     end
@@ -154,8 +208,10 @@ function [all] = bootstrap_model(N, obs, T, GMs, trust, fl, dt)
     all.N = N; all.num_models = num_models; all.mids = mids;
 end
 
-function [all, too_short] = sample_model(N, obs, T, GMs, trust, dt, fl)
-    length_run = sum(T);
+function [all, too_short] = sample_model(N, obs, GMs, trust, dt, fl)
+%TODO: can I modify the internal function to just truncate the observations
+%when the piC simulations are too short, instead of excluding them???
+    length_run = length(obs); %sum(T);
     length_of_GMs = sum(~isnan(GMs(:,:,1)),2);
     too_short = length_of_GMs<length_run;
     
@@ -190,7 +246,7 @@ function [all, too_short] = sample_model(N, obs, T, GMs, trust, dt, fl)
         index=randi(num_models,num_models,1);
         means=means(index,:,:);
 
-        [r, e, mmm] = calc_stats(means, trust(index), obs(:,T,:));
+        [r, e, mmm] = calc_stats(means, trust(index), obs);%(:,T,:));
         mmms(bs,:,:) = mmm;
         rs(bs,:,:) = r; es(bs,:,:) = e; 
     end
