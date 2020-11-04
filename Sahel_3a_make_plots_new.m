@@ -1,10 +1,10 @@
 clear
 historical = true;
-tosave = true;
+tosave = false;
 start_year = 1901;
 anomaly_years = 1901:1950;
-variable = 'pr';
-realm = 'amip';
+variable = 'ts';
+realm = 'cmip6';
 %TODO add NARI for amip figures.
 
 %TODO: (automate adding cmip5.)
@@ -153,7 +153,7 @@ for j = 1:length(scenarios)
         if(zoom)
             yl = 1.25;
             ylim([-yl, yl])
-        else
+        elseif(~strcmp(variable,'ts'))
             %set(gca, 'ycolor', scenario_colors{j})
             ylim([-1.5,1.5])
         end
@@ -182,6 +182,15 @@ for j = 1:length(scenarios)
             p_mmm = plot(ref_T_years,mmm(:,:,i),'-', 'Color', scenario_colors{j});%, 'LineWidth', 2);%, 'DisplayName', );
             xlim([start_year, end_year]);
         end
+        %{
+        if(strcmp(variable, 'ts'))
+            if i==3
+                yyaxis left
+            end
+            yl = ylim;
+            ylim([floor(yl(1)), ceil(yl(2))])
+        end
+        %}
     end
 end
 
@@ -219,8 +228,8 @@ if(strcmp(variable, 'ts'))
     %not as dramatic without the extra models in cmip5
 
     figure(6); clf;
-    plot(ref_T_years, no_ghg(:,:,1), 'k-', 'DisplayName', 'Observations'); hold on;
-    plot(ref_T_years, var_anomaly(:,:,1) - lin_trend, 'k-.', 'DisplayName', 'Observations - GHG MMM');
+    plot(ref_T_years, no_ghg(:,:,1), 'k-', 'DisplayName', 'Observations - GHG MMM'); hold on;
+    plot(ref_T_years, var_anomaly(:,:,1) - lin_trend, 'k-.', 'DisplayName', 'Observations - Linear Trend');
 
     A = load(['analysis/', variable, '/', scenarios{1}, '_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.mat']);
     mmm_v = A.MMM.MMM(:,:,1); mmm_anomaly = mmm_v-mean(mmm_v,2); 
@@ -237,7 +246,7 @@ if(strcmp(variable, 'ts'))
 
     p_stds = fill([ref_T_years';flipud(ref_T_years')],[down_noghg(:,:,1)';flipud(up_noghg(:,:,1)')],'b','FaceAlpha', .3 ,'linestyle','none');
     hold on; p_stds.HandleVisibility = 'off';
-    plot(ref_T_years,mmm_noghg(:,:,1),'-', 'Color', 'b', 'DisplayName', 'ALL');
+    plot(ref_T_years,mmm_noghg(:,:,1),'-', 'Color', 'b', 'DisplayName', 'ALL - GHG MMM');
 
     mmm = mmm - lin_trend;
     offset = mean(mmm(:,a_g_tf,:),2);
@@ -247,7 +256,19 @@ if(strcmp(variable, 'ts'))
 
     p_stds = fill([ref_T_years';flipud(ref_T_years')],[down(:,:,1)';flipud(up(:,:,1)')],[255,153,0]/255,'FaceAlpha', .3 ,'linestyle','none');
     p_stds.HandleVisibility = 'off';
-    plot(ref_T_years,mmm(:,:,1),'-', 'Color', [255,153,0]/255, 'DisplayName', 'ALL - GHG MMM');
+    plot(ref_T_years,mmm(:,:,1),'-', 'Color', [255,153,0]/255, 'DisplayName', 'ALL - Linear Trend');
+    
+    %AA
+    A = load(['analysis/', variable, '/', scenarios{2}, '_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.mat']);
+    mmm_v = A.MMM.MMM(:,:,1); mmm_anomaly = mmm_v-mean(mmm_v,2); 
+    anomaly_diff = mean(mmm_anomaly(:,ismember(ref_T_years, anomaly_years),:));
+    mmm = mmm_anomaly-anomaly_diff;
+    up   = A.historical_bootstrapped.high(:,:,1) - anomaly_diff; 
+    down = A.historical_bootstrapped.low(:,:,1) - anomaly_diff;  
+    
+    p_stds = fill([ref_T_years';flipud(ref_T_years')],[down(:,:,1)';flipud(up(:,:,1)')],'m','FaceAlpha', .3 ,'linestyle','none');
+    p_stds.HandleVisibility = 'off';
+    plot(ref_T_years,mmm(:,:,1),'-', 'Color', 'm', 'DisplayName', 'AA');
 
     yl = ylim; YL = mean(abs(yl));
     ylim([-YL, YL]);
