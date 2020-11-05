@@ -28,14 +28,14 @@ for i = 1:length(scenarios)
         end
         if(strcmp(variable, 'pr'))
             pr = ncread(fopen_name, 'pr');
-        s3=1;
+            s3=1;
         else
-        NA = ncread(fopen_name, 'NA');
-        GT = ncread(fopen_name, 'GT');
-        NARI = ncread(fopen_name, 'NARI');
-        pr = cat(3, NA, GT, NARI);
-        s3=3;
-        indices = permute({'NA', 'GT', 'NARI'},[1,3,2]);
+            NA = ncread(fopen_name, 'NA');
+            GT = ncread(fopen_name, 'GT');
+            NARI = ncread(fopen_name, 'NARI');
+            pr = cat(3, NA, GT, NARI);
+            s3=3;
+            indices = permute({'NA', 'GT', 'NARI'},[1,3,2]);
         end
         if contains(model_file_name, 'piC')
             l = length(Time);
