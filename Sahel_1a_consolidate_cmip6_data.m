@@ -3,7 +3,7 @@
 %Sahel_1_save_data_amip.
 
 clear
-variable = 'ts';
+variable = 'pr';
 
 scenarios = {'historical'};%'amip-hist', 'hist-aer', 'hist-nat', 'hist-GHG', 'piControl'};
 short_names = {'cmip6_h'};%'amip-hist', 'cmip6_a', 'cmip6_n', 'cmip6_g', 'cmip6_piC'};
@@ -53,13 +53,11 @@ for i = 1:length(scenarios)
         runs(next_line,1:l,1:s3) = pr; 
         time(next_line,1:l) = Time;
         next_line=next_line+1;
-        %{
         if(strcmp(variable, 'ts'))
             save(model_file_name, 'model', 'runs', 'time', 'indices')
         else
             save(model_file_name,'model','runs', 'time');
         end
-        %}
     end
 end
 
