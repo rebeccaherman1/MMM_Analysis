@@ -59,11 +59,11 @@ for v = 1:length(variables)
             hall = rmfield(hall, 'indices');
         end
         if(isfield(h, 'piC_GMs'))
-            h_T_piC = struct2table(rmfield(h, {'MMM', 'GMs', 'models', 'trust', 'time'}));
+            h_T_piC = struct2table(rmfield(h, {'GMs', 'models', 'trust', 'time'}));
             h = rmfield(h, {'piC_GMs', 'piC_models', 'piC_trust'});
         end
         %create table for h
-        h_T = struct2table(rmfield(h, {'MMM', 'time'}));
+        h_T = struct2table(rmfield(h, {'time'}));
         if(exist('h_T_piC', 'var'))
             %doing it this way disgards models which don't provide a piC
             %simulation. These will be disregarded anyway because common
