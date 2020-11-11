@@ -56,7 +56,7 @@ for i = 1:length(scenarios)
         end_year = ref_T_years(end);
         
         GA = load(['Analysis/', variable, '/', scenario, '_', num2str(start_year), '-', num2str(end_year), '_N500.mat']);
-        MMM = G.MMM.MMM(:,timeframe_m,:);                
+        MMM = GA.MMM.MMM(:,timeframe_m,:);                
         MMM_anomaly = MMM - mean(MMM(:,anomaly_timeframe,:),2); 
         MMM_standardized = MMM_anomaly./std(MMM_anomaly,0,2);
 
