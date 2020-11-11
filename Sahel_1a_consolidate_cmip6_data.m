@@ -3,9 +3,9 @@
 %Sahel_1_save_data_amip.
 
 clear
-variable = 'ts';
+variable = 'pr';
 
-scenarios = {'historical', 'hist-aer', 'hist-nat', 'hist-GHG'};%'amip-hist', 'piControl'};
+scenarios = {'historical'};%, 'hist-aer', 'hist-nat', 'hist-GHG'};%'amip-hist', 'piControl'};
 short_names = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%'amip-hist', 'cmip6_piC'};
 
 for i = 1:length(scenarios)
