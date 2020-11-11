@@ -6,7 +6,7 @@
 %here might not work...
 tosave = true;
 
-realm = 'cmip5';
+realm = 'amip';
 switch realm
     case 'amip'
         scenarios = {'amip-piF', 'amip-hist'};
