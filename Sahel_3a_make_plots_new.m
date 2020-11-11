@@ -1,9 +1,9 @@
 clear
 historical = true;
-tosave = false;
+tosave = true;
 start_year = 1901;
 anomaly_years = 1901:1950;
-variable = 'ts';
+variable = 'pr';
 realm = 'cmip6';
 %TODO add NARI for amip figures.
 
@@ -222,6 +222,7 @@ end
 
 
 %% Make Booth Figure
+% This figure is not saved.
 if(strcmp(variable, 'ts'))
     GHG_sub = GHG_sub(:,:,1);
     lin_trend = GHG_sub - detrend(GHG_sub);
