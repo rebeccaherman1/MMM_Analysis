@@ -3,10 +3,10 @@
 %Sahel_1_save_data_amip.
 
 clear
-variable = 'pr';
+variable = 'ts';
 
-scenarios = {'historical'};%'amip-hist', 'hist-aer', 'hist-nat', 'hist-GHG', 'piControl'};
-short_names = {'cmip6_h'};%'amip-hist', 'cmip6_a', 'cmip6_n', 'cmip6_g', 'cmip6_piC'};
+scenarios = {'historical', 'hist-aer', 'hist-nat', 'hist-GHG'};%'amip-hist', 'piControl'};
+short_names = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%'amip-hist', 'cmip6_piC'};
 
 for i = 1:length(scenarios)
     clear model runs time
