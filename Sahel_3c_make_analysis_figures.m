@@ -1,11 +1,11 @@
 %For TS just looks at NARI.
 mic=false;
-tosave = false;
+tosave = true;
 
 realm = 'cmip6';
-variable = 'pr';
-start_year = 1901;
-short = true;
+variable = 'ts';
+start_year = 1901; end_year = 2014;
+short = false;
 
 switch realm
     case 'cmip6'
@@ -14,11 +14,9 @@ switch realm
         styles = {'-', '-', '-', '-', '-', '-'};
         names = {'ALL 6', 'AA 6', 'NAT 6', 'GHG 6', 'amip-hist', 'amip-piF', 'Implied Fast Component'};
         mdgnd = [0,1,1]; %cyan
-        end_year = 2013;
         %I COULD automate adding cmip5, but I don't feel like it...
         if strcmp(variable, 'ts')
             scenarios = scenarios(1:4); %the others will get automatically shortened. 
-            end_year = 2014;
         end
         if(short)
             scenarios = [scenarios(1:4), {'h', 'a', 'n', 'g'}];
@@ -41,14 +39,12 @@ switch realm
         colors = {[0, 127, 0]/255};
         names = {'amip-hist'};
         mdgnd = max(min(colors{1}*2, [1,1,1]), [.4,.4,.6]);
-        end_year = 2013;
     case 'v'
         scenarios = {'amip-piF'};
         colors = {[1,.7,0]};
         styles = {'-'};
         names = {'amip-piF'};
         mdgnd = max(min(colors{1}*1.5, [1,1,1]), [.4,.6,.4]);
-        end_year = 2013;
     otherwise
         %a6? e? p? amip? (that last one's cmip5)
 end
