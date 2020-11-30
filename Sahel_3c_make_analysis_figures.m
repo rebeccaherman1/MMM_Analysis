@@ -1,9 +1,9 @@
 %For TS just looks at NARI.
 mic=false;
-tosave = true;
+tosave = false;
 
-realm = 'cmip6';
-variable = 'ts';
+realm = 'cmip5';
+variable = 'pr';
 start_year = 1901; end_year = 2014;
 short = false;
 
@@ -127,7 +127,7 @@ if(contains(realm, 'cmip'))
         end
     end
     finishfig(F,1,1,'a. Correlation with 20C Observations', '', 0); 
-    finishfig(F,1,2,'b. Scaled RMSE with 20C Observations', '', 1);
+    finishfig(F,1,2,'b. sRMSE with 20C Observations', '', 1);
     if(tosave)
         savefig(['figures/', variable, '/', realm, '_Fig4', '_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.fig']);
     end

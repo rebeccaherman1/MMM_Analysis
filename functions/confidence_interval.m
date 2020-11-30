@@ -1,4 +1,4 @@
-function [CI_low, CI_high] = confidence_interval(X, dim, confidence) %goes by columns
+function [CI_low, CI_high] = confidence_interval(X, dim, confidence)
     if(nargin < 2 || isempty(dim))
         dim = 1;
     end

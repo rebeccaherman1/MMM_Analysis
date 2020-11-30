@@ -5,7 +5,7 @@ clear;
 %TODO only use common models...
 
 tosave = false;
-realm = 'cmip6';
+realm = 'amip';
 variable = 'pr';
 global end_year start_year PAD; 
 start_year = 1901;
@@ -144,9 +144,9 @@ for subtract_GHG = to_subtract_GHG
             hold on;
 
             %CHANGE THIS BACK TO 'a'
-            if strcmp(s, 'a') || strcmp(s, 'cmip6_n')
+            if strcmp(s, 'a') || strcmp(s, 'cmip6_a')
                 unforced_mmms = A.piC_resampled_bootstrapped.r_means(:,:,indx);
-                [ps, f, CI] = pmtm(unforced_mmms',[],PAD, 1, 'ConfidenceLevel', .85);
+                [ps, f, CI] = pmtm(unforced_mmms',[],PAD, 1, 'ConfidenceLevel', .95);
                 periods = 1./f(2:end); low = mean(CI(2:end, 1:2:end), 2); high = mean(CI(2:end, 2:2:end), 2);
                 %[periods, mp, low, high, ~, ~] = ps_multi(unforced_mmms, obsT, .17,PAD, 2);
                 fill([periods;flip(periods)],[low;flip(high)],'y','FaceAlpha', .2 ,'linestyle','-', 'EdgeColor', 'y', 'DisplayName', 'bootstrapped piC MMM PS');
@@ -332,7 +332,7 @@ for basin = 1:I
         %TODO
         [yl, periods, periodograms, ~, ps, CI] = plot_all(h_runs, map, scaling, obs_anom_res, obsT, variable, obs_styles{i}); 
         mean_periodogram = mean(splitapply(@(X) mean(X,1), periodograms, scaling.groupings2),1);
-        plot(periods', mean_periodogram(2:end), '--', 'Color', intense_colors{i}, 'DisplayName', ['Mean of ', s, ' PS']);
+        plot(periods', mean_periodogram(2:end), '--', 'Color', intense_colors{i}, 'DisplayName', ['Mean of ', s, PS');
         set(gca, 'FontSize', 12); 
         yls(i) = yl(2);
 
