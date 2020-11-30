@@ -4,7 +4,7 @@ N = 500;
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
 realm = 'amip';
-short = false;
+short = true;
 
 global start_year end_year ref_T_years
 start_year = 1901;
@@ -44,7 +44,6 @@ for v = 1:length(variables)
         T_fast = table2struct(T_fast, 'ToScalar', true);
         T_fast = rmfield(T_fast, {'GMs_left', 'GMs_right', 'trust_left', 'trust_right'});
         common_models = T_fast.models;
-        T_fast.time = repmat(s1.time(1,:), length(common_models), 1);
         save('data/pr/cmip6_fast_GM.mat', '-struct', 'T_fast')
     end
     

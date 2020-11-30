@@ -4,7 +4,7 @@ tosave = true;
 start_year = 1901;
 anomaly_years = 1901:1950;
 variable = 'pr';
-realm = 'cmip6';
+realm = 'amip';
 %TODO add NARI for amip figures.
 
 %TODO: (automate adding cmip5.)
@@ -137,17 +137,17 @@ for j = 1:length(scenarios)
         
         %formatting stuffs
         if(I==1)
-            title([scenario_names{j}, ', N=', num2str(N_indiv(j)), ', r=', num2str(r_ttl, '%5.2f'), ', rmse=', num2str(rmsd, '%5.2f')], 'color', scenario_colors{j})
+            title([scenario_names{j}, ', N=', num2str(N_indiv(j)), ', r=', num2str(r_ttl, '%5.2f'), ', sRMSE=', num2str(rmsd, '%5.2f')], 'color', scenario_colors{j})
             ylabel('Precipitation Anomaly (mm/day)')
         else
             if(i==1)
                 ylabel([scenario_names{j}, ', N=', num2str(N_indiv(j))], 'color', scenario_colors{j})
             end
-            ttl = ['\color{', long_colors{j}, '} r=', num2str(r_ttl, '%5.2f'), ', rmse=', num2str(e_ttl, '%5.2f')];
+            ttl = ['r=', num2str(r_ttl, '%5.2f'), ', sRMSE=', num2str(e_ttl, '%5.2f')];%\color{', long_colors{j}, '} 
             if(j==1)
                 ttl = [ttl, ' \color{black}', A.indices{i}];
             end
-            title(ttl)
+            title(ttl, 'Color', scenario_colors{j})
         end 
         %left ordinates
         if(zoom)
@@ -158,7 +158,7 @@ for j = 1:length(scenarios)
             ylim([-1.5,1.5])
         end
         %right ordinates
-        if(zoom || strcmp(scenario, 'cmip6_fast') || (I~=1 && strcmp(A.indices(i), 'NARI')))
+        if(zoom || strcmp(scenario, 'cmip6_fast'))% || (I~=1 && strcmp(A.indices(i), 'NARI'))
             yyaxis right
             set(gca, 'ycolor', scenario_colors{j})
         end
