@@ -3,7 +3,7 @@ N = 500;
 
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
-realm = 'amip';
+realm = 'cmip5';
 short = false;
 
 global start_year end_year ref_T_years
@@ -32,9 +32,9 @@ mkdir('analysis')
 
 for v = 1:length(variables)
     variable = variables{v};
-    s2 = load(['data/', variable, '/', scenarios{2}, '_GM.mat']);
+    s2 = load(['data/', variable, '/', scenarios{2}, '_MM.mat']);
     if(~strcmp(realm, 'amip'))
-        common_models = s2.piC_models; %AA
+        common_models = s2.piC_models(:,2); %AA
     else
         s1 = load(['data/', variable, '/', scenarios{1}, '_GM.mat']);
         %make fast file
@@ -87,12 +87,18 @@ for v = 1:length(variables)
             h.time = repmat(h.time, length(h_new.models), 1);
         end
         h_new.time = h.time;
-        h_new = h_new(ismember(h_new.models, common_models),:);
+        %We loaded a GM, so don't need to do this anymore.
+        %h_new = h_new(ismember(h_new.models, common_models),:);
         
         %create table for h_all
         if(~strcmp(scenario, 'cmip6_fast'))
-            hall = struct2table(hall);
-            hall = hall(ismember(hall.model(:,1), common_models),:);
+            if(isfield(hall,'indices'))
+                hall2 = rmfield(hall, 'indices');
+            else
+                hall2 = hall;
+            end
+            hall = struct2table(hall2);
+            hall = hall(ismember(hall.model(:,2), common_models),:);
         end
 
         if(exist('h_indices', 'var'))

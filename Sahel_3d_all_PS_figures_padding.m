@@ -4,9 +4,9 @@ clear;
 %component.
 %TODO only use common models...
 
-tosave = false;
-realm = 'cmip6';
-variable = 'pr';
+tosave = true;
+realm = 'cmip5';
+variable = 'ts';
 global end_year start_year PAD; 
 start_year = 1901;
 PAD = 1101;
@@ -306,6 +306,7 @@ for basin = 1:I
             scaling = calc_scaling(h_runs, h_models, obs_var(:,:,basin));
         end
         if(strcmp(variable, 'ts'))
+            h_all.indices = {'NA', 'GT', 'NARI'};
             scaling.basin_index = h_all.indices{basin};
         end
         scaling.basic_name = fig5_names_1{i};
@@ -331,8 +332,10 @@ for basin = 1:I
         %obs_anom_res = obs_anom_res(:,:,basin);%pick just NARI
         %TODO
         [yl, periods, periodograms, ~, ps, CI] = plot_all(h_runs, map, scaling, obs_anom_res, obsT, variable, obs_styles{i}); 
-        mean_periodogram = mean(splitapply(@(X) mean(X,1), periodograms, scaling.groupings2),1);
-        plot(periods', mean_periodogram(2:end), '--', 'Color', intense_colors{i}, 'DisplayName', ['Mean of ', s, ' PS']);
+        if(strcmp(variable, 'pr'))
+            mean_periodogram = mean(splitapply(@(X) mean(X,1), periodograms, scaling.groupings2),1);
+            plot(periods', mean_periodogram(2:end), '--', 'Color', intense_colors{i}, 'DisplayName', ['Mean of ', s, ' PS']);
+        end
         set(gca, 'FontSize', 12); 
         yls(i) = yl(2);
 
