@@ -24,8 +24,8 @@ switch realm
 end
 vert_mean = @(X) mean(X,1); vert_sum = @(X) sum(X,1);
 
-AA = load(['data/', 'pr', '/', scenarios{2}, '_all.mat']);
-common_models = unique(AA.model(:,2));
+%AA = load(['data/', 'pr', '/', scenarios{2}, '_all.mat']);
+%common_models = unique(AA.model(:,2));
 
 for v = 1:length(variables)
     var = variables{v};
@@ -33,8 +33,8 @@ for v = 1:length(variables)
         scenario = scenarios{j};
         fprintf("Accessing scenario %s variable %s\n", scenario, var);
         h = load(['data/', var, '/', scenario, '_all.mat']); 
-        h = table(h.model, h.runs, h.time, 'VariableNames', {'model', 'runs', 'time'});
-        h = h(ismember(h.model(:,2), common_models),:);
+        %h = table(h.model, h.runs, h.time, 'VariableNames', {'model', 'runs', 'time'});
+        %h = h(ismember(h.model(:,2), common_models),:);
         [model_names, I, model_groupings] = unique(h.model(:,2)); nMM = max(model_groupings);
         num_runs = histcounts(model_groupings(~any(any(isnan(h.runs),2),3)), (0:nMM)+.5)';
         MM.MMs = splitapply(vert_mean, h.runs, model_groupings);
