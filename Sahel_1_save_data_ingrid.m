@@ -34,7 +34,7 @@ MIPs = {'CMIP5'; 'CMIP6', 'CMIP5'; 'CMIP6', 'AMIP5'; 'AMIP6pF', 'AMIP6'; 'ERA20C
 scenarios = {'VanillaAMIP'};%'PSL_FACTS'};%'historical','historicalAerosol','historicalNat','historicalGHG','piControl'};%'historicalMisc' is volcanoes only.  
 shortcuts = {'amip-piF'};%'p'};%'h', 'a', 'n', 'g', 'piC'};%, 'a6'};
 Generation = 6;
-variable = 'pr';
+variable = 'ts';
 
 start_month = 7;
 end_month = 9;
@@ -57,6 +57,12 @@ switch variable
         w_lon = 40;
     case 'ts'
         %TODO fill in for TS!!!
+        %NA!
+        s_lat = 10;
+        n_lat = 40; 
+        e_lon = -75;
+        w_lon = -15; 
+        GT_lat = [-20,20]; 
 end
         
 
@@ -70,6 +76,16 @@ space_range_average = [... also includes some background time stuff...
     '/lat/', num2str(s_lat), '/', num2str(n_lat), '/RANGE',... meridional range
     '%7B/lat/cosd/%7D/',... box size changes with lat
     '%5Blon/lat%5D/weighted-average/']; % zonal and meridional average
+
+if(strcmp(variable, 'ts'))
+    GT_space_average = [... also includes some background time stuff...
+    '/.pr',...   
+    '/time//T/renameGRID',... rename grid if needed.
+    '/T/1/monthlyAverage',... changes units from months to years
+    '/lat/', num2str(GT_lat(1)), '/', num2str(GT_lat(2)), '/RANGE',... meridional range
+    '%7B/lat/cosd/%7D/',... box size changes with lat
+    '%5Blon/lat%5D/weighted-average/']; % zonal and meridional average
+end
 
 %time range currently unused. 
 time_range = ['T/%28', month0, '%20', num2str(start_year), '%29%28',...
