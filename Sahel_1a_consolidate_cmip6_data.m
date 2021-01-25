@@ -3,10 +3,10 @@
 %Sahel_1_save_data_amip.
 
 clear
-variable = 'huss';
+variable = 'hus';
 location = 'Sahel';
 
-scenarios = {'historical', 'hist-aer'};%, 'hist-nat', 'hist-GHG'};%'amip-hist', 'piControl'};
+scenarios = {'historical'};%, 'hist-aer'};%, 'hist-nat', 'hist-GHG'};%'amip-hist', 'piControl'};
 short_names = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%'amip-hist', 'cmip6_piC'};
 
 for i = 1:length(scenarios)
@@ -28,7 +28,8 @@ for i = 1:length(scenarios)
             Time = ncread(fopen_name, 'year');
         end
         if(strcmp(location, 'Sahel'))
-            pr = ncread(fopen_name, variable);
+	    fprintf('fopen_name = %s, variable = %s\n', fopen_name, variable)
+	    pr = ncread(fopen_name, variable);
             s3=1;
         else
             NA = ncread(fopen_name, 'NA');
@@ -43,10 +44,10 @@ for i = 1:length(scenarios)
         elseif Time(1)<=1901 && Time(end)>=2014
             T_x = (Time >= 1901) & (Time <= 2014);
             Time = Time(T_x);
-            pr = pr(T_x,:,:);
-            l = length(pr);
-            if(length(Time)~=length(pr))
-                fprintf('pr contains fill values');
+            pr = pr(:,T_x,:);
+            l = size(pr,2);
+            if(length(Time)~=l)
+                fprintf('pr contains fill values\n');
             end
         else
             continue
