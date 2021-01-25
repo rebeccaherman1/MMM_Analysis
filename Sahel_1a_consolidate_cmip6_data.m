@@ -3,7 +3,8 @@
 %Sahel_1_save_data_amip.
 
 clear
-variable = 'ts';
+variable = 'huss';
+location = 'Sahel';
 
 scenarios = {'historical', 'hist-aer'};%, 'hist-nat', 'hist-GHG'};%'amip-hist', 'piControl'};
 short_names = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%'amip-hist', 'cmip6_piC'};
@@ -26,8 +27,8 @@ for i = 1:length(scenarios)
         elseif any(contains({INFO.Variables.Name}, {'year'}))
             Time = ncread(fopen_name, 'year');
         end
-        if(strcmp(variable, 'pr'))
-            pr = ncread(fopen_name, 'pr');
+        if(strcmp(location, 'Sahel'))
+            pr = ncread(fopen_name, variable);
             s3=1;
         else
             NA = ncread(fopen_name, 'NA');
