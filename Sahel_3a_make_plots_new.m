@@ -3,8 +3,8 @@ historical = true;
 tosave = true;
 start_year = 1901;
 anomaly_years = 1901:1950;
-variable = 'pr';
-realm = 'amip';
+variable = 'ts';
+realm = 'cmip5';
 %TODO add NARI for amip figures.
 
 %TODO: (automate adding cmip5.)
@@ -74,6 +74,9 @@ for j = 1:length(scenarios)
     scenario = char(scenarios(j));
     fprintf("Accessing historical scenario %s\n", scenario);
     A = load(['Analysis/', variable, '/', scenario, '_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.mat']);
+    if(strcmp(variable, 'ts'))
+        A.indices = {'NA', 'GT', 'NARI'};
+    end
     As{j} = A;
     if(isfield(A, 'indiv'))
         N_indiv(j) = length(A.indiv.models);
