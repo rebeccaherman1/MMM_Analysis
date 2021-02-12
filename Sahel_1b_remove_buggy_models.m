@@ -1,8 +1,8 @@
-scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%cle'amip-hist'};%
+scenarios = {'cmip6_h'};%, 'cmip6_a', 'cmip6_n', 'cmip6_g'};%cle'amip-hist'};%
 remove_models = {... prcp values 3 orders of magnitude too...
     'CIESM',... small, in piC and historical simulations. 
     'MCM-UA-1-0'}; %large, in piC simlations.
-variables = {'pr', 'ts'};
+variables = {'ts'};%'pr', 
 for v = 1:length(variables)
     for s = 1:length(scenarios)
         fname = ['data/', variables{v}, '/', scenarios{s}, '_all.mat'];
@@ -16,9 +16,9 @@ for v = 1:length(variables)
         model = h.model(~to_remove,:);
         runs = h.runs(~to_remove,:,:);
         time = h.time(~to_remove,:);
-	if(isfield(h, 'indices'))
-	    indices = h.indices;
-	    save(fname, 'model', 'runs', 'time', 'indices')
+        if(isfield(h, 'indices'))
+            indices = h.indices;
+            save(fname, 'model', 'runs', 'time', 'indices')
         else
             save(fname,'model','runs','time');
         end
