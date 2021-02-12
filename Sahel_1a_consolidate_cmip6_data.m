@@ -3,8 +3,8 @@
 %Sahel_1_save_data_amip.
 
 clear
-variable = 'hus';
-location = 'Sahel';
+variable = 'ts';
+location = 'Ocean';
 
 scenarios = {'historical'};%, 'hist-aer'};%, 'hist-nat', 'hist-GHG'};%'amip-hist', 'piControl'};
 short_names = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%'amip-hist', 'cmip6_piC'};
@@ -22,6 +22,12 @@ for i = 1:length(scenarios)
         fopen_name = [folder, '/', file{:}];
         %ncdisp(fopen_name)
         INFO = ncinfo(fopen_name);
+	if ~any(contains({INFO.Variables.Name}, {'SA'}))
+	    fprintf("skipping file %s\n", file{:})
+	    continue;
+        else
+	    fprintf("processing file %s\n", file{:})
+	end
         if any(contains({INFO.Variables.Name}, {'time'}))
             Time = ncread(fopen_name, 'time');
         elseif any(contains({INFO.Variables.Name}, {'year'}))
@@ -35,9 +41,11 @@ for i = 1:length(scenarios)
             NA = ncread(fopen_name, 'NA');
             GT = ncread(fopen_name, 'GT');
             NARI = ncread(fopen_name, 'NARI');
-            pr = cat(3, NA, GT, NARI);
-            s3=3;
-            indices = permute({'NA', 'GT', 'NARI'},[1,3,2]);
+	    SA = ncread(fopen_name, 'SA');
+	    md = ncread(fopen_name, 'md');
+            pr = cat(3, NA', GT', NARI', SA', md');
+            s3=5;
+            indices = permute({'NA', 'GT', 'NARI', 'SA', 'md'},[1,3,2]);
         end
         if contains(model_file_name, 'piC')
             l = length(Time);
@@ -55,7 +63,7 @@ for i = 1:length(scenarios)
         runs(next_line,1:l,1:s3) = pr; 
         time(next_line,1:l) = Time;
         next_line=next_line+1;
-        if(strcmp(variable, 'ts'))
+        if(strcmp(location, 'Ocean'))
             save(model_file_name, 'model', 'runs', 'time', 'indices')
         else
             save(model_file_name,'model','runs', 'time');
