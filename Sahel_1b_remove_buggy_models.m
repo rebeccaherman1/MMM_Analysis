@@ -16,6 +16,11 @@ for v = 1:length(variables)
         model = h.model(~to_remove,:);
         runs = h.runs(~to_remove,:,:);
         time = h.time(~to_remove,:);
-        save(fname,'model','runs','time');
+	if(isfield(h, 'indices'))
+	    indices = h.indices;
+	    save(fname, 'model', 'runs', 'time', 'indices')
+        else
+            save(fname,'model','runs','time');
+        end
     end
 end
