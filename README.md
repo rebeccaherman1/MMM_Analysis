@@ -1,18 +1,10 @@
 # MMM_Analysis
 Multi-Model Mean Analysis of Climate Simulations for Detection and Attribution
 
-# TODO List
-* add a T field to all data files, and modify script to do such
-* clean Sahel_2 and also turn it into a function for better bootstrapping.
-* change the methodology for calculating PS from FFT to MTM.
-
 # Accessing the Data
-Observed JAS area-averaged Sahel precipitation (from 
-[GPCC](/model_output/historical_precipitation.mat) and from [CRU](/model_output/CRU_data.mat))
-and SST indices (from [ERSST](/data/obs_Jul-Sep_ERSST.mat)) are located in the [data](/data) folder. Seasonal and 
-area averaged simulated data, labelled by institution, model, and run,  are located in 
-the same folder, with file names ending in "\_all.mat." There is a different file for 
-each unique experiment type and data source, described below.  
+All observations and model output can be found in the [data](/data) folder, sorted by variable. All variables are averaged seasonally over JAS and area-averaged over the Sahel or some other ocean basin. 
+Observation files are titled "observations.mat" while simulation files end with "\_all.mat". 
+Observations are categorized by source, while simulations are categorized by institution, model, and run.
 * historical experiments (radiative forcings)
     - h: CMIP5 historical "ALL"  
     - a: CMIP5 historical Anthropogenic Aerosols "AA"  
