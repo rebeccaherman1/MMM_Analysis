@@ -30,7 +30,10 @@ Below are the scripts used to generate these data files.
 # Analysis
 
 ## [Sahel_2_make_means.m](/Sahel_2_make_means.m)
-Performs a tiered MMM and saves the first tier under \*\_MM.mat and the second under \*\_GM.mat.
+Performs a tiered MMM and saves the results in the data folder, with the first tier under \*\_MM.mat and the second under \*\_GM.mat.
 
-## [Sahel_2a_make_plots.m](/Sahel_2a_make_plots.m)
-Make the first half of Fig1 using the files created in Sahel_2.
+## [Sahel_3_analyze_means.m](/Sahel_3_analyze_means.m)
+Performs bootstrapping analysis and saves the results in the [Analysis](/Analysis) folder labelled bby simulation, years analyzed, and the number of bootstrapping iterations.
+
+## Sahel_3...
+These other files are used to create figures used in Herman et al 2020 and followup work. The figures are saved in a folder titled "figures" and subfolders by variable, labelled according to the equivalent figure number in Herman et al 2020.
