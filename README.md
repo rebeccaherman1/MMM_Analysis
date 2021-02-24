@@ -4,22 +4,15 @@ Multi-Model Mean Analysis of Climate Simulations for Detection and Attribution
 # Accessing the Data
 All observations and model output can be found in the [data](/data) folder, sorted by variable. All variables are averaged seasonally over JAS and area-averaged over the Sahel or some other ocean basin. 
 Observation files are titled "observations.mat" while simulation files end with "\_all.mat". 
-Observations are categorized by source, while simulations are categorized by institution, model, and run.
+Observations are categorized by source, while simulations are categorized by institution, model, and run, and titled by the type of simulation (listed below).
 * historical experiments (radiative forcings)
     - h: CMIP5 historical "ALL"  
     - a: CMIP5 historical Anthropogenic Aerosols "AA"  
     - n: CMIP5 historical Natural Forcings "NAT"  
     - g: CMIP5 historical Greenhouse Gases "GHG"  
-* v: CMIP6 "Vanilla" AMIP simulations (forced with SST and preindustrial radiative forcings)
-* r: AMIP+RAD (SST + ALL radiative forcings). "r" includes data from all files below if the runs start by 1901. 
-    - e, ERA: ERA20CM   
-         - Currently, "e" uses 1901-2003, while "ERA" has the entire length of the time series and 
-    an additional variable T keeping track of that.   
-    - a6: CMIP6 AMIP   
-        - The files called 1901 include fewer simulations than those labelled 1950, reflecting 
-    the start times of those simulations.  
-    - p: NOAA PSL-FACTS
-    - amip: CMIP5 AMIP (from 1950)  
+    - cmip6_: same experiments, but in CMIP6.
+* amip-piF: CMIP6 "Vanilla" AMIP simulations (forced with SST and preindustrial radiative forcings)
+* amip-hist: CMIP6 AMIP+RAD which begin by 1850 (SST + ALL radiative forcings).  
 
 Below are the scripts used to generate these data files. 
 
