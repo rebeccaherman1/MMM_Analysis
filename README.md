@@ -30,7 +30,7 @@ Below are the scripts used to generate these data files.
 # Analysis
 
 ## [Sahel_2_make_means.m](/Sahel_2_make_means.m)
-Performs a tiered MMM and saves the results in the data folder, with the first tier under \*\_MM.mat and the second under \*\_GM.mat.
+Performs a tiered MMM and saves the results in the data folder, with the first tier (the "Model Mean") under \*\_MM.mat, and the second (the "Institution Mean", previously the "Group Mean") under \*\_GM.mat.
 
 ## [Sahel_3_analyze_means.m](/Sahel_3_analyze_means.m)
 Performs bootstrapping analysis and saves the results in a folder called Analysis, labelled by simulation, years analyzed, and the number of bootstrapping iterations.
