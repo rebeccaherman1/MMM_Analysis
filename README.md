@@ -40,3 +40,9 @@ These other files are used to create figures used in Herman et al 2020 and follo
 
 # [functions](/functions)
 This folder contains functions called by the data and analysis scripts.
+
+# Other Files
+
+* [AA_explained.m](/AA_explained.m): creates figure comparing AA simulations of NA SST to attributed NA SST when a linear GHG trend is removed from ALL simulations.
+* [calc_teleconnection.m](/calc_teleconnection.m): Uses bootstrapped MMMs to calculate covariances between NARI and Sahelian precipitation and associated uncertainties.
+* [make_table_1.m](/make_table_1.m): creates supplementary tables listing simulations used in followup work.
