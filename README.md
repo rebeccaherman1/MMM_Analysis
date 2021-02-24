@@ -14,10 +14,14 @@ Observations are categorized by source, while simulations are categorized by ins
 * amip-piF: CMIP6 "Vanilla" AMIP simulations (forced with SST and preindustrial radiative forcings)
 * amip-hist: CMIP6 AMIP+RAD which begin by 1850 (SST + ALL radiative forcings).  
 
+## Data Scripts
 Below are the scripts used to generate these data files. 
 
-## [concat_script.sh](/concat_script.sh)
-A bash script for concatenating montly netcdf files into one continuous file.
+*[Sahel_1_save_data_ingrid.m](/Sahel_1_save_data_ingrid.m): used to download observations to one file and CMIP5 simulations to another.
+*[Download2NetCDF.ipynb](/Download2NetCDF.ipynb): used to download CMIP6 simulations, with each simulation receiving its own file.
+*[Sahel_1a_consolidate_cmip6_data.m](/Sahel_1a_consolidate_cmip6_data.m): used to combine CMIP6 simulations into one file.
+*[Sahel_1b_remove_buggy_models.m](/Sahel_1b_remove_buggy_models.m): should be run after downloading new data. Removes models which produced outputs off by orders of magnitude which were identified by visual examination of the data.
+*[concat_script.sh](/concat_script.sh): a useful, but not currently used, bash script for combining monthly netcdf files downloaded directly from ESGF into one continuous file.
 
 ## [umbrella.mat](/umbrella.mat)
 A handmade matfile containing model name abbreviations (MODELS) and their corresponding 
