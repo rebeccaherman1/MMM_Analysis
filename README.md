@@ -37,3 +37,6 @@ Performs bootstrapping analysis and saves the results in a folder called Analysi
 
 ## Sahel_3...
 These other files are used to create figures used in Herman et al 2020 and followup work. The figures are saved in a folder titled "figures" and subfolders by variable, labelled according to the equivalent figure number in Herman et al 2020.
+
+# [functions](/functions)
+This folder contains functions called by the data and analysis scripts.
