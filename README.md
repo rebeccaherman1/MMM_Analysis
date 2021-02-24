@@ -1,7 +1,9 @@
 # MMM_Analysis
 Multi-Model Mean Analysis of Climate Simulations for Detection and Attribution
 
-# Accessing the Data
+# Data
+
+## Navigating Data Files
 All observations and model output can be found in the [data](/data) folder, sorted by variable. All variables are averaged seasonally over JAS and area-averaged over the Sahel or some other ocean basin. 
 Observation files are titled "observations.mat" while simulation files end with "\_all.mat". 
 Observations are categorized by source, while simulations are categorized by institution, model, and run, and titled by the type of simulation (listed below).
