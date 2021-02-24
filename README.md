@@ -19,11 +19,11 @@ Observations are categorized by source, while simulations are categorized by ins
 ## Data Scripts
 Below are the scripts used to generate these data files. 
 
-* Observations and CMIP5:
+* Observations and CMIP5 (IRIDL):
     - [Sahel_1_save_data_ingrid.m](/Sahel_1_save_data_ingrid.m): used to download observations to one file and CMIP5 simulations to another.
     - [institutions_cmip5.mat](/data/institutions_cmip5.mat): hand-made file used to identify CMIP5 institutions. Contains model name abbreviations (MODELS) and their corresponding "umbrella" research institution abbreviations (ABBREV) and full names (INSTITUTION) for all models used in Herman et al 2020 and followup work.
     - Model Lists: Files ending in "\_models.txt" contain lists of the files iterated over when downloading data using Sahel_1_save_data. Some of these files are currently missing from this repo.
-* CMIP6: 
+* CMIP6 (cloud): 
     - [Download2NetCDF.ipynb](/Download2NetCDF.ipynb): used to download CMIP6 simulations, with each simulation receiving its own file.
     - [Sahel_1a_consolidate_cmip6_data.m](/Sahel_1a_consolidate_cmip6_data.m): used to combine CMIP6 simulations into one file.
 * Post-processing:
