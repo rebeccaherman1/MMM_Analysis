@@ -4,9 +4,9 @@ clear;
 %component.
 %TODO only use common models...
 
-tosave = true;
+tosave = false;
 realm = 'cmip5';
-variable = 'ts';
+variable = 'pr';
 global end_year start_year PAD; 
 start_year = 1901;
 PAD = 1101;
