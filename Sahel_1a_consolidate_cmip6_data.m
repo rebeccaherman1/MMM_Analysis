@@ -2,9 +2,11 @@
 %jupyter script. For data I downloaded in full, see matlab code
 %Sahel_1_save_data_amip.
 
+%TODO check why CSIRO files give segfaults.
+
 clear
-variable = 'ts';
-location = 'Ocean';
+variable = 'hus_conv_925';
+location = 'Sahel';
 
 scenarios = {'historical'};%, 'hist-aer'};%, 'hist-nat', 'hist-GHG'};%'amip-hist', 'piControl'};
 short_names = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%'amip-hist', 'cmip6_piC'};
@@ -17,12 +19,12 @@ for i = 1:length(scenarios)
     files = files(contains(files, [variable, '_']));
     next_line = 1;
     for file = files'
-        names = make_model_and_p_name(file);
+        names = make_model_and_p_name(file, variable);
         model(next_line, 1:3) = names;
         fopen_name = [folder, '/', file{:}];
         %ncdisp(fopen_name)
         INFO = ncinfo(fopen_name);
-	if ~any(contains({INFO.Variables.Name}, {'SA'}))
+	if strcmp(variable, 'ts') & ~any(contains({INFO.Variables.Name}, {'SA'})) | contains(fopen_name, 'CSIRO')
 	    fprintf("skipping file %s\n", file{:})
 	    continue;
         else
@@ -35,7 +37,13 @@ for i = 1:length(scenarios)
         end
         if(strcmp(location, 'Sahel'))
 	    fprintf('fopen_name = %s, variable = %s\n', fopen_name, variable)
-	    pr = ncread(fopen_name, variable);
+	    V = split(variable, ["_"]);
+	    if(any(contains(V, 'conv')))
+		V = '__xarray_dataarray_variable__';
+	    else
+		V = V{1};
+	    end
+	    pr = ncread(fopen_name, V);
             s3=1;
         else
             NA = ncread(fopen_name, 'NA');
@@ -45,7 +53,7 @@ for i = 1:length(scenarios)
             SA = ncread(fopen_name, 'SA');
             md = ncread(fopen_name, 'md');
             pr = cat(3, NA', GT', NARI', SA', md');
-            s3=5;
+            s3=size(pr, 3);
             indices = permute({'NA', 'GT', 'NARI', 'SA', 'md'},[1,3,2]);
         end
         if contains(model_file_name, 'piC')
@@ -72,13 +80,14 @@ for i = 1:length(scenarios)
     end
 end
 
-function [model_names] = make_model_and_p_name(file)
+function [model_names] = make_model_and_p_name(file, var)
 % special version for PSL-FACTS
+    var_length = length(split(var, [".", "_"]));
     fields = split(file, [".", "_"]);
-    model = fields{3};
-    run = fields{4};
+    model = fields{2+var_length};
+    run = fields{3+var_length};
     run_stats = split(run, ["p", "f"]);
     model_and_p = [model, ' p', run_stats{2}];
-    institution = fields{2};
+    institution = fields{1+var_length};
     model_names = {institution, model_and_p, run};
 end
