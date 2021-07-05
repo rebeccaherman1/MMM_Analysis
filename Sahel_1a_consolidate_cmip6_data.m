@@ -5,7 +5,7 @@
 %TODO check why CSIRO files give segfaults.
 
 clear
-variable = 'hus_conv_925';
+variable = 'tas';
 location = 'Sahel';
 
 scenarios = {'historical'};%, 'hist-aer'};%, 'hist-nat', 'hist-GHG'};%'amip-hist', 'piControl'};
@@ -13,7 +13,11 @@ short_names = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%'amip-hist', 'cmip6_
 
 for i = 1:length(scenarios)
     clear model runs time
-    model_file_name = ['data/', variable, '/', short_names{i}, '_all.mat']
+    fldr_name = ['data/', variable];
+    if ~exist(fldr_name, 'dir')
+	mkdir(fldr_name);
+    end
+    model_file_name = [fldr_name, '/', short_names{i}, '_all.mat']
     folder = ['~/netcdf/cmip6/preprocessed/', scenarios{i}];
     files = split(ls(folder));
     files = files(contains(files, [variable, '_']));
@@ -44,7 +48,7 @@ for i = 1:length(scenarios)
 		V = V{1};
 	    end
 	    pr = ncread(fopen_name, V);
-            s3=1;
+	    s3=1;
         else
             NA = ncread(fopen_name, 'NA');
             GT = ncread(fopen_name, 'GT');
@@ -61,7 +65,13 @@ for i = 1:length(scenarios)
         elseif Time(1)<=1901 && Time(end)>=2014
             T_x = (Time >= 1901) & (Time <= 2014);
             Time = Time(T_x);
-            pr = pr(:,T_x,:);
+            if(ndims(pr)>2)
+		pr = pr(:,T_x,:);
+	    elseif (size(pr,2)==1)
+	        pr = pr(T_x)';
+	    else
+		pr = pr(:,T_x);
+	    end
             l = size(pr,2);
             if(length(Time)~=l)
                 fprintf('pr contains fill values\n');
