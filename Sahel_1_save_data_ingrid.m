@@ -15,8 +15,9 @@ get_simulations = true;
 scenarios = {'historical','historicalAerosol','historicalNat','historicalGHG','piControl'};%'historicalMisc' is volcanoes only.  
 %there are additional amip simulations which I downloaded onto a Lamont
 %server which can be accessed here, called 'amip', 'PSL-FACTS', and
-%'VanillaAMIP'. They are not included here because they were too short or
-%redundant to CMIP6.
+%'VanillaAMIP'. They are not included here because they were too short and
+%redundant to CMIP6 amip-piF and amip-hist runs. Be sure to use the cmip6 
+%institution file for those.
 shortcuts = {'h', 'a', 'n', 'g', 'piC'};
 %make sure the shortcuts match the scenarios if they are modified.
 variable = 'pr';
