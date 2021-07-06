@@ -25,7 +25,8 @@ Below are the scripts used to generate these data files.
     - Model Lists: Files ending in "\_models.txt" contain lists of the files iterated over when downloading data using Sahel_1_save_data. Some of these files are currently missing from this repo.
 * CMIP6 (cloud): 
     - [Download2NetCDF.ipynb](/Download2NetCDF.ipynb): used to download CMIP6 simulations, with each simulation receiving its own file.
-    - [Sahel_1a_consolidate_cmip6_data.m](/Sahel_1a_consolidate_cmip6_data.m): used to combine CMIP6 simulations into one file.
+    - [Sahel_1a_consolidate_cmip6_data.m](/Sahel_1a_consolidate_cmip6_data.m): used to combine CMIP6 simulations into one file. 
+      Also contains code to create [institutions_cmip6.mat](/data/institutions_cmip6.mat) (commented out near the end).
 * Post-processing:
     - [Sahel_1b_remove_buggy_models.m](/Sahel_1b_remove_buggy_models.m): should be run after downloading new data. Removes models which produced outputs off by orders of magnitude which were identified by visual examination of the data.
 * Other files:
