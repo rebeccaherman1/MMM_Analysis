@@ -13,8 +13,8 @@ Observations are categorized by source, while simulations are categorized by ins
     - n: CMIP5 historical Natural Forcings "NAT"  
     - g: CMIP5 historical Greenhouse Gases "GHG"  
     - cmip6_: same experiments, but in CMIP6.
-* amip-piF: CMIP6 "Vanilla" AMIP simulations (forced with SST and preindustrial radiative forcings)
-* amip-hist: CMIP6 AMIP+RAD which begin by 1850 (SST + ALL radiative forcings).  
+* amip-piF: CMIP6 AMIP simulations forced with SST and preindustrial radiative forcings
+* amip-hist: CMIP6 AMIP simulations forced with SST and historical ALL radiative forcings, which begin by 1850  
 
 ## Data Scripts
 Below are the scripts used to generate these data files. 
