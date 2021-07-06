@@ -5,7 +5,7 @@
 %TODO check why CSIRO files give segfaults.
 
 clear
-variable = 'tas';
+variable = 'ta';
 location = 'Sahel';
 
 scenarios = {'historical'};%, 'hist-aer'};%, 'hist-nat', 'hist-GHG'};%'amip-hist', 'piControl'};
@@ -14,6 +14,9 @@ short_names = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%'amip-hist', 'cmip6_
 for i = 1:length(scenarios)
     clear model runs time
     fldr_name = ['data/', variable];
+    if strcmp(variable, 'zg') || strcmp(variable, 'ta')
+	fldr_name = [fldr_name, '100'];
+    end
     if ~exist(fldr_name, 'dir')
 	mkdir(fldr_name);
     end
@@ -70,7 +73,7 @@ for i = 1:length(scenarios)
 	    elseif (size(pr,2)==1)
 	        pr = pr(T_x)';
 	    else
-		pr = pr(:,T_x);
+		pr = pr(end,T_x); %picking plev = 100 hPa for those files where I took too much. 
 	    end
             l = size(pr,2);
             if(length(Time)~=l)
