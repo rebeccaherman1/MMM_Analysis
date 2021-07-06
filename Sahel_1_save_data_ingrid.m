@@ -1,54 +1,29 @@
 %{
-Use for all data accessed without jupyter and the cloud, rather through ingrid. 
-Includes CMIP5 and Vanilla AMIP simulations, as well as certain AMIP+RAD
-simulations, and observations.
+Use for all data accessed without jupyter and the cloud, rather through the IRI library.
+Data is preprocessed using ingrid (see http://rainbow.ldeo.columbia.edu/documentation/libraries/ingrid/Ingrid_5.html#SEC39). 
+Includes CMIP5 and observations. Can also be used for short CMIP5 AMIP simulations.
 
 Log files for seach scenario "<Scenario>_log.txt" detail which simulations
 were skipped and why.
-
-%CMIP6 institutions file calculated using the following code, after 
-downloading CMIP6 historical simulations using jupyter:
-H = load('data/pr/cmip6_h_all.mat');
-[~, ia, ~] = unique(H.model(:,2));
-institutions = H.model(ia, 1:2);
-save('data/institutions_cmip6.mat', 'institutions');
 %}
-
-%TODO doesn't work for ts yet...
-%TODO: remove checking the years? or change it a little?
 
 clear
-get_observations = true;
-get_historical = false;
 
-%Create MONTH_NAMES and MONTH_DAYS matrices for use in changing units later
-month_names = {'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'};
-month_days  = 31*ones(1,12); month_days(2)=28; %should it just be uniformly 30-day months? I think not in CESM
-month_days(ismember(month_names,{'Sep','Apr','Jun','Nov'}))=30;
-%{
-Simulations = {'Coupled', 'piC', 'AMIP', 'AMIP+RAD'};
-Variables = {'pr'; 'ts', 'pr'; 'ts', 'pr', 'pr'};
-SST_indices = {'NA', 'GT'};
-MIPs = {'CMIP5'; 'CMIP6', 'CMIP5'; 'CMIP6', 'AMIP5'; 'AMIP6pF', 'AMIP6'; 'ERA20CM'; 'NOAA'};
-%}
-scenarios = {'VanillaAMIP'};%'PSL_FACTS'};%'historical','historicalAerosol','historicalNat','historicalGHG','piControl'};%'historicalMisc' is volcanoes only.  
-shortcuts = {'amip-piF'};%'p'};%'h', 'a', 'n', 'g', 'piC'};%, 'a6'};
-Generation = 6;
-variable = 'ts';
-
+%customizable variables
+get_observations = false;
+get_simulations = true;
+scenarios = {'historical','historicalAerosol','historicalNat','historicalGHG','piControl'};%'historicalMisc' is volcanoes only.  
+%there are additional amip simulations which I downloaded onto a Lamont
+%server which can be accessed here, called 'amip', 'PSL-FACTS', and
+%'VanillaAMIP'. They are not included here because they were too short or
+%redundant to CMIP6.
+shortcuts = {'h', 'a', 'n', 'g', 'piC'};
+%make sure the shortcuts match the scenarios if they are modified.
+variable = 'pr';
 start_month = 7;
 end_month = 9;
-month0 = month_names{start_month};
-month1 = month_names{end_month};
-%TODO this is only true if models don't just use 30-day months....
-days_per_month = mean(month_days(start_month:end_month));
 
-start_year = 1901;
-end_year = 2014;
-
-global ref_T_years
-ref_T_years = (start_year:1:end_year)';
-
+%define area limits
 switch variable
     case 'pr'
         s_lat = 12;
@@ -56,96 +31,112 @@ switch variable
         e_lon = -20;
         w_lon = 40;
     case 'ts'
-        %TODO fill in for TS!!!
-        %NA!
+        %NA
         s_lat = 10;
         n_lat = 40; 
         e_lon = -75;
         w_lon = -15; 
+        %GT
         GT_lat = [-20,20]; 
 end
-        
 
-umbrella=load(['data/institutions_cmip', num2str(Generation), '.mat']);
+%create data folder
+drnm = ['data/', variable];
+if(~exist(drnm, 'dir'))
+    mkdir(drnm)
+end
 
-space_range_average = [... also includes some background time stuff...
-    '/.pr',...   
-    '/time//T/renameGRID',... rename grid if needed.
+%Create MONTH_NAMES and MONTH_DAYS matrices for use in changing units later
+month_names = {'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'};
+month_days  = 31*ones(1,12); month_days(2)=28; %should it just be uniformly 30-day months? I think not in CESM
+month_days(ismember(month_names,{'Sep','Apr','Jun','Nov'}))=30;
+
+%ingrid preparations
+month0 = month_names{start_month};
+month1 = month_names{end_month};
+%NOTE: this is only true if models don't just use 30-day months....
+days_per_month = mean(month_days(start_month:end_month));
+seasonal_average = ['T/%28', month0, '-', month1,'%29/seasonalAverage/',...
+    'T/12/STEP/dods'];
+space_range_average = [... 
+    %'/time//T/renameGRID',... rename grid if needed. causes cold to fail
+    %if not needed, hence it is commented out.
     '/T/1/monthlyAverage',... changes units from months to years
     '/lon/', num2str(e_lon), '/', num2str(w_lon), '/RANGE',... zonal range
     '/lat/', num2str(s_lat), '/', num2str(n_lat), '/RANGE',... meridional range
     '%7B/lat/cosd/%7D/',... box size changes with lat
     '%5Blon/lat%5D/weighted-average/']; % zonal and meridional average
-
+url_end = [space_range_average, seasonal_average]; 
 if(strcmp(variable, 'ts'))
-    GT_space_average = [... also includes some background time stuff...
-    '/.pr',...   
-    '/time//T/renameGRID',... rename grid if needed.
-    '/T/1/monthlyAverage',... changes units from months to years
-    '/lat/', num2str(GT_lat(1)), '/', num2str(GT_lat(2)), '/RANGE',... meridional range
-    '%7B/lat/cosd/%7D/',... box size changes with lat
-    '%5Blon/lat%5D/weighted-average/']; % zonal and meridional average
+    GT_space_average = [... 
+                        '/time//T/renameGRID',... rename grid if needed.
+                        '/T/1/monthlyAverage',... changes units from months to years
+                        '/lat/', num2str(GT_lat(1)), '/', num2str(GT_lat(2)), '/RANGE',... meridional range
+                        '%7B/lat/cosd/%7D/',... box size changes with lat
+                        '%5Blon/lat%5D/weighted-average/']; % zonal and meridional average
+    land_mask = [... %used for GT in simulations where ts includes land measurements
+                'SOURCES/.WORLDBATH/.bath/',... 
+                'X/%28lon%29renameGRID/',...
+                'Y/%28lat%29renameGRID',...
+                '%5Blon/lat%5DregridLinear/',...
+                '0/maskgt/0/mul/add/'];
+    url_end_GT = [land_mask, GT_space_average, seasonal_average];
 end
-
-%time range currently unused. 
-time_range = ['T/%28', month0, '%20', num2str(start_year), '%29%28',...
-    month1, '%20', num2str(end_year), '%29RANGE/'];
-
-seasonal_average = ['T/%28', month0, '-', month1,'%29/seasonalAverage/',...
-    'T/12/STEP/dods'];
-url_end_h = [space_range_average, seasonal_average]; %I removed the time_range!
-url_end_piC = [space_range_average, seasonal_average];
 
 %Observations
 if(get_observations)
     ObsFile = matfile(['data/', variable, '/observations.mat'],'Writable', true);
-    
+    switch variable
+        case 'pr'
+            source = '.WCRP/.GCOS/.GPCC/.FDP/.version2018/.1p0/.prcp/';
+            ObsFile.src = 'GPCC version18';
+            v = 'prcp';
+        case 'ts'
+            source = '.NOAA/.NCDC/.ERSST/.version5/.sst/';
+            ObsFile.src = 'ERSSTv5';
+            v = 'sst';
+    end
+    obs_url_setup = [...
+        'http://iridl.ldeo.columbia.edu/SOURCES/',...
+        source];
+    observations_url_space = [...
+        'X/', num2str(e_lon), '/', num2str(w_lon), '/RANGE/',...
+        'Y/',num2str(s_lat), '/', num2str(n_lat), '/RANGE/'];
+    obs_url_averaging = [...
+        '%7B/Y/cosd/%7D/',...
+        '%5BX/Y%5D/weighted-average/', seasonal_average];
+    observations_url = [obs_url_setup, observations_url_space,obs_url_averaging];
+    obs_units = ncreadatt(observations_url, 'T', 'units');
+    var_unstandardized = ncread(observations_url, v);
     if(strcmp(variable, 'pr'))
-        observations_url = [...
-            'http://iridl.ldeo.columbia.edu/SOURCES/',...
-            '.WCRP/.GCOS/.GPCC/.FDP/.version2018/.1p0/.prcp/',...
-            'X/-20/40/RANGE/',...
-            'Y/',num2str(s_lat), '/', num2str(n_lat), '/RANGE/',...
-            '%7B/Y/cosd/%7D/',...
-            '%5BX/Y%5D/weighted-average/', seasonal_average]; %removed time_range!
-        obs_units = ncreadatt(observations_url, 'T', 'units');
-        
-        prcp_unstandardized = ncread(observations_url, 'prcp');
-        ObsFile.var = rainfall_to_days(prcp_unstandardized', days_per_month);
-        ObsFile.src = 'GPCC version18';
-
+        var_unstandardized = rainfall_to_days(var_unstandardized, days_per_month);
+    end
+    ObsFile.var = var_unstandardized;
+    ObsFile.T = adjust_time(ncread(observations_url,'T'), get_ref_year(obs_units))';
+    
+    if strcmp(variable, 'pr') %add an additional file for CRU observations
         observations_url_CRU = [...
             'http://kage.ldeo.columbia.edu:81/expert/home/.datasets/.CRU3.25/.cru3p25.nc/.pre/',...
-            'X/-20/40/RANGE/',...
-            'Y/',num2str(s_lat), '/', num2str(n_lat), '/RANGE',...
-            '%7B/Y/cosd/%7D/',...
-            '%5BX/Y%5D/weighted-average/', seasonal_average]; %removed time_range!
+            observations_url_space,obs_url_averaging];
         
         CRU_obs = matfile(['data/', variable,'/CRU_data.mat'], 'Writable', true);
         CRU_obs.var = rainfall_to_days(ncread(observations_url_CRU, 'pre')', days_per_month);
         CRU_obs.T = adjust_time(ncread(observations_url_CRU, 'T'), get_ref_year(ncreadatt(observations_url_CRU, 'T', 'units')));
         CRU_obs.src = 'CRU';
-
-        % Uses weighting as done by Alessandra Giannini in her 2003 paper
-        %{
-        Ale_2003 = [...
-            'http://iridl.ldeo.columbia.edu/SOURCES/',...
-            '.IRI/.FD/.NSIPP-1/.History/.ensemble/.monthly/.prcp/',...
-            'Y/cosd/mul/',...
-            'X/-20/40/RANGE/',...
-            'Y/12/18/RANGE/',...
-            '%5BX/Y%5Daverage/', seasonal_average];
-        %}
-    else
-        %TODO: fill in TS!!!!!
+    else %add additional ocean basins to the observaitons file
+        obs_url_GT = [obs_url_setup,... %don't need a land mask for SST observations
+            'Y/',num2str(GT_lat(1)), '/', num2str(GT_lat(2)), '/RANGE/',...
+            obs_url_averaging];
+        var_unstandardized = [var_unstandardized; ncread(obs_url_GT, v)];
+        var_unstandardized(3,:) = var_unstandardized(1,:) - var_unstandardized(2,:);
+        ObsFile.var = permute(var_unstandardized, [3,2,1]);
+        ObsFile.indices = permute({'NA'; 'GT'; 'NARI'},[3,2,1]);
     end
-    ref_T_months = ncread(observations_url,'T');
-    obs_T_years = adjust_time(ref_T_months, get_ref_year(obs_units));
-    ObsFile.T = obs_T_years';
 end
 
 %Historical Simulations
-if(get_historical)
+if(get_simulations)
+    umbrella=load('data/institutions_cmip5.mat');
     for j = 1:length(scenarios)
         clear model
         scenario = scenarios{j};
@@ -153,7 +144,7 @@ if(get_historical)
         log = fopen(['data/', variable, '/', sc, '_log.txt'], 'wt');
         switch scenario
             case {'historical','historicalAerosol','historicalNat','historicalGHG','piControl'} %cmip5
-                url_setup = 'http://strega.ldeo.columbia.edu:81/expert/CMIP5/.byScenario/.';
+                url_setup = ['http://strega.ldeo.columbia.edu:81/expert/CMIP5/.byScenario/.', scenario,'/.atmos/.mon/.', variable, '/.'];
             case 'amip' %cmip6, many start at 1950. supplemented with ERA20CM (e) and PSL-FACTS (p)
                 url_setup = 'http://carney.ldeo.columbia.edu:81/expert/home/.OTHER/.rebecca/.netcdf/.cmip6/.amip/.';
             case 'PSL_FACTS'
@@ -168,86 +159,96 @@ if(get_historical)
         end
         fprintf("Accessing scenario %s\n", scenario);
         fprintf("Opening file %s_models.txt\n", scenario);
-        models = fopen([scenario, '_models.txt']);
+        models = fopen(['data/',variable, '/',scenario, '_models.txt']);
 
         file_name = fgetl(models);
         next_line=1;
+        %for CMIP5, one line corresponds to all runs from one model. For
+        %data downloaded directly from ESGF, one line corresponds to one
+        %run.
         while ischar(file_name)
-            elements = strsplit(file_name, '_');
-            tokeep = false;
+            elements = strsplit(file_name, {'_', '\t', ' '});
             model_name = get_model_name(elements, scenario);
-            [mpname, run_name] = make_model_and_p_name(elements, scenario); %already type char
-            if(exist('model','var') && any(contains(model(:,2), mpname) & contains(model(:,3), run_name)))
-                next_line=next_line+1;
-                fprintf(log, "Already saved run %s\n", file_name);
-                continue
-            end
-            if(strcmp(scenario, "piControl"))
-                url = [url_setup, file_name, url_end_piC];
-            else
-                url = [url_setup, file_name, url_end_h];
-            end
-            T_units = ncreadatt(url, 'T', 'units');
-            P_units = ncreadatt(url, 'pr', 'units');
-            if(check_units(T_units, P_units, log))
-                non_standardized_run = ncread(url, 'pr');
-                l = length(non_standardized_run);
-                T=ncread(url, 'T');
-                T_years = adjust_time(T, get_ref_year(T_units));
-                %Why did I comment this out? Because the amip runs
-                %were short?
-                if(~check_years(scenario, T_years, l, model_name, run_name, log))
+            runs_ids = get_runs(elements, scenario);
+            for rx = 1:length(runs_ids)
+                r = runs_ids{rx};
+                tokeep = false;
+                [mpname, run_name] = make_model_and_p_name({model_name, r}, scenario); %already type char
+                if(exist('model','var') && any(contains(model(:,2), mpname) & contains(model(:,3), run_name)))
+                    next_line=next_line+1;
+                    fprintf(log, "Already saved run %s\n", file_name);
                     continue
                 end
-                if(sum(isnan(non_standardized_run))>0)
-                    fprintf(log, "%s contains NaN in run %s\n",...
-                        model_name, run_name);
-                else
-                    model(next_line, 2:3) = {mpname, run_name};
-                    runs(next_line,1:l)   = flux_to_rainfall(non_standardized_run');
-                    time(next_line,1:l)   = T_years;
-                    next_line=next_line+1;
-                    tokeep = true;
-                    save(model_file_name,'model','runs', 'time');
+                url = [url_setup,model_name, '/.',r, '/.', variable, url_end];
+                T_units = ncreadatt(url, 'T', 'units');
+                P_units = ncreadatt(url, variable, 'units');
+                if(check_units(T_units, P_units, variable, log))
+                    non_standardized_run = ncread(url, variable);
+                    l = length(non_standardized_run);
+                    T=ncread(url, 'T');
+                    T_years = adjust_time(T, get_ref_year(T_units));
+                    if(~check_years(scenario, T_years, l, model_name, run_name, log))
+                        continue
+                    end
+                    if(sum(isnan(non_standardized_run))>0)
+                        fprintf(log, "%s contains NaN in run %s\n",...
+                            model_name, run_name);
+                    else
+                        model(next_line, 2:3) = {mpname, run_name};
+                        if strcmp(variable, 'pr')
+                            non_standardized_run = flux_to_rainfall(non_standardized_run)';
+                            s3=1;
+                        else
+                            url_GT = [url_setup,model_name, '/.',r, '/.', variable, url_end_GT];
+                            non_standardized_run = [non_standardized_run, ncread(url, variable)];
+                            non_standardized_run(:,3) = non_standardized_run(:,1)-non_standardized_run(:,2);
+                            non_standardized_run = permute(non_standardized_run, [3,1,2]);
+                            s3=3;
+                        end
+                        runs(next_line,1:l,1:s3)   = non_standardized_run;
+                        time(next_line,1:l)   = T_years;
+                        next_line=next_line+1;
+                        tokeep = true;
+                        save(model_file_name,'model','runs', 'time');
+                    end
                 end
-            end
-            if(tokeep)
-                fprintf(log, "Saved run %s with %u years.\n", file_name, l);
-            else
-                fprintf(log, "skipping file %s\n", file_name);
+                if(tokeep)
+                    fprintf(log, "Saved model %s run %s with %u years.\n", model_name, run_name, l);
+                else
+                    fprintf(log, "skipping file %s\n", file_name);
+                end
             end
             file_name = fgetl(models);
         end
         fclose(models);
-        full_model_names = model(:,2); %just the full model names
-        umbrella_model_names = find_umbrella_names(full_model_names, umbrella);
+        umbrella_model_names = find_umbrella_names(model_name, umbrella);
         model(1:next_line-1,1) = umbrella_model_names;
         save(model_file_name, 'model', 'runs', 'time');
         clear model runs
     end
+    if(strcmp(variable, 'ts'))
+        load(model_file_name);
+        indices = permute({'NA'; 'GT'; 'NARI'}, [3,2,1]);
+        save(model_file_name, 'model', 'runs', 'time', 'indices');
+    end
 end
 
 %functions for legibility
-function units_ok = check_units(T_units, P_units, log)
-    units_ok = all([(T_units(1:13) == 'months since '),...
-        (T_units(18:end)=='-01-01'),...
-        (P_units=='kg m-2 s-1')]);
+function units_ok = check_units(T_units, P_units, variable, log)
+    T_units_ok = all([(T_units(1:13) == 'months since '),...
+                    (T_units(18:end)=='-01-01')]);
+    var_units_ok = strcmp(variable, 'pr') && strcmp(P_units,'kg m-2 s-1') || ...
+        strcmp(variable, 'ts') && strcmp(P_units, 'Kelvin_scale');
+    units_ok = T_units_ok && var_units_ok;
     if(~units_ok)
         fprintf(log, "cannot comprehend units: %s\n",T_units);
     end
 end
 
 function years_ok = check_years(scenario, T_years, l, model_name, run, log)
-    global ref_T_years;
+    ref_T_years = 1901:2003; %year limits for CMIP5.
     L = length(ref_T_years);
-    %We don't want to check the years for the pre-industrial
-    %controls, because the years are meaningless. We keep ALL
-    %AVAILABLE YEARS -- thus the length might be more than 107!
-    %It seems that we can gather this data even though we put
-    %years into the URL (but I should double-check!) since the
-    %years in the URL don't overlap with the available years.
-    %But what if some are less than 107 but equal to 100?
-    %perhaps I still don't want to throw them out?
+    %For piC, just make sure there are enough years total.
     if(strcmp(scenario, "piControl"))
         years_ok = (L<=l);
         if(~years_ok)
@@ -255,11 +256,8 @@ function years_ok = check_years(scenario, T_years, l, model_name, run, log)
                 model_name, run, l);
         end
     else
-        %the fact that I used a floor here is not
-        %consistent with my subtracting .5 from the years
-        %before. Actually maybe it's not, because the
-        %offset will always be more than half a year...
-        years_ok = (length(T_years) == L && all(T_years == ref_T_years));
+        %for historical simulations, check that the years include all the necessary ones. 
+        years_ok = sum(T_years >= min(ref_T_years) & T_years <= max(ref_T_years)) == L;
         if(~years_ok) 
             fprintf(log, "incomplete data for model %s, run %s: %u:%u\n",...
                 model_name, run, T_years(1),T_years(length(T_years)));
@@ -285,13 +283,22 @@ end
 
 %Extracts name from line with name and runs
 function name = get_model_name(line, scenario)
-    % special version for PSL-facts
-    if(strcmp(scenario, 'PSL_FACTS'))
-        name = line{:,2};
-    else
-        name = line{:,3};
+    %files downloaded directly from ESGF are listed by name individually
+    if(strcmp(scenario, 'PSL_FACTS') || strcmp(scenario, 'VanillaAMIP'))
+        name = line{2};
+    else %for CMIP5, the runs are listed within one line after the model name.
+        name = line{1};
     end
 end
+
+function runs = get_runs(line, scenario)
+    if(strcmp(scenario, 'PSL_FACTS') || strcmp(scenario, 'VanillaAMIP'))
+        runs = line(6);
+    else
+        runs = line(2:end);
+    end
+end
+    
 
 %Concatenates name with p number so that distinct p numbers will be saved as separate files.
 %If we want to collapse all offshoots of one model into one, we would want 
@@ -305,8 +312,9 @@ function [fname, run] = make_model_and_p_name(line, scenario)
         fname = get_model_name(line, scenario);
         run = run_stats{2};
     else
-        run = line{5};    
+        run = line{2};    
         run_stats = split(run, 'p');
+        %useful only for post-CMIP5 simulations
         p_and_f = split(run_stats(2), 'f');
         p = p_and_f{1}; 
         fname = [get_model_name(line, scenario), ' p', p];
