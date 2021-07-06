@@ -1,18 +1,9 @@
 %{
 Use for all data accessed without jupyter and the cloud, rather through ingrid. 
-Includes CMIP5 and Vanilla AMIP simulations, as well as certain AMIP+RAD
-simulations, and observations.
+Includes CMIP5 and observations. Can also be used for short CMIP5 AMIP simulations.
 
 Log files for seach scenario "<Scenario>_log.txt" detail which simulations
 were skipped and why.
-
-%CMIP6 institutions file calculated using the following code, after 
-downloading CMIP6 historical simulations using jupyter:
-H = load('data/pr/cmip6_h_all.mat');
-[~, ia, ~] = unique(H.model(:,2));
-institutions = H.model(ia, 1:2);
-save('data/institutions_cmip6.mat', 'institutions');
-%}
 
 %TODO doesn't work for ts yet...
 %TODO: remove checking the years? or change it a little?
