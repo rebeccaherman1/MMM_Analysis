@@ -93,6 +93,17 @@ for i = 1:length(scenarios)
     end
 end
 
+%{
+CMIP6 institutions file calculated using the following code, after 
+downloading CMIP6 historical simulations using jupyter:
+%}
+%{
+H = load('data/pr/cmip6_h_all.mat');
+[~, ia, ~] = unique(H.model(:,2));
+institutions = H.model(ia, 1:2);
+save('data/institutions_cmip6.mat', 'institutions');
+%}
+
 function [model_names] = make_model_and_p_name(file, var)
 % special version for PSL-FACTS
     var_length = length(split(var, [".", "_"]));

@@ -1,0 +1,27 @@
+bcc-csm1-1	r2i1p1 r3i1p1 r1i1p1
+bcc-csm1-1-m	r2i1p1 r3i1p1 r1i1p1
+BNU-ESM	r1i1p1
+CanAM4	r2i1p1 r3i1p1 r1i1p1 r4i1p1
+CCSM4	r2i1p1 r3i1p1 r5i1p1 r1i1p1 r4i1p1 r7i1p1
+CESM1-CAM5	r2i1p1 r1i1p1
+CMCC-CM	r2i1p1 r3i1p1 r1i1p1
+CNRM-CM5	r1i1p1
+CSIRO-Mk3-6-0	r2i1p1 r3i1p1 r10i1p1 r5i1p1 r1i1p1 r4i1p1 r7i1p1 r8i1p1 r6i1p1 r9i1p1
+FGOALS-g2	r1i1p1
+FGOALS-s2	r2i1p1 r3i1p1 r1i1p1
+GFDL-CM3	r2i1p1 r3i1p1 r5i1p1 r1i1p1 r4i1p1
+GFDL-HIRAM-C180	r2i1p1 r3i1p1 r1i1p1
+GFDL-HIRAM-C360	r2i1p1 r1i1p1
+GISS-E2-R	r1i1p1
+HadGEM2-A	r1i1p1
+inmcm4	r1i1p1
+IPSL-CM5A-LR	r2i1p1 r3i1p1 r5i1p1 r1i1p1 r4i1p1
+IPSL-CM5A-MR	r2i1p1 r3i1p1 r1i1p1
+IPSL-CM5B-LR	r1i1p1
+MIROC5	r2i1p1 r1i1p1
+MPI-ESM-LR	r2i1p1 r3i1p1 r1i1p1
+MPI-ESM-MR	r2i1p1 r3i1p1 r1i1p1
+MRI-AGCM3-2H	r1i1p1
+MRI-AGCM3-2S	r1i1p1
+MRI-CGCM3	r2i1p1 r3i1p1 r1i1p1
+NorESM1-M	r2i1p1 r3i1p1 r1i1p1
