@@ -33,7 +33,7 @@ Below are the scripts used to generate these data files.
 
 # Analysis
 
-## Scripts
+## Analysis Scripts
 
 ### [Sahel_2_make_means.m](/Sahel_2_make_means.m)
 Performs a tiered MMM and saves the results in the data folder, with the first tier (the "Model Mean") under \*\_MM.mat, and the second (the "Institution Mean", previously the "Group Mean") under \*\_GM.mat.
