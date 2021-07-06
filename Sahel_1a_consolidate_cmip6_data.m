@@ -28,7 +28,7 @@ for i = 1:length(scenarios)
         fopen_name = [folder, '/', file{:}];
         %ncdisp(fopen_name)
         INFO = ncinfo(fopen_name);
-	if strcmp(variable, 'ts') & ~any(contains({INFO.Variables.Name}, {'SA'})) | contains(fopen_name, 'CSIRO')
+	if strcmp(variable, 'ts') && ~any(contains({INFO.Variables.Name}, {'SA'})) || contains(fopen_name, 'CSIRO')
 	    fprintf("skipping file %s\n", file{:})
 	    continue;
         else
