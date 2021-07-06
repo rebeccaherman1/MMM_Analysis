@@ -33,19 +33,21 @@ Below are the scripts used to generate these data files.
 
 # Analysis
 
-## [Sahel_2_make_means.m](/Sahel_2_make_means.m)
+## Scripts
+
+### [Sahel_2_make_means.m](/Sahel_2_make_means.m)
 Performs a tiered MMM and saves the results in the data folder, with the first tier (the "Model Mean") under \*\_MM.mat, and the second (the "Institution Mean", previously the "Group Mean") under \*\_GM.mat.
 
-## [Sahel_3_analyze_means.m](/Sahel_3_analyze_means.m)
+### [Sahel_3_analyze_means.m](/Sahel_3_analyze_means.m)
 Performs bootstrapping analysis and saves the results in a folder called Analysis, labelled by simulation, years analyzed, and the number of bootstrapping iterations.
 
-## Sahel_3...
+### Sahel_3...
 These other files are used to create figures used in Herman et al 2020 and followup work. The figures are saved in a folder titled "figures" and subfolders by variable, labelled according to the equivalent figure number in Herman et al 2020.
 
-# [functions](/functions)
+## [functions](/functions)
 This folder contains functions called by the data and analysis scripts.
 
-# Other Files
+## Other Files
 
 * [AA_explained.m](/AA_explained.m): creates figure comparing AA simulations of NA SST to attributed NA SST when a linear GHG trend is removed from ALL simulations.
 * [calc_teleconnection.m](/calc_teleconnection.m): Uses bootstrapped MMMs to calculate covariances between NARI and Sahelian precipitation and associated uncertainties.
