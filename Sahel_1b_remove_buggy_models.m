@@ -3,13 +3,13 @@ remove_models = ...
     {... hus_conv_925
     'E3SM-1-1 p1' ... Inf, model name
     'MOHC'};% 0, inst name
-    %{... prcp values 3 orders of magnitude too...
+    % {... prcp values 3 orders of magnitude too...
     %'CIESM',... small, in piC and historical simulations. 
     %'MCM-UA-1-0'}; %large, in piC simlations.
 variables = {'hus_conv_925'};%'pr', 
 for v = 1:length(variables)
     for s = 1:length(scenarios)
-        fname = ['data/', variables{v}, '/', scenarios{s}, '_all.mat'];
+        fname = make_model_filename(variables{v}, start_month, end_month, scenarios{s}, 'all');
         h = load(fname); sz = size(h.runs);
         to_remove = zeros(sz(1),1);
         for rm = 1:length(remove_models)

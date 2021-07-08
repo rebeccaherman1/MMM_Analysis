@@ -10,6 +10,8 @@ variable = 'pr';
 global end_year start_year PAD; 
 start_year = 1901;
 PAD = 1101;
+start_month = 7;
+end_month = 9;
 
 isKelvin = false;
 switch realm
@@ -43,7 +45,7 @@ end
 single_scenario = scenarios{1};
 if(strcmp(variable, 'ts'))
     to_subtract_GHG = [false, true];
-    G = load(['analysis/', variable, '/', s_g, '_', num2str(start_year), '-', num2str(end_year), '_N500', '.mat']);
+    G = load(make_analysis_filename(variable, start_month, end_month, s_g, start_year, end_year, '500'));
 else
     to_subtract_GHG = [false];
 end
@@ -67,7 +69,7 @@ else
     conv = 0;
 end
 
-obs = load(['data/', variable, '/observations.mat']); 
+obs = load(make_data_filename(variable, start_month, end_month, 'observations']); 
 tm = obs.T>=start_year & obs.T<=end_year;
 obsT = obs.T(tm); obs_var = obs.var(:,tm,:)+conv; %convert obs to Kelvin if data is in Kelvins
 obs_var_a = obs_var - mean(obs_var,2);
@@ -102,7 +104,7 @@ for subtract_GHG = to_subtract_GHG
         elseif(subtract_GHG && contains(s, 'g'))
             continue
         else
-            A = load(['analysis/', variable, '/', s, '_', num2str(start_year), '-', num2str(end_year), '_N500', '.mat']);
+            A = load(make_analysis_filename(variable, start_month, end_month, s, start_year, end_year, '500'));
         end
         %forced_mmms = A.historical_bootstrapped.b_means;
 
@@ -240,7 +242,7 @@ switch realm
         fnames = {names{1}, 'piC'};
         obs_styles = {'-', '-.'};
 end    
-AA = load(['Analysis/', variable, '/', scenarios{1}, '_', num2str(start_year), '-', num2str(end_year), '_N500.mat']);
+AA = load(make_analysis_filename(variable, start_month, end_month, scenarios{1}, start_year, end_year, '500'));
 common_models = AA.indiv.models;
 
 fig5_names_2 = {'c.', 'd.'};
@@ -266,14 +268,14 @@ for basin = 1:I
         %to look like the historical simulations so I can run the scaling
         %there.
         if(strcmp(realm, 'cmip6') && strcmp(variable, 'pr'))
-            h_all = load('data/pr/cmip6_piC_all.mat');
+	    h_all = load(make_data_filename('pr', start_month, end_month, 'cmip6_piC','all'));
             h_all.runs(h_all.runs==0)=nan;
             T = table(h_all.model, h_all.runs(:,:,basin), h_all.time, 'VariableNames', {'model', 'runs', 'time'}); 
             T = split_piC_runs(T, end_year - start_year + 1);
             T.time = repmat(start_year:end_year, size(T,1),1);
             h_all = table2struct(T, 'ToScalar', true); clear T;
         elseif ~strcmp(s, 'noGHG')
-            h_all = load(['data/', variable, '/', s, '_all.mat']);
+	    h_all = load(make_data_filename(variable,start_month, end_month,  s, 'all'));
         end
         if(contains(s, 'piC'))
             h_all.runs(h_all.runs==0)=nan;
@@ -322,7 +324,7 @@ for basin = 1:I
             subplot(yn,xn,i+(basin-1)*xn)
         end
         if(contains(s, 'piC'))
-            H = load(['Analysis/', variable, '/', single_scenario, '_', num2str(start_year), '-', num2str(end_year), '_N500.mat']);
+	     H = load(make_analysis_filename(variable, start_month, end_month, single_scenario, start_year, end_year, '500'));
             obs_anom_res = obs_var_a(:,:,basin) - (H.MMM.MMM(:,1:length(obs_var_a(:,:,basin)),basin) - mean(H.MMM.MMM(:,1:length(obs_var_a(:,:,basin)),basin),2));
         elseif(strcmp(s, 'noGHG'))
             obs_anom_res = obs_var_a(:,:,basin) - (G.MMM.MMM(:,1:length(obs_var_a(:,:,basin)),basin) - mean(G.MMM.MMM(:,1:length(obs_var_a(:,:,basin)),basin),2));
@@ -363,7 +365,7 @@ for basin = 1:I
                         continue
                     end
                     c = colors{f};%scenarios==s);
-                    A = load(['data/', variable, '/', s, '_all.mat']);
+		    A = load(make_data_filename(variable, start_month, end_month, s, 'all'));
                     [~,l_idx,local_groupings] = unique(A.model(:,2), 'stable');
                     [~,~,local_groupings2] = unique(A.model(l_idx,1), 'stable');
                     forced_runs = A.runs(:,:,basin); %pick just NARI

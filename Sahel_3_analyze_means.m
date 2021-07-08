@@ -5,6 +5,8 @@ dt = "";%, "detrended"];
 %fl = "last";%, "first"];
 realm = 'cmip5';
 short = false;
+start_month = 5;%7
+start_month = 7;%9
 
 global start_year end_year ref_T_years
 start_year = 1901;
@@ -32,11 +34,11 @@ mkdir('analysis')
 
 for v = 1:length(variables)
     variable = variables{v};
-    s2 = load(['data/', variable, '/', scenarios{2}, '_MM.mat']);
+    s2 = load(make_data_filename(variable, start_month, end_month, scenarios{2}, 'MM'));
     if(~strcmp(realm, 'amip'))
         common_models = s2.piC_models(:,1); %AA
     else
-        s1 = load(['data/', variable, '/', scenarios{1}, '_GM.mat']);
+        s1 = load(make_data_filename(variable, start_month, end_month, scenarios{1}, 'GM'));
         %make fast file
         T_fast = innerjoin(struct2table(rmfield(s1, {'time'})), struct2table(rmfield(s2, {'time'})), 'Keys', 'models');       
         T_fast.trust = min(T_fast.trust_left, T_fast.trust_right);
@@ -49,7 +51,7 @@ for v = 1:length(variables)
     end
     
     mkdir(['analysis/', variable])
-    obs = load(['data/', variable, '/observations.mat']);
+    obs = load(make_data_filename(variable, start_month, end_month, 'observations'));
     obs_anomaly = obs.var-mean(obs.var);
     timeframe_obs = (obs.T >= start_year & obs.T <= end_year);
     ref_T_years = obs.T(timeframe_obs); 
@@ -58,10 +60,10 @@ for v = 1:length(variables)
         scenario = scenarios{j};
         fprintf("Accessing scenario %s\n", scenario);
 
-        h = load(['data/', variable, '/', scenario,'_GM.mat']);
-        fname = ['analysis/', variable, '/', scenario, '_', num2str(ref_T_years(1)), '-', num2str(ref_T_years(end)), '_N', num2str(N)];
+	h = load(make_data_filename(variable, start_month, end_month, scenario,'GM'));
+	fname = make_analysis_filename(variable, start_month, end_month, scenario, ref_T_years(1), ref_T_years(end), N)];
         if(~strcmp(scenario, 'cmip6_fast'))
-            hall = load(['data/', variable, '/', scenario, '_all.mat']);
+            hall = load(make_data_filename(variable, start_month, end_month, scenario, 'all'));
         end
         if(isfield(h, 'indices'))
             h_indices = h.indices;
