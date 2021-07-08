@@ -110,7 +110,7 @@ for i = 1:length(scenarios)
     end
     %change the name of the variable of interest to 'runs' to make later code easier. 
     %the name of the variable will be preserved in the MODEL_FILE_NAME
-    vars{strcmp(vars, V)} = 'runs';
+    vars{strcmp(vars_tot, V)} = 'runs';
     S = cell2struct(D_tot, vars_tot);
     save(model_file_name, '-struct', 'S');
 end
