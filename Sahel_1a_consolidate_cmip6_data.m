@@ -5,10 +5,10 @@
 %TODO check why CSIRO files give segfaults.
 
 clear
-variable = 'zg';
+variable = 'ts';
 location = 'Sahel';
-start_month;
-end_month;
+start_month = 5;
+end_month = 7;
 
 scenarios = {'historical'};%, 'hist-aer'};%, 'hist-nat', 'hist-GHG'};%'amip-hist', 'piControl'};
 short_names = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%'amip-hist', 'cmip6_piC'};
@@ -59,7 +59,8 @@ for i = 1:length(scenarios)
                 D = [D; {p1}];
 	        vars = [vars, {'p1'}];
 	    end
-	    all_basins = ~(strcmp(vars, 'time'));
+	    %keep this list of all potential ocean basins up to date!
+	    all_basins = contains(vars, {'NA', 'GT', 'NARI', 'p1', 'md', 'SA', 'TA'});
 	    pr = cat(3, D{all_basins});
 	    indices = vars(all_basins);
 	    D = {pr; Time; indices};
