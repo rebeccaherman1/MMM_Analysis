@@ -7,8 +7,8 @@
 clear
 variable = 'ts';
 location = 'Sahel';
-start_month = 5;
-end_month = 7;
+start_month = 3;
+end_month = 5;
 
 scenarios = {'historical'};%, 'hist-aer'};%, 'hist-nat', 'hist-GHG'};%'amip-hist', 'piControl'};
 short_names = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%'amip-hist', 'cmip6_piC'};
