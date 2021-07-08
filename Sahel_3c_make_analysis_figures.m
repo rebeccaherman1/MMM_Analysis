@@ -6,6 +6,8 @@ realm = 'cmip5';
 variable = 'pr';
 start_year = 1901; end_year = 2014;
 short = false;
+start_month = 5;%7
+end_month = 7;%9
 
 switch realm
     case 'cmip6'
@@ -66,8 +68,8 @@ close all;
  %hold off; clf; 
 
 if(strcmp(variable, 'pr') && ~short)
-    aname = ['analysis/',variable, '/', single_scenario,'_',num2str(start_year), '-', num2str(end_year), '_N', num2str(N)];
-    A = load([aname, '.mat']);
+    aname = make_analysis_filename(variable, start_month, end_month, single_scenario,start_year, end_year, N);
+    A = load(aname);
     openfig(['figures/', variable, '/', single_scenario, '_Fig1p_', num2str(start_year), '-', num2str(end_year), '.fig']);
     hold on;
 
@@ -101,8 +103,8 @@ if(contains(realm, 'cmip'))
             for l = 1:length(dts)
                 dt = char(dts(l));
 
-                aname = ['analysis/', variable, '/', scenario, '_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N)];
-                A = load([aname, '.mat']);
+		aname = make_analysis_filename(variable, start_month, end_month, scenario, start_year, end_year, N);
+                A = load(aname);
 
                 r = A.MMM.r; r_bootstrap = A.historical_bootstrapped.rs; 
                 e = A.MMM.e; e_bootstrap = A.historical_bootstrapped.es; 

@@ -7,6 +7,8 @@
 clear
 variable = 'zg';
 location = 'Sahel';
+start_month;
+end_month;
 
 scenarios = {'historical'};%, 'hist-aer'};%, 'hist-nat', 'hist-GHG'};%'amip-hist', 'piControl'};
 short_names = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%'amip-hist', 'cmip6_piC'};
@@ -14,13 +16,12 @@ skipped_vars = cell(1,6);
 
 for i = 1:length(scenarios)
     %create folder and filename where compiled data will be saved
-    fldr_name = ['data/', variable];
+    [model_file_name, fldr_name] = make_data_filename(variable, start_month, end_month, short_names{i}, 'all');
     if ~exist(fldr_name, 'dir')
 	mkdir(fldr_name);
     end
-    model_file_name = [fldr_name, '/', short_names{i}, '_all.mat']
     %get list of files to compile
-    folder = ['~/netcdf/cmip6/preprocessed/', scenarios{i}];
+    folder = ['~/netcdf/cmip6/preprocessed/', scenarios{i}, '/', num2str(start_month), '-', num2str(end_month)];
     files = split(ls(folder));
     files = files(contains(files, [variable, '_']));
     for file = files'

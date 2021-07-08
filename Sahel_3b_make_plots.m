@@ -3,6 +3,8 @@ start_year=1901;
 anomaly_years = 1901:1950;
 %should work with TS if I pick a basin now, but no need to make this figure
 %for that.
+start_month = 5;%7
+end_month = 7;%9
 
 %TODO put colors other than blue for the different scenarios!
 scenarios = {'cmip6_h'};%,'h','amip-hist','amip-piF'};
@@ -39,7 +41,7 @@ for i = 1:length(scenarios)
     
     for v = 1:length(variables)
         variable = variables{v};
-        obs = load(['data/', variable, '/observations.mat']);
+	obs = load(make_data_filename(variable, start_month, end_month, 'observations'));
         %this is still short
         %cru = load(['data/', variable, '/CRU_data.mat']);%ncread('data/Jul-Sep/CRU_data.nc', 'aprod'); %mm/month *month/day
         %cru=cru.prcp;
@@ -49,13 +51,13 @@ for i = 1:length(scenarios)
         prcp_anomaly = prcp - mean(prcp(:,ismember(ref_T_years, anomaly_years),:)); %cru_anomaly = cru - mean(cru);
         prcp_standardized = prcp_anomaly./std(prcp,0,2); %cru_standardized = cru_anomaly/std(cru);
         
-        G = load(['data/', variable, '/',scenario,'_GM.mat']);
+	G = load(make_data_filename(variable, start_month, end_month, scenario,'GM'));
         timeframe_m = ismember(single(G.time), ref_T_years);
         anomaly_timeframe = ismember(single(G.time), anomaly_years);
         ref_T_years = G.time(timeframe_m);
         end_year = ref_T_years(end);
         
-        GA = load(['Analysis/', variable, '/', scenario, '_', num2str(start_year), '-', num2str(end_year), '_N500.mat']);
+	GA = load(make_analysis_filename(variable, start_month, end_month, scenario, start_year, end_year, 500));
         MMM = GA.MMM.MMM(:,timeframe_m,:);                
         MMM_anomaly = MMM - mean(MMM(:,anomaly_timeframe,:),2); 
         MMM_standardized = MMM_anomaly./std(MMM_anomaly,0,2);
@@ -64,7 +66,7 @@ for i = 1:length(scenarios)
         GM_anomalies = GM - mean(GM(:,anomaly_timeframe,:),2);   
         GM_standardized = GM_anomalies./std(GM_anomalies, 0, 2);
 
-        I = load(['data/', variable, '/',scenario,'_all.mat']);
+	I = load(make_data_filename(variable, start_month, end_month, scenario,'all'));
         runs = I.runs(:,timeframe_m,:); 
         runs_anomalies = runs - mean(runs(:,anomaly_timeframe,:),2);   
         runs_standardized = runs_anomalies./std(runs_anomalies, 0, 2);

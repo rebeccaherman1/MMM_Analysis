@@ -154,7 +154,7 @@ if(get_simulations)
                 url_setup = 'http://carney.ldeo.columbia.edu:81/expert/home/.OTHER/.rebecca/.netcdf/.cmip6/.amip-piForcing/.';
         end
 
-        model_file_name = ['data/',variable, '/', sc,'_all.mat'];
+	model_file_name = make_data_filename(variable, start_month, end_month, sc,'all'];
         if(exist(model_file_name,'file')==2)
             load(model_file_name);
         end

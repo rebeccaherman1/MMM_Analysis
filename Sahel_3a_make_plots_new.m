@@ -5,6 +5,8 @@ start_year = 1901;
 anomaly_years = 1901:1950;
 variable = 'ts';
 realm = 'cmip5';
+start_month = 5;%7
+end_month = 7;%9
 %TODO add NARI for amip figures.
 
 %TODO: (automate adding cmip5.)
@@ -42,8 +44,7 @@ N=500;
 
 global ref_T_years; 
 
-obs = load(['data/', variable, '/observations.mat']);
-
+obs = load(make_data_filename(variable, start_month, end_month, observations));
 timeframe = (obs.T >= start_year & obs.T <= end_year);
 ref_T_years = obs.T(timeframe); %TODO this is inconsistent
 start_year = max(start_year, ref_T_years(1));
@@ -54,7 +55,7 @@ var_std = std(var_unstandardized,0,2);
 var_standardized = var_anomaly./var_std;
 
 if(~strcmp(realm, 'amip'))
-    gA = load(['Analysis/', variable, '/', scenarios{contains(scenarios, 'g')}, '_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.mat']);
+    gA = load(make_analysis_filename(variable,start_month, end_month, scenarios{contains(scenarios, 'g')}, start_year, end_year, N));
     gt = start_year:end_year;
     g_tf = ismember(gt, ref_T_years);
     a_g_tf = ismember(gt, anomaly_years);
@@ -73,7 +74,7 @@ N_indiv = nan(1,length(scenarios));
 for j = 1:length(scenarios)
     scenario = char(scenarios(j));
     fprintf("Accessing historical scenario %s\n", scenario);
-    A = load(['Analysis/', variable, '/', scenario, '_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.mat']);
+    A = load(make_analysis_filename(variable, start_month, end_month,scenario, start_year, end_year, N));
     if(strcmp(variable, 'ts'))
         A.indices = {'NA', 'GT', 'NARI'};
     end
@@ -198,19 +199,19 @@ for j = 1:length(scenarios)
 end
 
 if(strcmp(realm, 'amip'))
-    NAT = load(['Analysis/pr/cmip6_n_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.mat']);
+    NAT = load(make_analysis_filename('pr',start_month, end_month, 'cmip6_n', start_year, end_year, N));
     mmm = NAT.MMM.MMM;
     mmm = mmm - mean(mmm(:,ismember(ref_T_years, anomaly_years),:),2);
     plot(ref_T_years, mmm, 'r-')
     corr(mmm', A.MMM.MMM')
     
-    ALL = load(['Analysis/pr/cmip6_h_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.mat']);
+    ALL = load(make_analysis_filename('pr', start_month, end_month,'cmip6_h', start_year, end_year, N));
     mmm = ALL.MMM.MMM;
     mmm = mmm - mean(mmm(:,ismember(ref_T_years, anomaly_years),:),2);
     plot(ref_T_years, mmm, 'b-')
     corr(mmm', A.MMM.MMM')
     
-    sst_obs = load('data/ts/observations.mat'); NARI = sst_obs.var(:,:,3);
+    sst_obs = load(make_data_filename('ts', start_month, end_month, 'observations'); NARI = sst_obs.var(:,:,3);
     NARI_color = [0.07,0.62,1.00];
     subplot(yn, xn, 1); yyaxis right; set(gca, 'ycolor', NARI_color); ylabel('NARI (C)');
     plot(sst_obs.T, NARI, '-', 'Color', NARI_color, 'DisplayName', 'NARI')
@@ -235,7 +236,7 @@ if(strcmp(variable, 'ts'))
     plot(ref_T_years, no_ghg(:,:,1), 'k-', 'DisplayName', 'Observations - GHG MMM'); hold on;
     plot(ref_T_years, var_anomaly(:,:,1) - lin_trend, 'k-.', 'DisplayName', 'Observations - Linear Trend');
 
-    A = load(['analysis/', variable, '/', scenarios{1}, '_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.mat']);
+    A = load(make_analysis_filename(variable, start_month, end_month, scenarios{1}, start_year, end_year, N));
     mmm_v = A.MMM.MMM(:,:,1); mmm_anomaly = mmm_v-mean(mmm_v,2); 
     anomaly_diff = mean(mmm_anomaly(:,ismember(ref_T_years, anomaly_years),:));
     mmm = mmm_anomaly-anomaly_diff;
@@ -263,7 +264,7 @@ if(strcmp(variable, 'ts'))
     plot(ref_T_years,mmm(:,:,1),'-', 'Color', [255,153,0]/255, 'DisplayName', 'ALL - Linear Trend');
     
     %AA
-    A = load(['analysis/', variable, '/', scenarios{2}, '_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.mat']);
+    A = load(make_analysis_filename(variable, start_month, end_month, scenarios{2}, start_year, end_year, N));
     mmm_v = A.MMM.MMM(:,:,1); mmm_anomaly = mmm_v-mean(mmm_v,2); 
     anomaly_diff = mean(mmm_anomaly(:,ismember(ref_T_years, anomaly_years),:));
     mmm = mmm_anomaly-anomaly_diff;

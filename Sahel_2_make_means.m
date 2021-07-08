@@ -5,6 +5,8 @@
 %TODO: if I remove the year constraints in 1_save_data, my year checking
 %here might not work...
 tosave = true;
+start_month = 5;%7
+start_month = 7;%9
 
 realm = 'cmip5';
 switch realm
@@ -32,7 +34,7 @@ for v = 1:length(variables)
     for j = 1:length(scenarios)
         scenario = scenarios{j};
         fprintf("Accessing scenario %s variable %s\n", scenario, var);
-        h = load(['data/', var, '/', scenario, '_all.mat']); 
+	h = load(make_data_filename(var, start_month, end_month, scenario, 'all')); 
         %h = table(h.model, h.runs, h.time, 'VariableNames', {'model', 'runs', 'time'});
         %h = h(ismember(h.model(:,2), common_models),:);
         [model_names, I, model_groupings] = unique(h.model(:,2)); nMM = max(model_groupings);
@@ -45,8 +47,8 @@ for v = 1:length(variables)
         end
 
         if(tosave) 
-            fname = ['data/', var, '/',scenario, '_MM'];
-            delete([fname, '.mat']);
+            fname = make_data_filename(var, start_month, end_month, scenario, 'MM');
+            delete(fname);
             File = matfile(fname, 'Writable', true);
             fprintf("Writing file %s\n", fname);
             File.MMs = MM.MMs; 
@@ -61,7 +63,7 @@ for v = 1:length(variables)
         end
 
         if(~strcmp(realm, 'amip'))
-            piC = load(['data/', var, '/', piCs, '_all.mat']); piC.runs(piC.runs==0)=NaN; piC_lengths = sum(~isnan(piC.runs(:,:,1)), 2);
+	    piC = load(make_data_filename(var, start_month, end_month, piCs, 'all')); piC.runs(piC.runs==0)=NaN; piC_lengths = sum(~isnan(piC.runs(:,:,1)), 2);
             T_piC = table(piC.model, piC.runs, piC.time, piC_lengths, 'VariableNames', {'model', 'runs', 'time', 'length'});
             
             relevant_pC_models = ismember(T_piC.model(:,1),h.model(:,1));
@@ -93,8 +95,8 @@ for v = 1:length(variables)
         GM.GMs = splitapply(vert_sum, MM.trust.*MM.MMs./weights(model_groupings), model_groupings);
         GM.trust = splitapply(@sum, MM.trust, model_groupings)./sqrt(histcounts(model_groupings, (0:nGM)+.5)');
         if(tosave)
-            fname = ['data/',var, '/', scenario, '_GM'];
-            delete([fname, '.mat']);
+	    fname = make_data_filename(var, start_month, end_month, scenario, 'GM');
+            delete(fname);
             File = matfile(fname, 'Writable', true);
             fprintf("Writing file %s\n", fname);
             File.GMs= GM.GMs; 
