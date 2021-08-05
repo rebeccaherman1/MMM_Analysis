@@ -5,13 +5,13 @@
 %TODO check why CSIRO files give segfaults.
 
 clear
-variable = 'hus';
+variable = 'ts';
 location = 'Sahel';
-start_month = 7;
-end_month = 9;
+start_month = 5;
+end_month = 6;
 
 scenarios = {'historical'};%, 'hist-aer'};%, 'hist-nat', 'hist-GHG'};%'amip-hist', 'piControl'};
-short_names = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};%'amip-hist', 'cmip6_piC'};
+short_names = {'cmip6_h'};%, 'cmip6_a', 'cmip6_n', 'cmip6_g'};%'amip-hist', 'cmip6_piC'};
 skipped_vars = cell(1,6);
 
 for i = 1:length(scenarios)
@@ -54,13 +54,13 @@ for i = 1:length(scenarios)
 	%if the variable is ts, combine the basins into one array called VARIABLE.
         if(strcmp(variable, 'ts'))
 	    %Add p1 if missing.
-	    if(~any(contains(vars, 'p1')))
+	    if(~any(contains(vars, 'p1')) & contains(vars, 'NA') & contains(vars, 'GT'))
 		p1 = D{strcmp(vars, 'NA')} + D{strcmp(vars, 'GT')};
                 D = [D; {p1}];
 	        vars = [vars, {'p1'}];
 	    end
 	    %keep this list of all potential ocean basins up to date!
-	    all_basins = contains(vars, {'NA', 'GT', 'NARI', 'p1', 'md', 'SA', 'TA'});
+	    all_basins = contains(vars, {'NA', 'GT', 'NARI', 'p1', 'md', 'SA', 'TA', 'GG'});
 	    pr = cat(3, D{all_basins});
 	    indices = vars(all_basins);
 	    D = {pr; Time; indices};
