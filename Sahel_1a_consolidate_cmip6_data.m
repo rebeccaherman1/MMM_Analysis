@@ -5,10 +5,10 @@
 %TODO check why CSIRO files give segfaults.
 
 clear
-variable = 'ts';
-location = 'Sahel';
-start_month = 5;
-end_month = 6;
+variable = 'hus_bndries';
+%location = 'Sahel'; Not currently used. Perhaps use ~strcmp(location, Sahel) for the ocean basins instead of strcmp(variable, ts)
+start_month = 7;
+end_month = 9;
 
 scenarios = {'historical'};%, 'hist-aer'};%, 'hist-nat', 'hist-GHG'};%'amip-hist', 'piControl'};
 short_names = {'cmip6_h'};%, 'cmip6_a', 'cmip6_n', 'cmip6_g'};%'amip-hist', 'cmip6_piC'};
@@ -69,7 +69,9 @@ for i = 1:length(scenarios)
 	%Find the variable of interest
 	if(contains(variable, 'conv'))
 	    V = '__xarray_dataarray_variable__';
-        else
+        elseif(contains(variable, 'bndries'))
+	    V = variable(1:(end-8));
+        else	    
 	    V = variable;
         end
         %restrict time to the years of interest.
@@ -78,9 +80,9 @@ for i = 1:length(scenarios)
         elseif Time(1)<=1901 && Time(end)>=2014
             T_x = (Time >= 1901) & (Time <= 2014);
             D{strcmp(vars, 'time')} = Time(T_x);
-	    Dv = D{strcmp(vars, V)};
-	    D{strcmp(vars, V)} = Dv(:,T_x,:);
-	    l = size(D{strcmp(vars, V)},2);
+	    Dv = cat(1, D{contains(vars, V)});
+	    D(contains(vars, V)) = num2cell(Dv(:,T_x,:), [2,3]);
+	    l = size(D{find(contains(vars, V), 1)},2);
             if(length(D{strcmp(vars, 'time')})~=l)
                 fprintf('pr contains fill values\n');
             end
@@ -110,7 +112,12 @@ for i = 1:length(scenarios)
     end
     %change the name of the variable of interest to 'runs' to make later code easier. 
     %the name of the variable will be preserved in the MODEL_FILE_NAME
-    vars_tot{strcmp(vars_tot, V)} = 'runs';
+    if contains(variable, 'bndries')
+        vars_tot(contains(vars_tot, V)) = arrayfun(@(X) ['runs', X{:}((length(V)+1):end)],...
+                                                   vars_tot(contains(vars_tot, V)), 'UniformOutput', 0);
+    else
+    	vars_tot{strcmp(vars_tot, V)} = 'runs';
+    end
     S = cell2struct(D_tot, vars_tot);
     save(model_file_name, '-struct', 'S');
 end
