@@ -10,8 +10,8 @@ variable = 'ts';
 start_month = 7;
 end_month = 9;
 
-scenarios = {'historical'};%, 'hist-aer'};%, 'hist-nat', 'hist-GHG'};%'amip-hist', 'piControl'};
-short_names = {'cmip6_h'};%, 'cmip6_a', 'cmip6_n', 'cmip6_g'};%'amip-hist', 'cmip6_piC'};
+scenarios = {'hist-aer'};%'historical'};%, , 'hist-nat', 'hist-GHG'};%'amip-hist', 'piControl'};
+short_names = {'cmip6_a'};%'cmip6_h'};%, , 'cmip6_n', 'cmip6_g'};%'amip-hist', 'cmip6_piC'};
 skipped_vars = cell(1,6);
 
 for i = 1:length(scenarios)
