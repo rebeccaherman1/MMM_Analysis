@@ -3,10 +3,10 @@ N = 500;
 
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
-realm = 'cmip5';
+realm = 'cmip6';
 short = false;
-start_month = 5;%7
-start_month = 7;%9
+start_month = 7;
+end_month = 9;
 
 global start_year end_year ref_T_years
 start_year = 1901;
@@ -16,9 +16,9 @@ switch realm
         end_year = 2003;
         variables = {'pr', 'ts'};
     case 'cmip6'
-        scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};
+        scenarios = {'cmip6_h', 'cmip6_a'};%, 'cmip6_n', 'cmip6_g'};
         end_year = 2014; 
-        variables = {'pr', 'ts'};
+        variables = {'ts'};%'pr', 
     case 'amip'
         scenarios = {'amip-hist', 'amip-piF','cmip6_fast'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
         end_year = 2014; 
@@ -61,12 +61,12 @@ for v = 1:length(variables)
         fprintf("Accessing scenario %s\n", scenario);
 
 	h = load(make_data_filename(variable, start_month, end_month, scenario,'GM'));
-	fname = make_analysis_filename(variable, start_month, end_month, scenario, ref_T_years(1), ref_T_years(end), N)];
+	fname = make_analysis_filename(variable, scenario, ref_T_years(1), ref_T_years(end), N);
         if(~strcmp(scenario, 'cmip6_fast'))
             hall = load(make_data_filename(variable, start_month, end_month, scenario, 'all'));
         end
         if(isfield(h, 'indices'))
-            h_indices = h.indices;
+            h_indices = h.indices(1,:);
             h = rmfield(h, 'indices');
             hall = rmfield(hall, 'indices');
         end
@@ -117,7 +117,9 @@ for v = 1:length(variables)
         Analysis = matfile(fname, 'Writable', true);
 
         T_m = ismember(single(h.time(1,:)),ref_T_years);
-        hm = h.GMs(:,T_m, :); %TODO should actually add a T record to the data I save :/
+        hm = h.GMs(:,T_m, ismember(h.indices(1,:), {'NA', 'GT', 'NARI'})); 
+        %above: selecting the basins for which I've downloaded
+        %observations.
         trust = h.trust;
 
         [r, e, mmm] = calc_stats(hm, trust, o);
@@ -125,7 +127,8 @@ for v = 1:length(variables)
 
         %hall
         if(~strcmp(scenario, 'cmip6_fast'))
-            runs = hall.runs(:,T_m,:);
+            %select the basins for which I have observations
+            runs = hall.runs(:,T_m,ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
             runs_r = m_corrcoef(runs, o); runs_e = rmse(runs, o);
             indiv_runs.r = runs_r; indiv_runs.e = runs_e; indiv.models = hall.model;
         end
@@ -146,7 +149,10 @@ for v = 1:length(variables)
         %TODO could alternately use ISFIELD and then I wouldn't have to
         %define the realm at the top...
         if(~strcmp(realm, 'amip'))
-            [Analysis.piC_resampled_bootstrapped, skip_models] = sample_model(N, o, h.piC_GMs, h.piC_trust, dt);
+            [Analysis.piC_resampled_bootstrapped, skip_models] = ...
+                sample_model(N, o,...
+                h.piC_GMs(:,:,ismember(h.indices(1,:),{'NA', 'GT', 'NARI'})),...
+                h.piC_trust, dt);
             fprintf('skipping piC simulations which are too short:')
             h.piC_models(skip_models,:)
         %{
