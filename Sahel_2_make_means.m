@@ -5,10 +5,10 @@
 %TODO: if I remove the year constraints in 1_save_data, my year checking
 %here might not work...
 tosave = true;
-start_month = 5;%7
-start_month = 7;%9
+start_month = 7;
+end_month = 9;
 
-realm = 'cmip5';
+realm = 'cmip6';
 switch realm
     case 'amip'
         scenarios = {'amip-piF', 'amip-hist'};
@@ -18,9 +18,9 @@ switch realm
         piCs = 'piC';
         variables = {'pr', 'ts'}; 
     case 'cmip6'
-        scenarios = {'cmip6_h','cmip6_a', 'cmip6_n', 'cmip6_g'};
+        scenarios = {'cmip6_h','cmip6_a'};%, 'cmip6_n', 'cmip6_g'};
         piCs = 'cmip6_piC';
-        variables = {'pr', 'ts'};
+        variables = {'ts'};%'pr', 
     otherwise
         fprintf("what do you want?")
 end
@@ -34,7 +34,7 @@ for v = 1:length(variables)
     for j = 1:length(scenarios)
         scenario = scenarios{j};
         fprintf("Accessing scenario %s variable %s\n", scenario, var);
-	h = load(make_data_filename(var, start_month, end_month, scenario, 'all')); 
+	    h = load(make_data_filename(var, start_month, end_month, scenario, 'all')); 
         %h = table(h.model, h.runs, h.time, 'VariableNames', {'model', 'runs', 'time'});
         %h = h(ismember(h.model(:,2), common_models),:);
         [model_names, I, model_groupings] = unique(h.model(:,2)); nMM = max(model_groupings);
