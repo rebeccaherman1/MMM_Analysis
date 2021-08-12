@@ -10,8 +10,8 @@ were skipped and why.
 clear
 
 %customizable variables
-get_observations = false;
-get_simulations = true;
+get_observations = true;
+get_simulations = false;
 scenarios = {'historical','historicalAerosol','historicalNat','historicalGHG','piControl'};%'historicalMisc' is volcanoes only.  
 %there are additional amip simulations which I downloaded onto a Lamont
 %server which can be accessed here, called 'amip', 'PSL-FACTS', and
@@ -20,7 +20,7 @@ scenarios = {'historical','historicalAerosol','historicalNat','historicalGHG','p
 %institution file for those.
 shortcuts = {'h', 'a', 'n', 'g', 'piC'};
 %make sure the shortcuts match the scenarios if they are modified.
-variable = 'pr';
+variable = 'ts';
 start_month = 7;
 end_month = 9;
 
@@ -86,7 +86,10 @@ end
 
 %Observations
 if(get_observations)
-    ObsFile = matfile(['data/', variable, '/observations.mat'],'Writable', true);
+    obs_file_name = make_data_filename(variable, start_month, end_month, 'observations', 0);
+    fprintf('Writing file %s\n', obs_file_name);
+    ObsFile = matfile(obs_file_name,'Writable', true);
+    %matfile(['data/', variable, '/', num2str(start_month), '-', num2str(end_month), '/observations.mat']
     switch variable
         case 'pr'
             source = '.WCRP/.GCOS/.GPCC/.FDP/.version2018/.1p0/.prcp/';
@@ -154,7 +157,7 @@ if(get_simulations)
                 url_setup = 'http://carney.ldeo.columbia.edu:81/expert/home/.OTHER/.rebecca/.netcdf/.cmip6/.amip-piForcing/.';
         end
 
-	model_file_name = make_data_filename(variable, start_month, end_month, sc,'all'];
+	model_file_name = make_data_filename(variable, start_month, end_month, sc,'all');
         if(exist(model_file_name,'file')==2)
             load(model_file_name);
         end
