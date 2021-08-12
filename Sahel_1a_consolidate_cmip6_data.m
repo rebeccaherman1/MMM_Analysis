@@ -10,8 +10,8 @@ variable = 'ts';
 start_month = 7;
 end_month = 9;
 
-scenarios = {'hist-aer'};%'historical'};%, , 'hist-nat', 'hist-GHG'};%'amip-hist', 'piControl'};
-short_names = {'cmip6_a'};%'cmip6_h'};%, , 'cmip6_n', 'cmip6_g'};%'amip-hist', 'cmip6_piC'};
+scenarios = {'piControl'};%'hist-aer'};%'historical'};%, , 'hist-nat', 'hist-GHG'};%'amip-hist', 
+short_names = {'cmip6_piC'};%'cmip6_a'};%'cmip6_h'};%, , 'cmip6_n', 'cmip6_g'};%'amip-hist', 
 skipped_vars = cell(1,6);
 
 for i = 1:length(scenarios)
@@ -101,7 +101,19 @@ for i = 1:length(scenarios)
 	    for di = 1:length(vars)
 		dti = strcmp(vars_tot, vars{di});
 		if(any(dti))
-		    D_tot{dti} = cat(1, D_tot{dti}, D{di});
+		    if(contains(model_file_name, 'piC') & ~any(strcmp(vars{dti}, {'indices', 'model'})))
+			tmp = D_tot{dti};
+			h1 = size(tmp, 1);
+			h2 = size(D{di}, 1);
+			w1 = size(tmp, 2);
+			w2 = size(D{di}, 2);
+			d = size(tmp, 3);
+			D_tot{dti} = nan(h1+h2, max(w1, w2));
+			D_tot{dti}(1:h1, 1:w1,1:d) = tmp;
+			D_tot{dti}((h1+1):(h1+h2), 1:w2, 1:d) = D{di};
+		    else
+		        D_tot{dti} = cat(1, D_tot{dti}, D{di});
+		    end
 		else
 		    fprintf('missing variable %s\n', vars{di});
 		    M = D{strcmp(vars, 'model')};
