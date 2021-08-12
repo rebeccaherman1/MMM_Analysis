@@ -5,7 +5,7 @@
 %TODO check why CSIRO files give segfaults.
 
 clear
-variable = 'hus_bndries';
+variable = 'ts';
 %location = 'Sahel'; Not currently used. Perhaps use ~strcmp(location, Sahel) for the ocean basins instead of strcmp(variable, ts)
 start_month = 7;
 end_month = 9;
