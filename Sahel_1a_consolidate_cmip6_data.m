@@ -10,11 +10,12 @@ variable = 'ts';
 start_month = 7;
 end_month = 9;
 
-scenarios = {'piControl'};%'hist-aer'};%'historical'};%, , 'hist-nat', 'hist-GHG'};%'amip-hist', 
-short_names = {'cmip6_piC'};%'cmip6_a'};%'cmip6_h'};%, , 'cmip6_n', 'cmip6_g'};%'amip-hist', 
+scenarios = {'historical','hist-aer','hist-nat', 'hist-GHG','piControl'};%};%};%, , 'amip-hist', 
+short_names = {'cmip6_h','cmip6_a','cmip6_n', 'cmip6_g','cmip6_piC'};%};%};%, , 'amip-hist', 
 skipped_vars = cell(1,6);
 
 for i = 1:length(scenarios)
+    fprintf('\nSCENARIO %s\n', scenarios{i}')
     %create folder and filename where compiled data will be saved
     [model_file_name, fldr_name] = make_data_filename(variable, start_month, end_month, short_names{i}, 'all');
     if ~exist(fldr_name, 'dir')
@@ -132,6 +133,7 @@ for i = 1:length(scenarios)
     end
     S = cell2struct(D_tot, vars_tot);
     save(model_file_name, '-struct', 'S');
+    clear D_tot, vars_tot;
 end
 
 %{
