@@ -5,12 +5,12 @@
 %TODO check why CSIRO files give segfaults.
 
 clear
-variable = 'ts';
+variable = 'va';
 %location = 'Sahel'; Not currently used. Perhaps use ~strcmp(location, Sahel) for the ocean basins instead of strcmp(variable, ts)
 start_month = 7;
 end_month = 9;
 
-scenarios = {'historical','hist-aer','hist-nat', 'hist-GHG','piControl'};%};%};%, , 'amip-hist', 
+scenarios = {'historical'};%,'hist-aer','hist-nat', 'hist-GHG','piControl'};%};%};%, , 'amip-hist', 
 short_names = {'cmip6_h','cmip6_a','cmip6_n', 'cmip6_g','cmip6_piC'};%};%};%, , 'amip-hist', 
 skipped_vars = cell(1,6);
 
@@ -25,6 +25,10 @@ for i = 1:length(scenarios)
     folder = ['~/netcdf/cmip6/preprocessed/', scenarios{i}, '/', num2str(start_month), '-', num2str(end_month)];
     files = split(ls(folder));
     files = files(contains(files, [variable, '_']));
+    if(length(files)==0)
+	fprintf('No files exist for variable %s\n', variable);
+	continue;
+    end
     for file = files'
         fopen_name = [folder, '/', file{:}];
         %ncdisp(fopen_name)
