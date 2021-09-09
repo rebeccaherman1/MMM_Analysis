@@ -5,13 +5,13 @@
 %TODO check why CSIRO files give segfaults.
 
 clear
-variable = 'ts';
+variable = 'evspsbl';
 %location = 'Sahel'; Not currently used. Perhaps use ~strcmp(location, Sahel) for the ocean basins instead of strcmp(variable, ts)
 start_month = 7;
 end_month = 9;
 
-scenarios = {'hist-GHG-cmip5'};%orical'};%,'hist-aer','hist-nat', 'hist-GHG','piControl'};%};%};%, , 'amip-hist', 
-short_names = {'g_test'}%'cmip6_h','cmip6_a','cmip6_n', 'cmip6_g','cmip6_piC'};%};%};%, , 'amip-hist', 
+scenarios = {'historical'};%,'hist-aer','hist-nat', 'hist-GHG','piControl'};%};%};%, , 'amip-hist', 
+short_names = {'cmip6_h','cmip6_a','cmip6_n', 'cmip6_g','cmip6_piC'};%};%};%, , 'amip-hist', 'g_test'}%
 skipped_vars = cell(1,6);
 
 for i = 1:length(scenarios)
