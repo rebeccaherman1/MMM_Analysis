@@ -5,13 +5,19 @@
 %TODO check why CSIRO files give segfaults.
 
 clear
-variable = 'evspsbl';
+generation = 5;
+if(generation==6)
+	end_year = 2014;
+else
+	end_year = 2003;
+end
+variable = 'ts';%'evspsbl';
 %location = 'Sahel'; Not currently used. Perhaps use ~strcmp(location, Sahel) for the ocean basins instead of strcmp(variable, ts)
 start_month = 7;
 end_month = 9;
 
-scenarios = {'historical'};%,'hist-aer','hist-nat', 'hist-GHG','piControl'};%};%};%, , 'amip-hist', 
-short_names = {'cmip6_h','cmip6_a','cmip6_n', 'cmip6_g','cmip6_piC'};%};%};%, , 'amip-hist', 'g_test'}%
+scenarios = {'historicalGHG'};%,'hist-aer','hist-nat', 'hist-GHG','piControl'};%};%};%, , 'amip-hist', 
+short_names = {'g'};%'cmip6_h','cmip6_a','cmip6_n', 'cmip6_g','cmip6_piC'};%};%};%, , 'amip-hist', 'g_test'}%
 skipped_vars = cell(1,6);
 
 for i = 1:length(scenarios)
@@ -22,7 +28,7 @@ for i = 1:length(scenarios)
 	mkdir(fldr_name);
     end
     %get list of files to compile
-    folder = ['~/netcdf/cmip6/preprocessed/', scenarios{i}, '/', num2str(start_month), '-', num2str(end_month)];
+    folder = ['~/netcdf/cmip', num2str(generation),'/preprocessed/', scenarios{i}, '/', num2str(start_month), '-', num2str(end_month)];
     files = split(ls(folder));
     files = files(contains(files, [variable, '_']));
     if(length(files)==0)
@@ -56,14 +62,18 @@ for i = 1:length(scenarios)
 	    vars{strcmp(vars, 'year')} = 'time';
         end
 	Time = D{strcmp(vars, 'time')};
+
+	%REMOVE THIS LINE
+%	Time = floor(Time/12)+1901;
+
 	%if the variable is ts, combine the basins into one array called VARIABLE.
         if(strcmp(variable, 'ts'))
 	    %Add p1 if missing.
-	    if(~any(contains(vars, 'p1')) & contains(vars, 'NA') & contains(vars, 'GT'))
-		p1 = D{strcmp(vars, 'NA')} + D{strcmp(vars, 'GT')};
-                D = [D; {p1}];
-	        vars = [vars, {'p1'}];
-	    end
+	    %if(~any(contains(vars, 'p1')) & contains(vars, 'NA') & contains(vars, 'GT'))
+		%p1 = D{strcmp(vars, 'NA')} + D{strcmp(vars, 'GT')};
+                %D = [D; {p1}];
+	        %vars = [vars, {'p1'}];
+	    %end
 	    %keep this list of all potential ocean basins up to date!
 	    all_basins = contains(vars, {'NA', 'GT', 'NARI', 'p1', 'md', 'SA', 'TA', 'GG'});
 	    pr = cat(3, D{all_basins});
@@ -82,8 +92,8 @@ for i = 1:length(scenarios)
         %restrict time to the years of interest.
 	if contains(model_file_name, 'piC')
             l = length(Time);
-        elseif Time(1)<=1901 && Time(end)>=2014
-            T_x = (Time >= 1901) & (Time <= 2014);
+        elseif Time(1)<=1901 && Time(end)>=end_year
+	    T_x = (Time >= 1901) & (Time <= end_year);
             D{strcmp(vars, 'time')} = Time(T_x);
 	    Dv = cat(1, D{contains(vars, V)});
 	    D(contains(vars, V)) = num2cell(Dv(:,T_x,:), [2,3]);
@@ -92,7 +102,7 @@ for i = 1:length(scenarios)
                 fprintf('pr contains fill values\n');
             end
         else
-            fprintf('does not cover desired time period\n');
+	    fprintf('does not cover desired time period: %i - %i\n', Time(1), Time(end));
 	    continue
         end
 	%add institution, model, run to the cell array D
@@ -155,8 +165,8 @@ function [model_names] = make_model_and_p_name(file, var)
 % special version for PSL-FACTS
     var_length = length(split(var, [".", "_"]));
     fields = split(file, [".", "_"]);
-    model = fields{2+var_length};
-    run = fields{3+var_length};
+    model = fields{1+var_length};%2 when CMIP6!
+    run = fields{2+var_length};%3 when CMIP6!
     run_stats = split(run, ["p", "f"]);
     model_and_p = [model, ' p', run_stats{2}];
     institution = fields{1+var_length};
