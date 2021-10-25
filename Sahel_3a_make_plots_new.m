@@ -1,20 +1,24 @@
 clear
 historical = true;
-tosave = true;
+tosave = false;
 start_year = 1901;
 anomaly_years = 1901:1950;
 variable = 'ts';
 realm = 'cmip5';
-start_month = 5;%7
-end_month = 7;%9
+start_month = 7;
+end_month = 9;
 %TODO add NARI for amip figures.
 
 %TODO: (automate adding cmip5.)
 %maybe, add ALL MMM to IFC.
 
+%TODO make new case for CMIP6 (and CMIP5?) fast.
+
 switch realm
     case 'cmip6'
-        scenarios = {'cmip6_h','cmip6_a','cmip6_n','cmip6_g'};%'amip'};%,; 
+        %TODO this isn't generally for fast... make it its own special
+        %case.
+        scenarios = {'cmip6_hfast','cmip6_afast','cmip6_nfast','cmip6_gfast'};%'amip'};%,; 
         scenario_names = {'ALL 6', 'AA 6', 'NAT 6', 'GHG 6'};
         pC = true;
         scenario_colors = {'b', 'm', [0.60,0.20,0.00], [0.00,0.80,0.00], 'c'};
@@ -36,7 +40,7 @@ switch realm
     otherwise
         fprintf('undefined realm!')
 end
-zoom = strcmp(variable, 'pr') && ~strcmp(realm, 'amip'); %I put a special case for 'cmip6_fast' scenario at the end
+zoom = strcmp(variable, 'pr') && ~strcmp(realm, 'amip') && ~any(contains(scenarios, 'fast')); %I put a special case for 'cmip6_fast' scenario at the end
 As = cell(length(scenarios),1);
 
 fl = '';%'last';
@@ -44,18 +48,27 @@ N=500;
 
 global ref_T_years; 
 
-obs = load(make_data_filename(variable, start_month, end_month, observations));
-timeframe = (obs.T >= start_year & obs.T <= end_year);
-ref_T_years = obs.T(timeframe); %TODO this is inconsistent
+%{
+F = load('Analysis/pr/cmip6_fast_1901-2014_N500.mat');
+ref_T_years = 1901:2014;
+var_unstandardized = F.MMM.MMM;
+%}
+O = load('data/ts/7-9/observations.mat');
+ref_T_years = O.T(ismember(O.T, start_year:end_year));
+var_unstandardized = O.var(:,ismember(O.T, start_year:end_year),:);
+
+%obs = load(make_data_filename(variable, start_month, end_month, 'observations'));
+%timeframe = (obs.T >= start_year & obs.T <= end_year);
+%ref_T_years = obs.T(timeframe); %TODO this is inconsistent
 start_year = max(start_year, ref_T_years(1));
 end_year = min(end_year, ref_T_years(end));
-var_unstandardized = obs.var(:,timeframe,:);
+%var_unstandardized = obs.var(:,timeframe,:);
 var_anomaly = var_unstandardized - mean(var_unstandardized(:,ismember(ref_T_years, anomaly_years),:),2);
 var_std = std(var_unstandardized,0,2);
 var_standardized = var_anomaly./var_std;
 
 if(~strcmp(realm, 'amip'))
-    gA = load(make_analysis_filename(variable,start_month, end_month, scenarios{contains(scenarios, 'g')}, start_year, end_year, N));
+    gA = load(make_analysis_filename(variable,scenarios{contains(scenarios, 'g')}, start_year, end_year, N));
     gt = start_year:end_year;
     g_tf = ismember(gt, ref_T_years);
     a_g_tf = ismember(gt, anomaly_years);
@@ -74,7 +87,7 @@ N_indiv = nan(1,length(scenarios));
 for j = 1:length(scenarios)
     scenario = char(scenarios(j));
     fprintf("Accessing historical scenario %s\n", scenario);
-    A = load(make_analysis_filename(variable, start_month, end_month,scenario, start_year, end_year, N));
+    A = load(make_analysis_filename(variable, scenario, start_year, end_year, N));
     if(strcmp(variable, 'ts'))
         A.indices = {'NA', 'GT', 'NARI'};
     end
@@ -98,7 +111,8 @@ for j = 1:length(scenarios)
         end
     end
     if(historical)
-        mmm_v = A.MMM.MMM; mmm_anomaly = mmm_v-mean(mmm_v,2); r = A.MMM.r; rmsd = A.MMM.e;
+        mmm_v = A.MMM.MMM; mmm_anomaly = mmm_v-mean(mmm_v,2); 
+        r = A.MMM.r; rmsd = A.MMM.e;
         anomaly_diff = mean(mmm_anomaly(:,ismember(ref_T_years, anomaly_years),:),2);
         mmm = mmm_anomaly-anomaly_diff;
         %the historical_bootstrapped are actual anomalies, hence the need
@@ -131,7 +145,7 @@ for j = 1:length(scenarios)
         plot(ref_T_years, zeros(size(ref_T_years)), 'k--'); 
         hold on; set(gca,'FontSize',15); 
         if(strcmp(variable, 'ts') && (contains(scenario, 'a') || contains(scenario, 'n')) && i<3)
-            p_actual = plot(ref_T_years, no_ghg(:,:,i), '-', 'color', [.5 0 .6]);%, 'LineWidth', 2);
+            p_actual = plot(ref_T_years, no_ghg(:,:,i), '-', 'color', [1.00,0.55,0.31]);%, 'LineWidth', 2);
             r_ttl = r_no_ghg(:,:,i); e_ttl = e_no_ghg(:,:,i);
             fprintf('no ghg!')
         else
@@ -149,7 +163,7 @@ for j = 1:length(scenarios)
             end
             ttl = ['r=', num2str(r_ttl, '%5.2f'), ', sRMSE=', num2str(e_ttl, '%5.2f')];%\color{', long_colors{j}, '} 
             if(j==1)
-                ttl = [ttl, ' \color{black}', A.indices{i}];
+                ttl = [' {\color{black}', A.indices{i},'}\n', ttl];
             end
             title(ttl, 'Color', scenario_colors{j})
         end 
@@ -157,7 +171,7 @@ for j = 1:length(scenarios)
         if(zoom)
             yl = 1.25;
             ylim([-yl, yl])
-        elseif(~strcmp(variable,'ts'))
+        elseif(~strcmp(variable,'ts') && ~any(contains(scenarios, 'fast')))
             %set(gca, 'ycolor', scenario_colors{j})
             ylim([-1.5,1.5])
         end
@@ -211,7 +225,7 @@ if(strcmp(realm, 'amip'))
     plot(ref_T_years, mmm, 'b-')
     corr(mmm', A.MMM.MMM')
     
-    sst_obs = load(make_data_filename('ts', start_month, end_month, 'observations'); NARI = sst_obs.var(:,:,3);
+    sst_obs = load(make_data_filename('ts', start_month, end_month, 'observations')); NARI = sst_obs.var(:,:,3);
     NARI_color = [0.07,0.62,1.00];
     subplot(yn, xn, 1); yyaxis right; set(gca, 'ycolor', NARI_color); ylabel('NARI (C)');
     plot(sst_obs.T, NARI, '-', 'Color', NARI_color, 'DisplayName', 'NARI')
@@ -236,7 +250,7 @@ if(strcmp(variable, 'ts'))
     plot(ref_T_years, no_ghg(:,:,1), 'k-', 'DisplayName', 'Observations - GHG MMM'); hold on;
     plot(ref_T_years, var_anomaly(:,:,1) - lin_trend, 'k-.', 'DisplayName', 'Observations - Linear Trend');
 
-    A = load(make_analysis_filename(variable, start_month, end_month, scenarios{1}, start_year, end_year, N));
+    A = load(make_analysis_filename(variable, scenarios{1}, start_year, end_year, N));
     mmm_v = A.MMM.MMM(:,:,1); mmm_anomaly = mmm_v-mean(mmm_v,2); 
     anomaly_diff = mean(mmm_anomaly(:,ismember(ref_T_years, anomaly_years),:));
     mmm = mmm_anomaly-anomaly_diff;
@@ -264,7 +278,7 @@ if(strcmp(variable, 'ts'))
     plot(ref_T_years,mmm(:,:,1),'-', 'Color', [255,153,0]/255, 'DisplayName', 'ALL - Linear Trend');
     
     %AA
-    A = load(make_analysis_filename(variable, start_month, end_month, scenarios{2}, start_year, end_year, N));
+    A = load(make_analysis_filename(variable, scenarios{2}, start_year, end_year, N));
     mmm_v = A.MMM.MMM(:,:,1); mmm_anomaly = mmm_v-mean(mmm_v,2); 
     anomaly_diff = mean(mmm_anomaly(:,ismember(ref_T_years, anomaly_years),:));
     mmm = mmm_anomaly-anomaly_diff;

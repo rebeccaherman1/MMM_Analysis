@@ -1,14 +1,16 @@
 %saves weighted MMs (model means) and IMs (institution means) as 
 %"<scenario>_XM.mat". Weights to use for the following tier are stored in 
-%TRUST.
+%TRUST. 
+%uses only models which contribute AA simulations.
 
 %TODO: if I remove the year constraints in 1_save_data, my year checking
 %here might not work...
+
 tosave = true;
 start_month = 7;
 end_month = 9;
 
-realm = 'cmip6';
+realm = 'cmip5';
 switch realm
     case 'amip'
         scenarios = {'amip-piF', 'amip-hist'};
@@ -18,7 +20,7 @@ switch realm
         piCs = 'piC';
         variables = {'pr', 'ts'}; 
     case 'cmip6'
-        scenarios = {'cmip6_h','cmip6_a'};%, 'cmip6_n', 'cmip6_g'};
+        scenarios = {'cmip6_h','cmip6_a', 'cmip6_n', 'cmip6_g'};
         piCs = 'cmip6_piC';
         variables = {'ts'};%'pr', 
     otherwise
@@ -26,17 +28,19 @@ switch realm
 end
 vert_mean = @(X) mean(X,1); vert_sum = @(X) sum(X,1);
 
-%AA = load(['data/', 'pr', '/', scenarios{2}, '_all.mat']);
-%common_models = unique(AA.model(:,2));
-
 for v = 1:length(variables)
     var = variables{v};
+    AA = load(make_data_filename(var, start_month, end_month, scenarios{2}, 'all'));%'a', 'MM'));%
+    common_models = unique(AA.models(:,1)); %just model for CMIP6?
     for j = 1:length(scenarios)
         scenario = scenarios{j};
         fprintf("Accessing scenario %s variable %s\n", scenario, var);
-	    h = load(make_data_filename(var, start_month, end_month, scenario, 'all')); 
-        %h = table(h.model, h.runs, h.time, 'VariableNames', {'model', 'runs', 'time'});
-        %h = h(ismember(h.model(:,2), common_models),:);
+	    h = load(make_data_filename(var, start_month, end_month, scenario, 'all'));
+        if(isfield(h, 'indices'))
+            h_indices = h.indices;
+        end
+        h = table(h.model, h.runs, h.time, 'VariableNames', {'model', 'runs', 'time'});
+        h = h(ismember(h.model(:,1), common_models),:);
         [model_names, I, model_groupings] = unique(h.model(:,2)); nMM = max(model_groupings);
         num_runs = histcounts(model_groupings(~any(any(isnan(h.runs),2),3)), (0:nMM)+.5)';
         MM.MMs = splitapply(vert_mean, h.runs, model_groupings);
@@ -57,15 +61,15 @@ for v = 1:length(variables)
             NanSims = h.model(any(any(isnan(h.runs),2),3),:);
             File.NanSims = NanSims;
             File.time = h.time(1,:);
-            if(isfield(h, 'indices'))
-                File.indices = h.indices;
+            if(exist('indices', 'var'))
+                File.indices = h_indices;
             end
         end
 
         if(~strcmp(realm, 'amip'))
 	    piC = load(make_data_filename(var, start_month, end_month, piCs, 'all')); piC.runs(piC.runs==0)=NaN; piC_lengths = sum(~isnan(piC.runs(:,:,1)), 2);
-            T_piC = table(piC.model, piC.runs, piC.time, piC_lengths, 'VariableNames', {'model', 'runs', 'time', 'length'});
-            
+            %T_piC = table(piC.model, piC.runs, piC.time, piC_lengths, 'VariableNames', {'model', 'runs', 'time', 'length'});
+            T_piC = table(piC.model, piC.runs, piC_lengths, 'VariableNames', {'model', 'runs', 'length'});
             relevant_pC_models = ismember(T_piC.model(:,1),h.model(:,1));
             T_piC = T_piC(relevant_pC_models, :); 
             %before I do this! let me pretend I have more runs!!!!!
@@ -104,8 +108,8 @@ for v = 1:length(variables)
             File.trust  = GM.trust; 
             %File.MMM = GM.MMM;
             File.time=h.time(1,:);
-            if(isfield(h, 'indices'))
-                File.indices = h.indices;
+            if(exist('h_indices', 'var'))
+                File.indices = h_indices;
             end
         end
         if(~strcmp(realm, 'amip'))
