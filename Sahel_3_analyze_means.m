@@ -3,10 +3,11 @@ N = 500;
 
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
-realm = 'cmip6';
+realm = 'cmip5';
 short = false;
 start_month = 7;
 end_month = 9;
+use_fast = false;
 
 global start_year end_year ref_T_years
 start_year = 1901;
@@ -16,9 +17,9 @@ switch realm
         end_year = 2003;
         variables = {'pr', 'ts'};
     case 'cmip6'
-        scenarios = {'cmip6_h', 'cmip6_a'};%, 'cmip6_n', 'cmip6_g'};
+        scenarios = {'cmip6_hfast', 'cmip6_afast', 'cmip6_nfast', 'cmip6_gfast'};
         end_year = 2014; 
-        variables = {'ts'};%'pr', 
+        variables = {'pr'};%'pr', 
     case 'amip'
         scenarios = {'amip-hist', 'amip-piF','cmip6_fast'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
         end_year = 2014; 
@@ -34,10 +35,11 @@ mkdir('analysis')
 
 for v = 1:length(variables)
     variable = variables{v};
-    s2 = load(make_data_filename(variable, start_month, end_month, scenarios{2}, 'MM'));
+    s2 = load(make_data_filename(variable, start_month, end_month, scenarios{2}, 'GM'));%'a', 'GM'));%
     if(~strcmp(realm, 'amip'))
         common_models = s2.piC_models(:,1); %AA
     else
+        %I could probably do something similar for the coupled simulations too. 
         s1 = load(make_data_filename(variable, start_month, end_month, scenarios{1}, 'GM'));
         %make fast file
         T_fast = innerjoin(struct2table(rmfield(s1, {'time'})), struct2table(rmfield(s2, {'time'})), 'Keys', 'models');       
@@ -51,18 +53,24 @@ for v = 1:length(variables)
     end
     
     mkdir(['analysis/', variable])
-    obs = load(make_data_filename(variable, start_month, end_month, 'observations'));
-    obs_anomaly = obs.var-mean(obs.var);
-    timeframe_obs = (obs.T >= start_year & obs.T <= end_year);
-    ref_T_years = obs.T(timeframe_obs); 
-    o = obs_anomaly(:,timeframe_obs,:);
+    if(use_fast)
+        F = load('Analysis/pr/cmip6_fast_1901-2014_N500.mat');
+        ref_T_years = 1901:2014;
+        o = F.MMM.MMM - mean(F.MMM.MMM, 2);
+    else
+        obs = load(make_data_filename(variable, start_month, end_month, 'observations'));
+        obs_anomaly = obs.var-mean(obs.var);
+        timeframe_obs = (obs.T >= start_year & obs.T <= end_year);
+        ref_T_years = obs.T(timeframe_obs); 
+        o = obs_anomaly(:,timeframe_obs,1); %TODO change this back to :!
+    end
     for j = 1:length(scenarios)
         scenario = scenarios{j};
         fprintf("Accessing scenario %s\n", scenario);
 
 	h = load(make_data_filename(variable, start_month, end_month, scenario,'GM'));
 	fname = make_analysis_filename(variable, scenario, ref_T_years(1), ref_T_years(end), N);
-        if(~strcmp(scenario, 'cmip6_fast'))
+        if(~contains(scenario, 'fast'))
             hall = load(make_data_filename(variable, start_month, end_month, scenario, 'all'));
         end
         if(isfield(h, 'indices'))
@@ -92,7 +100,7 @@ for v = 1:length(variables)
         h_new = h_new(ismember(h_new.models, common_models),:);
         
         %create table for h_all
-        if(~strcmp(scenario, 'cmip6_fast'))
+        if(~contains(scenario, 'fast'))
             if(isfield(hall,'indices'))
                 hall2 = rmfield(hall, 'indices');
             else
@@ -117,7 +125,11 @@ for v = 1:length(variables)
         Analysis = matfile(fname, 'Writable', true);
 
         T_m = ismember(single(h.time(1,:)),ref_T_years);
-        hm = h.GMs(:,T_m, ismember(h.indices(1,:), {'NA', 'GT', 'NARI'})); 
+        if(strcmp(variable, 'ts'))
+            hm = h.GMs(:,T_m, ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
+        else
+            hm = h.GMs(:,T_m, :);
+        end
         %above: selecting the basins for which I've downloaded
         %observations.
         trust = h.trust;
@@ -126,7 +138,7 @@ for v = 1:length(variables)
         MMM.r = r; MMM.e = e; MMM.MMM = mmm; Analysis.MMM = mmm;
 
         %hall
-        if(~strcmp(scenario, 'cmip6_fast'))
+        if(~contains(scenario, 'fast'))
             %select the basins for which I have observations
             runs = hall.runs(:,T_m,ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
             runs_r = m_corrcoef(runs, o); runs_e = rmse(runs, o);
@@ -142,16 +154,24 @@ for v = 1:length(variables)
         [r_sanity, e_sanity, ~] = calc_stats(zeros(size(o)), 1, o);
         sanity.r = r_sanity; sanity.e = e_sanity;
 
-        Analysis.MMM = MMM; Analysis.indiv = indiv; Analysis.sanity = sanity; Analysis.N = N; Analysis.indiv_runs = indiv_runs;
+        Analysis.MMM = MMM; Analysis.sanity = sanity; Analysis.N = N; 
+        if(~contains(scenario, 'fast'))
+            Analysis.indiv = indiv; Analysis.indiv_runs = indiv_runs;
+        end
 
         Analysis.historical_bootstrapped = bootstrap_model(N, o, hm, trust);
 
         %TODO could alternately use ISFIELD and then I wouldn't have to
         %define the realm at the top...
         if(~strcmp(realm, 'amip'))
+            if(strcmp(variable, 'ts'))
+                sl = h.piC_GMs(:,:,ismember(h.indices(1,:),{'NA', 'GT', 'NARI'}));
+            else
+                sl = h.piC_GMs;
+            end
             [Analysis.piC_resampled_bootstrapped, skip_models] = ...
                 sample_model(N, o,...
-                h.piC_GMs(:,:,ismember(h.indices(1,:),{'NA', 'GT', 'NARI'})),...
+                sl,...
                 h.piC_trust, dt);
             fprintf('skipping piC simulations which are too short:')
             h.piC_models(skip_models,:)
@@ -163,7 +183,7 @@ for v = 1:length(variables)
         end
         
         if(isfield(h, 'indices'))
-            Analysis.indices = h.indices;
+            Analysis.indices = h.indices(1,ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
         end
     end
     %{

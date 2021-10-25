@@ -2,12 +2,12 @@
 mic=false;
 tosave = false;
 
-realm = 'cmip5';
+realm = 'cmip6_fast';
 variable = 'pr';
 start_year = 1901; end_year = 2014;
 short = false;
-start_month = 5;%7
-end_month = 7;%9
+start_month = 7;
+end_month = 9;
 
 switch realm
     case 'cmip6'
@@ -27,6 +27,12 @@ switch realm
             names = [names(1:4), {'ALL', 'AA', 'VA', 'GHG'}];
             end_year = 2003;
         end
+    case 'cmip6_fast'
+        scenarios = {'cmip6_hfast', 'cmip6_afast', 'cmip6_nfast', 'cmip6_gfast'};% The Fast component is SUPER WIDE! 'cmip6_fast'};
+        colors = {'b', 'm', [0.60,0.20,0.00], 'g', [0, 127, 0]/255, [1,.7,0],[126, 47, 142]/255};
+        styles = {'-', '-', '-', '-', '-', '-'};
+        names = {'ALL fast', 'AA fast', 'NAT fast', 'GHG fast', 'amip-hist', 'amip-piF', 'Implied Fast Component'};
+        mdgnd = [0,1,1]; %cyan
     case 'cmip5'
         scenarios = {'h', 'a', 'n', 'g'};
         colors = {'b', 'm', [0.60,0.20,0.00], 'g'};
@@ -103,7 +109,7 @@ if(contains(realm, 'cmip'))
             for l = 1:length(dts)
                 dt = char(dts(l));
 
-		aname = make_analysis_filename(variable, start_month, end_month, scenario, start_year, end_year, N);
+		aname = make_analysis_filename(variable, scenario, start_year, end_year, N);
                 A = load(aname);
 
                 r = A.MMM.r; r_bootstrap = A.historical_bootstrapped.rs; 
@@ -238,7 +244,7 @@ function[] = analysis_plot(v, bootstrap, color, style, name, fig_num, sp_x, sp_n
     idx_v = find(abs(x - v) == min(abs(x - v)));
     if(contains(name, 'piC')||contains(name, 'Control'))
         plot(x, y, ':', 'Color', color, 'LineWidth', 2, 'DisplayName', name); hold on;
-        [low, high] = confidence_interval(bootstrap, 1, .05); 
+        [low, high] = confidence_interval(bootstrap, 1, .001); 
         if(v > median(bootstrap))
             plot(high*[1,1], get(gca, 'ylim'), '--', 'Color', color, 'HandleVisibility', 'off');
         else

@@ -5,8 +5,8 @@ clear;
 %TODO only use common models...
 
 tosave = false;
-realm = 'cmip5';
-variable = 'pr';
+realm = 'cmip6';
+variable = 'ts';
 global end_year start_year PAD; 
 start_year = 1901;
 PAD = 1101;
@@ -45,7 +45,7 @@ end
 single_scenario = scenarios{1};
 if(strcmp(variable, 'ts'))
     to_subtract_GHG = [false, true];
-    G = load(make_analysis_filename(variable, start_month, end_month, s_g, start_year, end_year, '500'));
+    G = load(make_analysis_filename(variable, s_g, start_year, end_year, '500'));
 else
     to_subtract_GHG = [false];
 end
@@ -64,12 +64,13 @@ end
 clear wetdry hotcold x;
 
 if(isKelvin)
-    conv = strcmp(variable, 'ts').*(~strcmp(G.indices, 'NARI'))*273.15;
+    conv = permute(strcmp(variable, 'ts').*(~strcmp(G.indices, 'NARI'))*273.15,...
+                   [1,3,2]);
 else
     conv = 0;
 end
 
-obs = load(make_data_filename(variable, start_month, end_month, 'observations']); 
+obs = load(make_data_filename(variable, start_month, end_month, 'observations')); 
 tm = obs.T>=start_year & obs.T<=end_year;
 obsT = obs.T(tm); obs_var = obs.var(:,tm,:)+conv; %convert obs to Kelvin if data is in Kelvins
 obs_var_a = obs_var - mean(obs_var,2);
@@ -104,7 +105,7 @@ for subtract_GHG = to_subtract_GHG
         elseif(subtract_GHG && contains(s, 'g'))
             continue
         else
-            A = load(make_analysis_filename(variable, start_month, end_month, s, start_year, end_year, '500'));
+            A = load(make_analysis_filename(variable, s, start_year, end_year, '500'));
         end
         %forced_mmms = A.historical_bootstrapped.b_means;
 
@@ -242,7 +243,7 @@ switch realm
         fnames = {names{1}, 'piC'};
         obs_styles = {'-', '-.'};
 end    
-AA = load(make_analysis_filename(variable, start_month, end_month, scenarios{1}, start_year, end_year, '500'));
+AA = load(make_analysis_filename(variable, scenarios{1}, start_year, end_year, '500'));
 common_models = AA.indiv.models;
 
 fig5_names_2 = {'c.', 'd.'};
@@ -324,7 +325,7 @@ for basin = 1:I
             subplot(yn,xn,i+(basin-1)*xn)
         end
         if(contains(s, 'piC'))
-	     H = load(make_analysis_filename(variable, start_month, end_month, single_scenario, start_year, end_year, '500'));
+	     H = load(make_analysis_filename(variable, single_scenario, start_year, end_year, '500'));
             obs_anom_res = obs_var_a(:,:,basin) - (H.MMM.MMM(:,1:length(obs_var_a(:,:,basin)),basin) - mean(H.MMM.MMM(:,1:length(obs_var_a(:,:,basin)),basin),2));
         elseif(strcmp(s, 'noGHG'))
             obs_anom_res = obs_var_a(:,:,basin) - (G.MMM.MMM(:,1:length(obs_var_a(:,:,basin)),basin) - mean(G.MMM.MMM(:,1:length(obs_var_a(:,:,basin)),basin),2));
@@ -453,7 +454,7 @@ function [yl, periods, periodograms, h_CI, obs_ps, CI] = plot_all(m_runs, color_
     %I should smooth these as well to make up for the smaller means
     [periods, periodograms, ~, h_CI] = pmtm_multi(m_runs, obsT, [], PAD, scaling.groupings);
     for i = unique(scaling.groupings)'
-        plot(periods, periodograms(i,:), 'color', color_map(scaling.color_index_mean(i),:), 'DisplayName', scaling.models{i}, 'Linewidth', 1);
+        plot(periods, periodograms(i,:), 'color', color_map(scaling.color_index_mean(i),:), 'Linewidth', 1, 'HandleVisibility', 'off','DisplayName', scaling.models{i})
         hold on;
     end
     [obs_ps, f, CI] = pmtm(obsv',[],PAD, 1, 'ConfidenceLevel', .95);
@@ -481,3 +482,6 @@ function [T] = split_piC_runs(T, LENGTH)
     T.runs = cat(1,runs{:}); T.time = cat(1,time{:});
     T.runs = T.runs(:,1:LENGTH); T.time = T.time(:,1:LENGTH);
 end
+
+%NA: CNRM-ESM2-1 p1 (pink), IPSL-CM6A-LR p1 (blue), CNRM-CM6-1 p1 (grey)
+%NARI: CNRM-ESM2-1 p1 (pink), CNRM-CM6-1 p1 (grey pink)
