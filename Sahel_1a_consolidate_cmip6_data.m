@@ -5,7 +5,7 @@
 %TODO check why CSIRO files give segfaults.
 
 clear
-generation = 5;
+generation = 6;
 if(generation==6)
 	end_year = 2014;
 else
@@ -16,8 +16,8 @@ variable = 'ts';%'evspsbl';
 start_month = 7;
 end_month = 9;
 
-scenarios = {'historicalGHG'};%,'hist-aer','hist-nat', 'hist-GHG','piControl'};%};%};%, , 'amip-hist', 
-short_names = {'g'};%'cmip6_h','cmip6_a','cmip6_n', 'cmip6_g','cmip6_piC'};%};%};%, , 'amip-hist', 'g_test'}%
+scenarios = {'piControl'};%'historicalGHG'};%,'hist-aer','hist-nat', 'hist-GHG',};%};%, , 'amip-hist', 
+short_names = {'cmip6_piC'};%'g'};%'cmip6_h','cmip6_a','cmip6_n', 'cmip6_g',};%};%, , 'amip-hist', 'g_test'}%
 skipped_vars = cell(1,6);
 
 for i = 1:length(scenarios)
@@ -165,8 +165,8 @@ function [model_names] = make_model_and_p_name(file, var)
 % special version for PSL-FACTS
     var_length = length(split(var, [".", "_"]));
     fields = split(file, [".", "_"]);
-    model = fields{1+var_length};%2 when CMIP6!
-    run = fields{2+var_length};%3 when CMIP6!
+    model = fields{2+var_length};%1 when CMIP5!
+    run = fields{3+var_length};%2 when CMIP5!
     run_stats = split(run, ["p", "f"]);
     model_and_p = [model, ' p', run_stats{2}];
     institution = fields{1+var_length};
