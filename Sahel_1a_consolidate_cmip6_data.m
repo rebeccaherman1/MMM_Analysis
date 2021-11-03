@@ -11,13 +11,13 @@ if(generation==6)
 else
 	end_year = 2003;
 end
-variable = 'hus_bndries';%'evspsbl';
+variable = 'ts';%'evspsbl';%
 %location = 'Sahel'; Not currently used. Perhaps use ~strcmp(location, Sahel) for the ocean basins instead of strcmp(variable, ts)
 start_month = 7;
 end_month = 9;
 
-scenarios = {'piControl'};%'historicalGHG'};%,'hist-aer','hist-nat', 'hist-GHG',};%};%, , 'amip-hist', 
-short_names = {'cmip6_piC'};%'g'};%'cmip6_h','cmip6_a','cmip6_n', 'cmip6_g',};%};%, , 'amip-hist', 'g_test'}%
+scenarios = {'hist-aer','hist-nat', 'hist-GHG',};%};%, , 'amip-hist', 'piControl'};%'historicalGHG'};%,
+short_names = {'cmip6_a','cmip6_n', 'cmip6_g',};%};%, , 'amip-hist', 'g_test'}%'cmip6_piC'};%'g'};%'cmip6_h',
 skipped_vars = cell(1,6);
 
 for i = 1:length(scenarios)
@@ -79,7 +79,6 @@ for i = 1:length(scenarios)
 	    %end
 	    %keep this list of all potential ocean basins up to date!
 	    all_basins = contains(vars, {'NA', 'GT', 'NARI', 'p1', 'md', 'SA', 'TA', 'GG'});
-	    vars(all_basins)
 	    pr = cat(3, D{all_basins});
 	    indices = vars(all_basins);
 	    D = {pr; Time; indices};
