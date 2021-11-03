@@ -11,7 +11,7 @@ if(generation==6)
 else
 	end_year = 2003;
 end
-variable = 'ts';%'evspsbl';
+variable = 'hus_bndries';%'evspsbl';
 %location = 'Sahel'; Not currently used. Perhaps use ~strcmp(location, Sahel) for the ocean basins instead of strcmp(variable, ts)
 start_month = 7;
 end_month = 9;
@@ -31,6 +31,9 @@ for i = 1:length(scenarios)
     folder = ['~/netcdf/cmip', num2str(generation),'/preprocessed/', scenarios{i}, '/', num2str(start_month), '-', num2str(end_month)];
     files = split(ls(folder));
     files = files(contains(files, [variable, '_']));
+    if(~contains(variable, 'bndries'))
+	files = files(~contains(files, 'bndries'));
+    end
     if(length(files)==0)
 	fprintf('No files exist for variable %s\n', variable);
 	continue;
@@ -76,6 +79,7 @@ for i = 1:length(scenarios)
 	    %end
 	    %keep this list of all potential ocean basins up to date!
 	    all_basins = contains(vars, {'NA', 'GT', 'NARI', 'p1', 'md', 'SA', 'TA', 'GG'});
+	    vars(all_basins)
 	    pr = cat(3, D{all_basins});
 	    indices = vars(all_basins);
 	    D = {pr; Time; indices};
@@ -116,7 +120,7 @@ for i = 1:length(scenarios)
 	    for di = 1:length(vars)
 		dti = strcmp(vars_tot, vars{di});
 		if(any(dti))
-		    if(contains(model_file_name, 'piC') & ~any(strcmp(vars{dti}, {'indices', 'model'})))
+		    if(contains(model_file_name, 'piC') & ~any(strcmp(vars_tot{dti}, {'indices', 'model'})))
 			tmp = D_tot{dti};
 			h1 = size(tmp, 1);
 			h2 = size(D{di}, 1);
