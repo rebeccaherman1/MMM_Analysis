@@ -13,11 +13,11 @@ else
 end
 variable = 'ts';%'evspsbl';%
 %location = 'Sahel'; Not currently used. Perhaps use ~strcmp(location, Sahel) for the ocean basins instead of strcmp(variable, ts)
-start_month = 7;
-end_month = 9;
+start_month = 5;
+end_month = 6;
 
-scenarios = {'hist-aer','hist-nat', 'hist-GHG',};%};%, , 'amip-hist', 'piControl'};%'historicalGHG'};%,
-short_names = {'cmip6_a','cmip6_n', 'cmip6_g',};%};%, , 'amip-hist', 'g_test'}%'cmip6_piC'};%'g'};%'cmip6_h',
+scenarios = {'piControl'};%'hist-aer','hist-nat', 'hist-GHG',};%};%, , 'amip-hist', 'historicalGHG'};%,
+short_names = {'cmip6_piC'};%'cmip6_a','cmip6_n', 'cmip6_g',};%};%, , 'amip-hist', 'g_test'}%'g'};%'cmip6_h',
 skipped_vars = cell(1,6);
 
 for i = 1:length(scenarios)
