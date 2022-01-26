@@ -78,7 +78,7 @@ for i = 1:length(scenarios)
 	        %vars = [vars, {'p1'}];
 	    %end
 	    %keep this list of all potential ocean basins up to date!
-	    all_basins = contains(vars, {'NA', 'GT', 'NARI', 'p1', 'md', 'SA', 'TA', 'GG'});
+	    all_basins = contains(vars, {'NA', 'GT', 'NARI', 'p1', 'md', 'SA', 'TA', 'GG', 'EN', 'IN'});
 	    pr = cat(3, D{all_basins});
 	    indices = vars(all_basins);
 	    D = {pr; Time; indices};
