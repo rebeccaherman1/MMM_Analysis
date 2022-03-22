@@ -10,7 +10,7 @@ tosave = true;
 start_month = 7;
 end_month = 9;
 
-realm = 'cmip5';
+realm = 'cmip6';
 switch realm
     case 'amip'
         scenarios = {'amip-piF', 'amip-hist'};
@@ -20,9 +20,9 @@ switch realm
         piCs = 'piC';
         variables = {'pr', 'ts'}; 
     case 'cmip6'
-        scenarios = {'cmip6_h','cmip6_a', 'cmip6_n', 'cmip6_g'};
+        scenarios = {'cmip6_h'};%,'cmip6_a', 'cmip6_n', 'cmip6_g'};
         piCs = 'cmip6_piC';
-        variables = {'ts'};%'pr', 
+        variables = {'globalts'};%'pr', 
     otherwise
         fprintf("what do you want?")
 end
@@ -30,8 +30,9 @@ vert_mean = @(X) mean(X,1); vert_sum = @(X) sum(X,1);
 
 for v = 1:length(variables)
     var = variables{v};
-    AA = load(make_data_filename(var, start_month, end_month, scenarios{2}, 'all'));%'a', 'MM'));%
-    common_models = unique(AA.models(:,1)); %just model for CMIP6?
+    %AA = load(make_data_filename(var, start_month, end_month, scenarios{2}, 'all'));%'a', 'MM'));%
+    AA = load(make_data_filename('ts', start_month, end_month, 'cmip6_h', 'all'));%'a', 'MM'));%
+    common_models = unique(AA.model(:,1)); %just model for CMIP6?
     for j = 1:length(scenarios)
         scenario = scenarios{j};
         fprintf("Accessing scenario %s variable %s\n", scenario, var);
@@ -39,7 +40,7 @@ for v = 1:length(variables)
         if(isfield(h, 'indices'))
             h_indices = h.indices;
         end
-        h = table(h.model, h.runs, h.time, 'VariableNames', {'model', 'runs', 'time'});
+        h = table(h.model, h.runs, repmat(h.time, size(h.model, 1)), 'VariableNames', {'model', 'runs', 'time'});
         h = h(ismember(h.model(:,1), common_models),:);
         [model_names, I, model_groupings] = unique(h.model(:,2)); nMM = max(model_groupings);
         num_runs = histcounts(model_groupings(~any(any(isnan(h.runs),2),3)), (0:nMM)+.5)';
@@ -64,9 +65,13 @@ for v = 1:length(variables)
             if(exist('indices', 'var'))
                 File.indices = h_indices;
             end
+	    if(isfield('h', 'lat'))
+	        File.lat = h.lat;
+		File.lon = h.lon;
+	    end
         end
 
-        if(~strcmp(realm, 'amip'))
+        if(~strcmp(realm, 'amip') & ~contains(var, 'global'))
 	    piC = load(make_data_filename(var, start_month, end_month, piCs, 'all')); piC.runs(piC.runs==0)=NaN; piC_lengths = sum(~isnan(piC.runs(:,:,1)), 2);
             %T_piC = table(piC.model, piC.runs, piC.time, piC_lengths, 'VariableNames', {'model', 'runs', 'time', 'length'});
             T_piC = table(piC.model, piC.runs, piC_lengths, 'VariableNames', {'model', 'runs', 'length'});
@@ -111,8 +116,12 @@ for v = 1:length(variables)
             if(exist('h_indices', 'var'))
                 File.indices = h_indices;
             end
+	    if(isfield('h', 'lat'))
+	        File.lat = h.lat;
+		File.lon = h.lon;
+	    end
         end
-        if(~strcmp(realm, 'amip'))
+        if(~strcmp(realm, 'amip') & ~contains(Var, 'global'))
             [GM.piC_models, I, model_groupings] = unique(MM.piC_models(:,1)); nGM = max(model_groupings);
             weights=splitapply(vert_sum, MM.piC_trust, model_groupings);
             GM.piC_GMs = splitapply(vert_sum, MM.piC_trust.*MM.piC_MMs./weights(model_groupings), model_groupings);
