@@ -4,6 +4,8 @@
 %variables that are included in some models but not others can be found in SKIPPED_VARS
 %TODO check why CSIRO files give segfaults.
 
+%the global version is not working because the different models have different grids. I need to regrid at some point.
+
 clear
 generation = 6;
 if(generation==6)
@@ -11,13 +13,13 @@ if(generation==6)
 else
 	end_year = 2003;
 end
-variable = 'ts';%'evspsbl';%
+variable = 'globalts';%'evspsbl';%
 %location = 'Sahel'; Not currently used. Perhaps use ~strcmp(location, Sahel) for the ocean basins instead of strcmp(variable, ts)
-start_month = 5;
-end_month = 6;
+start_month = 7;
+end_month = 9;
 
-scenarios = {'piControl'};%'hist-aer','hist-nat', 'hist-GHG',};%};%, , 'amip-hist', 'historicalGHG'};%,
-short_names = {'cmip6_piC'};%'cmip6_a','cmip6_n', 'cmip6_g',};%};%, , 'amip-hist', 'g_test'}%'g'};%'cmip6_h',
+scenarios = {'historical'};%'hist-aer','hist-nat', 'hist-GHG',};%};%, , 'amip-hist', 'historicalGHG'};%,
+short_names = {'cmip6_h'};%'cmip6_a','cmip6_n', 'cmip6_g',};%};%, , 'amip-hist', 'g_test'}%'g'};%'cmip6_h',
 skipped_vars = cell(1,6);
 
 for i = 1:length(scenarios)
@@ -59,7 +61,7 @@ for i = 1:length(scenarios)
 	    %make sure the first dimension has length 1 and that time is the second dimension.
 	    D{v} = permute(d, [length(Lengths)+1, find(strcmp(dims, 'time') | strcmp(dims, 'year')),...
 		                   find(~(strcmp(dims, 'time') | strcmp(dims, 'year')))]);
-        end
+	end
 	%rename 'year' to 'time' if needed
 	if(any(contains(vars, 'year')))
 	    vars{strcmp(vars, 'year')} = 'time';
@@ -79,16 +81,30 @@ for i = 1:length(scenarios)
 	    %end
 	    %keep this list of all potential ocean basins up to date!
 	    all_basins = contains(vars, {'NA', 'GT', 'NARI', 'p1', 'md', 'SA', 'TA', 'GG', 'EN', 'IN'});
-	    pr = cat(3, D{all_basins});
-	    indices = vars(all_basins);
-	    D = {pr; Time; indices};
-	    vars = {variable, 'time', 'indices'};
+	    if(any(contains(vars, 'ts')))
+                lt = any(contains(vars, {'lat', 'Y'}));
+                ln = any(contains(vars, {'lon', 'X'}));
+		lat_L = Dims{lt}.Length;
+		lon_L = Dims{ln}.Length;
+		lat = repmat(D{lt}, 1, lon_L); lat = reshape(lat, lat_L*lon_L, 1);
+		lon = repmat(D{ln}', lat_L, 1); lon = reshape(lon, lat_L*lon_L, 1);
+		pr = reshape(D{contains(vars, 'ts')}, 1, size(Time), lat_L*lon_L);
+		D = {pr; Time; lat; lon};
+		vars = {variable, 'time', 'lat', 'lon'};
+	    else
+	        pr = cat(3, D{all_basins});
+	        indices = vars(all_basins);
+	        D = {pr; Time; indices};
+	        vars = {variable, 'time', 'indices'};
+	    end
         end
 	%Find the variable of interest
 	if(contains(variable, 'conv'))
 	    V = '__xarray_dataarray_variable__';
         elseif(contains(variable, 'bndries'))
 	    V = variable(1:(end-8));
+        elseif(contains(variable, 'global'))
+            V = 'ts';
         else	    
 	    V = variable;
         end
@@ -149,7 +165,7 @@ for i = 1:length(scenarios)
     	vars_tot{strcmp(vars_tot, V)} = 'runs';
     end
     S = cell2struct(D_tot, vars_tot);
-    save(model_file_name, '-struct', 'S');
+    save(model_file_name, '-struct', 'S');%, '-v7.3');
     clear D_tot, vars_tot;
 end
 
