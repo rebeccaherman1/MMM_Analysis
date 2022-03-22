@@ -1,13 +1,12 @@
 %For TS just looks at NARI.
 mic=false;
-tosave = false;
+tosave = true;
 
-realm = 'cmip6_fast';
+realm = 'cmip6';
 variable = 'pr';
 start_year = 1901; end_year = 2014;
 short = false;
-start_month = 7;
-end_month = 9;
+smth = 1;
 
 switch realm
     case 'cmip6'
@@ -74,21 +73,35 @@ close all;
  %hold off; clf; 
 
 if(strcmp(variable, 'pr') && ~short)
-    aname = make_analysis_filename(variable, start_month, end_month, single_scenario,start_year, end_year, N);
+    aname = make_analysis_filename(variable, single_scenario,start_year, end_year, N);
     A = load(aname);
-    openfig(['figures/', variable, '/', single_scenario, '_Fig1p_', num2str(start_year), '-', num2str(end_year), '.fig']);
+    fname = ['figures/', variable, '/', single_scenario, '_Fig1p_', num2str(start_year), '-', num2str(end_year), '.fig'];
+    if(smth)
+        fname = ['figures/', variable, '/', single_scenario, '_Fig1p_smth_', num2str(start_year), '-', num2str(end_year), '.fig'];
+    end
+    openfig(fname);
     hold on;
 
-    r = A.MMM.r; r_indiv = A.indiv.r; r_bootstrap = A.historical_bootstrapped.rs; r_r = A.indiv_runs.r; 
-    e = A.MMM.e; e_indiv = A.indiv.e; e_bootstrap = A.historical_bootstrapped.es; e_r = A.indiv_runs.e;
+    MMM = 'MMM'; hbs = 'historical_bootstrapped';
+    if(smth)
+        tmp = arrayfun(@(X) append(X, '_s'), {MMM, hbs});
+        [MMM,hbs] = tmp{:};
+    end
+     
+    r = A.(MMM).r; r_indiv = A.indiv.r; r_bootstrap = A.(hbs).rs; r_r = A.indiv_runs.r; 
+    e = A.(MMM).e; e_indiv = A.indiv.e; e_bootstrap = A.(hbs).es; e_r = A.indiv_runs.e;
     %indiv_plot(r_r, 3); hold on; indiv_plot(e_r, 4); hold on;
     indiv_plot(r_indiv, 3, mdgnd); hold on; analysis_plot(r, r_bootstrap, colors{1}, styles{1}, 'MMM', 1, 2, 3);
     indiv_plot(e_indiv, 4, mdgnd); hold on; analysis_plot(e, e_bootstrap, colors{1}, styles{1}, 'MMM', 1, 2, 4);
     finishfig(1,2,3,'c. Correlation with 20C Observations', '', 0, 'northwest'); 
     finishfig(1,2,4,'d. RMSE with 20C Observations', 'Fraction of Observed Variance', 1, 'northeast');
     if(tosave)
-        savefig(['figures/', variable, '/', single_scenario, '_Fig1_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.fig']);
-        saveas(1, ['figures/', variable, '/', single_scenario, '_Fig1_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N)], 'png');
+        fname_f = ['figures/', variable, '/', single_scenario, '_Fig1_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N)];
+        if(smth)
+            fname_f = ['figures/', variable, '/', single_scenario, '_Fig1_smth_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N)];
+        end
+        savefig([fname_f, '.fig']);
+        saveas(1, fname_f, 'png');
     end
 end
 
@@ -104,16 +117,21 @@ if(contains(realm, 'cmip'))
         color = colors{j};
         style = styles{j};
         name = names{j};
+        MMM = 'MMM'; hbs = 'historical_bootstrapped'; rbs = 'piC_resampled_bootstrapped'; 
+        if(smth)% & ~(contains(scenario, 'amip')))
+            tmp = arrayfun(@(X) append(X, '_s'), {MMM, hbs, rbs});
+            [MMM,hbs,rbs] = tmp{:};
+        end
         for k = 1:length(fls)
             fl = char(fls(k));
             for l = 1:length(dts)
                 dt = char(dts(l));
 
-		aname = make_analysis_filename(variable, scenario, start_year, end_year, N);
+                aname = make_analysis_filename(variable, scenario, start_year, end_year, N);
                 A = load(aname);
 
-                r = A.MMM.r; r_bootstrap = A.historical_bootstrapped.rs; 
-                e = A.MMM.e; e_bootstrap = A.historical_bootstrapped.es; 
+                r = A.(MMM).r; r_bootstrap = A.(hbs).rs; 
+                e = A.(MMM).e; e_bootstrap = A.(hbs).es; 
                 
                 if(strcmp(variable, 'ts'))
                     r = r(:,:,3); r_bootstrap = r_bootstrap(:,:,3);
@@ -124,7 +142,7 @@ if(contains(realm, 'cmip'))
                 analysis_plot(e, e_bootstrap, color, style, name, F, 1, 2); 
                 
                 if(isfield(A, 'piC_resampled_bootstrapped')) %UMMMM why does amip-piF have piC??? it shouldn't....
-                    r_resample = A.piC_resampled_bootstrapped.rs; e_resample = A.piC_resampled_bootstrapped.es; 
+                    r_resample = A.(rbs).rs; e_resample = A.(rbs).es; 
                     if(strcmp(variable, 'ts'))
                         r_resample = r_resample(:,:,3); e_resample = e_resample(:,:,3);
                     end
@@ -243,8 +261,8 @@ function[] = analysis_plot(v, bootstrap, color, style, name, fig_num, sp_x, sp_n
     lineplot = h(2); x = lineplot.XData; y = lineplot.YData; y = y / ((x(2) - x(1)) * sum(y));
     idx_v = find(abs(x - v) == min(abs(x - v)));
     if(contains(name, 'piC')||contains(name, 'Control'))
-        plot(x, y, ':', 'Color', color, 'LineWidth', 2, 'DisplayName', name); hold on;
-        [low, high] = confidence_interval(bootstrap, 1, .001); 
+        plot(x, y, ':', 'Color', color, 'LineWidth', 2, 'HandleVisibility', 'off'); hold on;
+        [low, high] = confidence_interval(bootstrap, 1, .05); 
         if(v > median(bootstrap))
             plot(high*[1,1], get(gca, 'ylim'), '--', 'Color', color, 'HandleVisibility', 'off');
         else

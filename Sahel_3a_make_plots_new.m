@@ -3,8 +3,8 @@ historical = true;
 tosave = false;
 start_year = 1901;
 anomaly_years = 1901:1950;
-variable = 'ts';
-realm = 'cmip5';
+variable = 'pr';
+realm = 'amip';
 start_month = 7;
 end_month = 9;
 %TODO add NARI for amip figures.
@@ -14,11 +14,13 @@ end_month = 9;
 
 %TODO make new case for CMIP6 (and CMIP5?) fast.
 
+gry = [0.65,0.65,0.65]; ls = '-'; lw = 0.5;
 switch realm
     case 'cmip6'
         %TODO this isn't generally for fast... make it its own special
         %case.
-        scenarios = {'cmip6_hfast','cmip6_afast','cmip6_nfast','cmip6_gfast'};%'amip'};%,; 
+        %scenarios = {'cmip6_hfast','cmip6_afast','cmip6_nfast','cmip6_gfast'};%'amip'};%,; 
+        scenarios = {'cmip6_h','cmip6_a','cmip6_n','cmip6_g'};%'amip'};%,; 
         scenario_names = {'ALL 6', 'AA 6', 'NAT 6', 'GHG 6'};
         pC = true;
         scenario_colors = {'b', 'm', [0.60,0.20,0.00], [0.00,0.80,0.00], 'c'};
@@ -31,16 +33,18 @@ switch realm
         scenario_colors = {[0.00,0.45,0.74], [0.75,0.00,0.75], 'r', [0.47,0.67,0.19], 'c'};
         long_colors = {'blue', 'magenta', 'red', 'green', 'cyan'};
         end_year = 2003;
+        ls = ':'; lw = 2;
     case 'amip'
         scenarios = {'amip-piF', 'amip-hist', 'cmip6_fast'}; %TODO: add other amip scenarios...
         scenario_names = {'amip-piForcing','amip-hist', 'Implied Fast Component'};
         pC = false;
         scenario_colors = {[1,.7,0],[0, 127, 0]/255, [126, 47, 142]/255};
         end_year = 2014;
+        anomaly_years = 1901:2014;
     otherwise
         fprintf('undefined realm!')
 end
-zoom = strcmp(variable, 'pr') && ~strcmp(realm, 'amip') && ~any(contains(scenarios, 'fast')); %I put a special case for 'cmip6_fast' scenario at the end
+zoom = 0;%strcmp(variable, 'pr') && ~strcmp(realm, 'amip') && ~any(contains(scenarios, 'fast')); %I put a special case for 'cmip6_fast' scenario at the end
 As = cell(length(scenarios),1);
 
 fl = '';%'last';
@@ -53,7 +57,7 @@ F = load('Analysis/pr/cmip6_fast_1901-2014_N500.mat');
 ref_T_years = 1901:2014;
 var_unstandardized = F.MMM.MMM;
 %}
-O = load('data/ts/7-9/observations.mat');
+O = load(sprintf('data/%s/7-9/observations.mat', variable));
 ref_T_years = O.T(ismember(O.T, start_year:end_year));
 var_unstandardized = O.var(:,ismember(O.T, start_year:end_year),:);
 
@@ -63,7 +67,7 @@ var_unstandardized = O.var(:,ismember(O.T, start_year:end_year),:);
 start_year = max(start_year, ref_T_years(1));
 end_year = min(end_year, ref_T_years(end));
 %var_unstandardized = obs.var(:,timeframe,:);
-var_anomaly = var_unstandardized - mean(var_unstandardized(:,ismember(ref_T_years, anomaly_years),:),2);
+var_anomaly = var_unstandardized - mean(var_unstandardized, 2);%(:,ismember(ref_T_years, anomaly_years),:),2);
 var_std = std(var_unstandardized,0,2);
 var_standardized = var_anomaly./var_std;
 
@@ -86,6 +90,7 @@ figure(2); hold off; clf; hold on;
 N_indiv = nan(1,length(scenarios));
 for j = 1:length(scenarios)
     scenario = char(scenarios(j));
+    smth = strcmp(scenario, 'a') || contains(scenario, {'_a', 'g', 'amip', 'fast'});
     fprintf("Accessing historical scenario %s\n", scenario);
     A = load(make_analysis_filename(variable, scenario, start_year, end_year, N));
     if(strcmp(variable, 'ts'))
@@ -99,26 +104,30 @@ for j = 1:length(scenarios)
     end
     [~,~,I] = size(A.MMM.MMM);
 
+    DU = {'low', 'high'};
+    if(smth)
+        DU = arrayfun(@(X) append(X, '_s'), DU);
+    end
     if(pC)
         if(strcmp(fl, 'last'))
             pC_down = A.piC_last.low;    
             pC_up = A.piC_last.high;     
             pC_scale = mean(std(A.piC_last.r_means, 0, 2));         
         else
-            pC_down = A.piC_resampled_bootstrapped.low;
-            pC_up   = A.piC_resampled_bootstrapped.high;
+            pC_down = mean(A.piC_resampled_bootstrapped.(DU{1}));
+            pC_up   = mean(A.piC_resampled_bootstrapped.(DU{2}));
             pC_scale = mean(std(A.piC_resampled_bootstrapped.r_means, 0, 2));
         end
     end
     if(historical)
         mmm_v = A.MMM.MMM; mmm_anomaly = mmm_v-mean(mmm_v,2); 
-        r = A.MMM.r; rmsd = A.MMM.e;
+        r = A.MMM_s.r; rmsd = A.MMM_s.e;
         anomaly_diff = mean(mmm_anomaly(:,ismember(ref_T_years, anomaly_years),:),2);
         mmm = mmm_anomaly-anomaly_diff;
         %the historical_bootstrapped are actual anomalies, hence the need
         %for "anomaly_diff" as defined.
-        up   = A.historical_bootstrapped.high - anomaly_diff; 
-        down = A.historical_bootstrapped.low - anomaly_diff;  
+        up   = A.historical_bootstrapped.(DU{2}) - anomaly_diff; 
+        down = A.historical_bootstrapped.(DU{1}) - anomaly_diff;  
         if(strcmp(variable, 'ts'))
             r_no_ghg = permute(diag(corr(permute(mmm_anomaly, [2,3,1]), permute(no_ghg, [2,3,1]))),[2,3,1]);
             e_no_ghg = mean((mmm_anomaly-no_ghg).^2,2).^.5./std(no_ghg,0,2);
@@ -149,7 +158,14 @@ for j = 1:length(scenarios)
             r_ttl = r_no_ghg(:,:,i); e_ttl = e_no_ghg(:,:,i);
             fprintf('no ghg!')
         else
-            p_actual = plot(ref_T_years, var_anomaly(:,:,i), 'k-');%, 'LineWidth', 2);
+            if(strcmp(scenario, 'h') || contains(scenario, '_h'))
+                plot(ref_T_years, var_anomaly(:,:,i), '-', 'color', gry*.8/.65);%, 'LineWidth', 2);
+            end
+            tp = smooth(smooth(var_anomaly(:,:,i), 20),5)';
+            if(contains(scenario, 'n'))
+                tp = var_anomaly(:,:,i)-tp;
+            end
+            p_actual_s = plot(ref_T_years, tp, '-', 'color', gry);%, 'LineWidth', 2);
             r_ttl = r(:,:,i); e_ttl = rmsd(:,:,i);
         end
         
@@ -173,16 +189,20 @@ for j = 1:length(scenarios)
             ylim([-yl, yl])
         elseif(~strcmp(variable,'ts') && ~any(contains(scenarios, 'fast')))
             %set(gca, 'ycolor', scenario_colors{j})
-            ylim([-1.5,1.5])
+            %ylim([-1.5,1.5])
+            ylim([-.7,.7])
         end
         %right ordinates
-        if(zoom || strcmp(scenario, 'cmip6_fast'))% || (I~=1 && strcmp(A.indices(i), 'NARI'))
+        if(zoom)% || strcmp(scenario, 'cmip6_fast'))% || (I~=1 && strcmp(A.indices(i), 'NARI'))
             yyaxis right
             set(gca, 'ycolor', scenario_colors{j})
         end
+        %{
         if(strcmp(scenario, 'cmip6_fast'))
             ylim([-1,1]);
-        elseif(zoom || I~=1 && strcmp(A.indices(i), 'NARI'))
+        else
+        %}
+        if(zoom || I~=1 && strcmp(A.indices(i), 'NARI'))
             ylim([-.5, .5])
         elseif(strcmp(variable, 'ts'))
             %ylim([-.85,1.15]);
@@ -190,14 +210,21 @@ for j = 1:length(scenarios)
 
         %pC
         if(pC)
-            p_stds = fill([ref_T_years';flipud(ref_T_years')],[pC_down(:,:,i)';flipud(pC_up(:,:,i)')],'y','FaceAlpha', .3 ,'linestyle','none');
-            p_stds.HandleVisibility = 'off';
+            %p_stds = fill([ref_T_years';flipud(ref_T_years')],[pC_down(:,:,i)';flipud(pC_up(:,:,i)')],'y','FaceAlpha', .3 ,'linestyle','none');
+            %p_stds.HandleVisibility = 'off';
+            plot([ref_T_years(1), ref_T_years(end)], [1,1]*pC_up, 'k', 'LineStyle', ls, 'HandleVisibility', 'off')
+            plot([ref_T_years(1), ref_T_years(end)], [1,1]*pC_down, 'k', 'LineStyle', ls, 'HandleVisibility', 'off')
         end
         if(historical)
+            if(smth)
+                down(:,:,i) = smooth(down(:,:,i), 20);
+                up(:,:,i) = smooth(up(:,:,i), 20);
+                mmm(:,:,i) = smooth(mmm(:,:,i), 20);
+            end
             hold on;
             p_stds = fill([ref_T_years';flipud(ref_T_years')],[down(:,:,i)';flipud(up(:,:,i)')],scenario_colors{j},'FaceAlpha', .3 ,'linestyle','none');
             p_stds.HandleVisibility = 'off';
-            p_mmm = plot(ref_T_years,mmm(:,:,i),'-', 'Color', scenario_colors{j});%, 'LineWidth', 2);%, 'DisplayName', );
+            p_mmm = plot(ref_T_years,mmm(:,:,i),'LineStyle', ls, 'Color', scenario_colors{j}, 'LineWidth', lw);%, 'DisplayName', );
             xlim([start_year, end_year]);
         end
         %{
@@ -213,21 +240,25 @@ for j = 1:length(scenarios)
 end
 
 if(strcmp(realm, 'amip'))
-    NAT = load(make_analysis_filename('pr',start_month, end_month, 'cmip6_n', start_year, end_year, N));
+    %{
+    NAT = load(make_analysis_filename('pr','cmip6_n', start_year, end_year, N));
     mmm = NAT.MMM.MMM;
     mmm = mmm - mean(mmm(:,ismember(ref_T_years, anomaly_years),:),2);
     plot(ref_T_years, mmm, 'r-')
     corr(mmm', A.MMM.MMM')
+    %}
     
-    ALL = load(make_analysis_filename('pr', start_month, end_month,'cmip6_h', start_year, end_year, N));
-    mmm = ALL.MMM.MMM;
+    ALL = load(make_analysis_filename('pr', 'cmip6_h', start_year, end_year, N));
+    mmm = ALL.MMM_s.MMM;
     mmm = mmm - mean(mmm(:,ismember(ref_T_years, anomaly_years),:),2);
     plot(ref_T_years, mmm, 'b-')
     corr(mmm', A.MMM.MMM')
     
-    sst_obs = load(make_data_filename('ts', start_month, end_month, 'observations')); NARI = sst_obs.var(:,:,3);
+    sst_obs = load(make_data_filename('ts', start_month, end_month, 'observations')); NARI = smooth(smooth(sst_obs.var(:,:,3), 20),5);
     NARI_color = [0.07,0.62,1.00];
-    subplot(yn, xn, 1); yyaxis right; set(gca, 'ycolor', NARI_color); ylabel('NARI (C)');
+    subplot(yn, xn, 1); yl = ylim;
+    yyaxis right; set(gca, 'ycolor', NARI_color); ylabel('NARI (C)');
+    ylim(yl./.87 + mean(NARI))
     plot(sst_obs.T, NARI, '-', 'Color', NARI_color, 'DisplayName', 'NARI')
 end
 %}
