@@ -3,7 +3,7 @@ N = 500;
 
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
-realm = 'cmip5';
+realm = 'cmip6';
 short = false;
 start_month = 7;
 end_month = 9;
@@ -15,9 +15,10 @@ switch realm
     case 'cmip5'
         scenarios = {'h', 'a', 'n', 'g'};
         end_year = 2003;
-        variables = {'pr', 'ts'};
+        variables = {'pr'};%, 'ts'};
     case 'cmip6'
-        scenarios = {'cmip6_hfast', 'cmip6_afast', 'cmip6_nfast', 'cmip6_gfast'};
+        scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};
+        %scenarios = {'cmip6_hfast', 'cmip6_afast', 'cmip6_nfast', 'cmip6_gfast'};
         end_year = 2014; 
         variables = {'pr'};%'pr', 
     case 'amip'
@@ -63,6 +64,7 @@ for v = 1:length(variables)
         timeframe_obs = (obs.T >= start_year & obs.T <= end_year);
         ref_T_years = obs.T(timeframe_obs); 
         o = obs_anomaly(:,timeframe_obs,1); %TODO change this back to :!
+        o_s = smooth(o, 20);
     end
     for j = 1:length(scenarios)
         scenario = scenarios{j};
@@ -129,6 +131,7 @@ for v = 1:length(variables)
             hm = h.GMs(:,T_m, ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
         else
             hm = h.GMs(:,T_m, :);
+            hm_s = smoothdata(hm, 2, 'movmean', 20);
         end
         %above: selecting the basins for which I've downloaded
         %observations.
@@ -136,11 +139,16 @@ for v = 1:length(variables)
 
         [r, e, mmm] = calc_stats(hm, trust, o);
         MMM.r = r; MMM.e = e; MMM.MMM = mmm; Analysis.MMM = mmm;
+        [r_s, e_s, mmm_s] = calc_stats(hm_s, trust, o_s');
+        MMM_s.r = r_s; MMM_s.e = e_s; MMM_s.MMM = mmm_s;
 
         %hall
         if(~contains(scenario, 'fast'))
             %select the basins for which I have observations
-            runs = hall.runs(:,T_m,ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
+            runs = hall.runs(:,T_m,:);
+            if(strcmp(v, 'ts'))
+                runs = hall.runs(:,:,ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
+            end
             runs_r = m_corrcoef(runs, o); runs_e = rmse(runs, o);
             indiv_runs.r = runs_r; indiv_runs.e = runs_e; indiv.models = hall.model;
         end
@@ -155,11 +163,13 @@ for v = 1:length(variables)
         sanity.r = r_sanity; sanity.e = e_sanity;
 
         Analysis.MMM = MMM; Analysis.sanity = sanity; Analysis.N = N; 
+        Analysis.MMM_s = MMM_s;
         if(~contains(scenario, 'fast'))
             Analysis.indiv = indiv; Analysis.indiv_runs = indiv_runs;
         end
 
         Analysis.historical_bootstrapped = bootstrap_model(N, o, hm, trust);
+        Analysis.historical_bootstrapped_s = bootstrap_model(N, o_s', hm_s, trust);
 
         %TODO could alternately use ISFIELD and then I wouldn't have to
         %define the realm at the top...
@@ -175,6 +185,10 @@ for v = 1:length(variables)
                 h.piC_trust, dt);
             fprintf('skipping piC simulations which are too short:')
             h.piC_models(skip_models,:)
+            [Analysis.piC_resampled_bootstrapped_s, ~] = ...
+                sample_model(N, o_s',...
+                smoothdata(sl, 2, 'movmean', 20),...
+                h.piC_trust, dt);
         %{
         else
             HBs{j} = Analysis.historical_bootstrapped;
@@ -254,10 +268,12 @@ function [all] = bootstrap_model(N, obs, GMs, trust, fl, dt)
         rs(bs,:,:) = r; es(bs,:,:) = e;
     end
     [CI_low, CI_high] = confidence_interval(mmms);
+    [CI_low_s, CI_high_s] = confidence_interval(smoothdata(mmms, 2, 'movmean', 20));
     b_means = mmms; mids = mean(mmms, 1);
     
     all.b_means = b_means; all.rs = rs; all.es = es; all.high = CI_high; all.low = CI_low;
     all.N = N; all.num_models = num_models; all.mids = mids;
+    all.high_s = CI_high_s; all.low_s = CI_low_s;
 end
 
 function [all, too_short] = sample_model(N, obs, GMs, trust, dt, fl)
@@ -303,10 +319,12 @@ function [all, too_short] = sample_model(N, obs, GMs, trust, dt, fl)
         rs(bs,:,:) = r; es(bs,:,:) = e; 
     end
     [CI_low, CI_high] = confidence_interval(mmms); mids = mean(mmms, 1);
+    [CI_low_s, CI_high_s] = confidence_interval(smoothdata(mmms, 2, 'movmean', 20));
     r_means = mmms;
     %r_means, rs, es, CI_low, CI_high
     all.r_means = r_means; all.rs = rs; all.es = es; all.low = CI_low; all.high = CI_high;
     all.num_models = num_models; all.mids = mids;
+    all.low_s = CI_low_s; all.high_s = CI_high_s;
 end
 
 %takes the correlation coefficient of horizontal time series in a 2D matrix 
