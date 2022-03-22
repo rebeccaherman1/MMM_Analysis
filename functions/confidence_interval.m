@@ -11,6 +11,8 @@ function [CI_low, CI_high] = confidence_interval(X, dim, confidence)
             CI_low = X(side+1,:,:); CI_high = X(n - side,:,:);
         case 2
             CI_low = X(:,side+1,:); CI_high = X(:,n - side,:);
+        case 3
+            CI_low = X(:,:,side+1); CI_high = X(:,:, n-side);
         otherwise
             fprintf('bad dimension!')
     end

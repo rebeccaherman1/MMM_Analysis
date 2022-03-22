@@ -6,7 +6,7 @@ clear;
 
 tosave = false;
 realm = 'cmip6';
-variable = 'ts';
+variable = 'pr';
 global end_year start_year PAD; 
 start_year = 1901;
 PAD = 1101;

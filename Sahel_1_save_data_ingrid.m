@@ -1,6 +1,7 @@
 %{
-Use for all data accessed without jupyter and the cloud, rather through the IRI library.
-Data is preprocessed using ingrid (see http://rainbow.ldeo.columbia.edu/documentation/libraries/ingrid/Ingrid_5.html#SEC39). 
+Use for all data accessed without jupyter and the cloud, rather through the
+IRI library. Data is preprocessed using ingrid (see 
+http://rainbow.ldeo.columbia.edu/documentation/libraries/ingrid/Ingrid_5.html#SEC39). 
 Includes CMIP5 and observations. Can also be used for short CMIP5 AMIP simulations.
 
 Log files for seach scenario "<Scenario>_log.txt" detail which simulations
@@ -12,7 +13,7 @@ clear
 %customizable variables
 get_observations = true;
 get_simulations = false;
-scenarios = {'historical','historicalAerosol','historicalNat','historicalGHG','piControl'};%'historicalMisc' is volcanoes only.  
+scenarios = {'historical'};%,'historicalAerosol','historicalNat','historicalGHG','piControl'};%'historicalMisc' is volcanoes only.  
 %there are additional amip simulations which I downloaded onto a Lamont
 %server which can be accessed here, called 'amip', 'PSL-FACTS', and
 %'VanillaAMIP'. They are not included here because they were too short and
