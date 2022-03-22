@@ -149,7 +149,7 @@ for i = 1:length(scenarios)
     	vars_tot{strcmp(vars_tot, V)} = 'runs';
     end
     S = cell2struct(D_tot, vars_tot);
-    save(model_file_name, '-struct', 'S');
+    save(model_file_name, '-struct', 'S', '-v7.3');
     clear D_tot, vars_tot;
 end
 
