@@ -3,7 +3,7 @@ N = 500;
 
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
-realm = 'cmip5';
+realm = 'cmip6';
 short = false;
 start_month = 7;
 end_month = 9;
@@ -17,9 +17,9 @@ switch realm
         end_year = 2003;
         variables = {'pr', 'ts'};
     case 'cmip6'
-        scenarios = {'cmip6_hfast', 'cmip6_afast', 'cmip6_nfast', 'cmip6_gfast'};
+        scenarios = {'cmip6_h'};%'cmip6_hfast', 'cmip6_afast', 'cmip6_nfast', 'cmip6_gfast'};
         end_year = 2014; 
-        variables = {'pr'};%'pr', 
+        variables = {'globalts'};%'pr', 
     case 'amip'
         scenarios = {'amip-hist', 'amip-piF','cmip6_fast'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
         end_year = 2014; 

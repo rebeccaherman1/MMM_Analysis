@@ -36,14 +36,15 @@ for v = 1:length(variables)
     for j = 1:length(scenarios)
         scenario = scenarios{j};
         fprintf("Accessing scenario %s variable %s\n", scenario, var);
-	    h = load(make_data_filename(var, start_month, end_month, scenario, 'all'));
+
+	h = load(make_data_filename(var, start_month, end_month, scenario, 'all'));
         if(isfield(h, 'indices'))
             h_indices = h.indices;
         end
         h = table(h.model, h.runs, repmat(h.time, size(h.model, 1)), 'VariableNames', {'model', 'runs', 'time'});
         h = h(ismember(h.model(:,1), common_models),:);
         [model_names, I, model_groupings] = unique(h.model(:,2)); nMM = max(model_groupings);
-        num_runs = histcounts(model_groupings(~any(any(isnan(h.runs),2),3)), (0:nMM)+.5)';
+        num_runs = histcounts(model_groupings(~all(all(isnan(h.runs),2),3)), (0:nMM)+.5)';
         MM.MMs = splitapply(vert_mean, h.runs, model_groupings);
         MM.models = [h.model(I,1), model_names];
         MM.trust = sqrt(num_runs);
@@ -99,6 +100,11 @@ for v = 1:length(variables)
                 File.piC_trust = MM.piC_trust;
             end
         end
+%}
+        %skipping MM
+        fname = make_data_filename(var, start_month, end_month, scenario, 'MM');
+	MM = load(fname);
+
         [GM.models, ~, model_groupings] = unique(MM.models(:,1)); nGM = max(model_groupings);
         weights=splitapply(vert_sum, MM.trust, model_groupings);
         GM.GMs = splitapply(vert_sum, MM.trust.*MM.MMs./weights(model_groupings), model_groupings);
@@ -121,7 +127,7 @@ for v = 1:length(variables)
 		File.lon = h.lon;
 	    end
         end
-        if(~strcmp(realm, 'amip') & ~contains(Var, 'global'))
+        if(~strcmp(realm, 'amip') & ~contains(variables, 'global'))
             [GM.piC_models, I, model_groupings] = unique(MM.piC_models(:,1)); nGM = max(model_groupings);
             weights=splitapply(vert_sum, MM.piC_trust, model_groupings);
             GM.piC_GMs = splitapply(vert_sum, MM.piC_trust.*MM.piC_MMs./weights(model_groupings), model_groupings);
