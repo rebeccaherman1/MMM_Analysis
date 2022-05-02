@@ -7,32 +7,41 @@
 %the global version is not working because the different models have different grids. I need to regrid at some point.
 
 clear
-generation = 6;
+generation = 5;
 if(generation==6)
+	scenarios = {'historical'};%'hist-aer','hist-nat', ,};%};%, , 'amip-hist', 'historicalGHG'};%,
+	short_names = {'cmip6_h'};%'cmip6_a','cmip6_n', 'cmip6_g',};%};%, , 'amip-hist', 'g_test'}%'g'};%'cmip6_h',
 	end_year = 2014;
 else
 	end_year = 2003;
+	scenarios = {'historicalGHG'}%;,'historicalAerosol','historicalNat', 'historicalGHG'};%};%, , 'amip-hist', 'historicalGHG'};%,
+	short_names = {'g'};%,'a','n', 'g',};%};%, , 'amip-hist', 'g_test'}%'g'};%'cmip6_h',
 end
-variable = 'globalts';%'evspsbl';%
+variable = 'ts';%'evspsbl';%
 %location = 'Sahel'; Not currently used. Perhaps use ~strcmp(location, Sahel) for the ocean basins instead of strcmp(variable, ts)
 start_month = 7;
 end_month = 9;
 
-scenarios = {'historical'};%'hist-aer','hist-nat', 'hist-GHG',};%};%, , 'amip-hist', 'historicalGHG'};%,
-short_names = {'cmip6_h'};%'cmip6_a','cmip6_n', 'cmip6_g',};%};%, , 'amip-hist', 'g_test'}%'g'};%'cmip6_h',
 skipped_vars = cell(1,6);
 
 for i = 1:length(scenarios)
     fprintf('\nSCENARIO %s\n', scenarios{i}')
     %create folder and filename where compiled data will be saved
     [model_file_name, fldr_name] = make_data_filename(variable, start_month, end_month, short_names{i}, 'all');
+    fldr_name = ['data/', variable, '/', num2str(start_month), '-', num2str(end_month), '/trying_wrong_NA/'];
+    model_file_name = [fldr_name, 'g_all.mat'];
     if ~exist(fldr_name, 'dir')
 	mkdir(fldr_name);
     end
+    fprintf([fldr_name, '\n'])
     %get list of files to compile
-    folder = ['~/netcdf/cmip', num2str(generation),'/preprocessed/', scenarios{i}, '/', num2str(start_month), '-', num2str(end_month)];
+    if(ischar(start_month))
+        folder = ['~/netcdf/cmip', num2str(generation),'/preprocessed/trying_wrong_NA/', scenarios{i}, '/', start_month];
+    else
+        folder = ['~/netcdf/cmip', num2str(generation),'/preprocessed/trying_wrong_NA/', scenarios{i}, '/', num2str(start_month), '-', num2str(end_month)];
+    end
     files = split(ls(folder));
-    files = files(contains(files, [variable, '_']));
+    files = files(startsWith(files, [variable, '_']));
     if(~contains(variable, 'bndries'))
 	files = files(~contains(files, 'bndries'));
     end
@@ -59,8 +68,9 @@ for i = 1:length(scenarios)
 	    Lengths = [Dims{v}.Length];
 	    dims = {Dims{v}.Name};
 	    %make sure the first dimension has length 1 and that time is the second dimension.
-	    D{v} = permute(d, [length(Lengths)+1, find(strcmp(dims, 'time') | strcmp(dims, 'year')),...
-		                   find(~(strcmp(dims, 'time') | strcmp(dims, 'year')))]);
+	    D{v} = permute(d, [length(Lengths)+1,...
+	                       find(strcmp(dims, 'time') | strcmp(dims, 'year')),...
+		               find(~(strcmp(dims, 'time') | strcmp(dims, 'year')))]);
 	end
 	%rename 'year' to 'time' if needed
 	if(any(contains(vars, 'year')))
@@ -72,7 +82,7 @@ for i = 1:length(scenarios)
 %	Time = floor(Time/12)+1901;
 
 	%if the variable is ts, combine the basins into one array called VARIABLE.
-        if(strcmp(variable, 'ts'))
+        if(contains(variable, 'ts'))
 	    %Add p1 if missing.
 	    %if(~any(contains(vars, 'p1')) & contains(vars, 'NA') & contains(vars, 'GT'))
 		%p1 = D{strcmp(vars, 'NA')} + D{strcmp(vars, 'GT')};
@@ -82,13 +92,17 @@ for i = 1:length(scenarios)
 	    %keep this list of all potential ocean basins up to date!
 	    all_basins = contains(vars, {'NA', 'GT', 'NARI', 'p1', 'md', 'SA', 'TA', 'GG', 'EN', 'IN'});
 	    if(any(contains(vars, 'ts')))
-                lt = any(contains(vars, {'lat', 'Y'}));
-                ln = any(contains(vars, {'lon', 'X'}));
-		lat_L = Dims{lt}.Length;
-		lon_L = Dims{ln}.Length;
-		lat = repmat(D{lt}, 1, lon_L); lat = reshape(lat, lat_L*lon_L, 1);
-		lon = repmat(D{ln}', lat_L, 1); lon = reshape(lon, lat_L*lon_L, 1);
-		pr = reshape(D{contains(vars, 'ts')}, 1, size(Time), lat_L*lon_L);
+                p_ts = find(contains(vars, 'ts'), 1);
+		dims = [Dims{p_ts}.Length];
+		nms = {Dims{p_ts}.Name};
+		lt = find(ismember(nms, {'lat', 'Y', 'y'})); LT = find(ismember(vars, {'lat', 'Y', 'y'}));
+                ln = find(ismember(nms, {'lon', 'X', 'x'})); LN = find(ismember(vars, {'lon', 'X', 'x'}));
+		lat_L = dims(lt);
+		lon_L = dims(ln);
+		lat = reshape(D{LT}, 1, lat_L*lon_L);
+		lon = reshape(D{LN}, 1, lat_L*lon_L);
+		pr = reshape(D{p_ts}, 1, length(Time), lat_L*lon_L);
+		%pr(pr==0)=NaN;
 		D = {pr; Time; lat; lon};
 		vars = {variable, 'time', 'lat', 'lon'};
 	    else
@@ -162,10 +176,28 @@ for i = 1:length(scenarios)
         vars_tot(contains(vars_tot, V)) = arrayfun(@(X) ['runs', X{:}((length(V)+1):end)],...
                                                    vars_tot(contains(vars_tot, V)), 'UniformOutput', 0);
     else
-    	vars_tot{strcmp(vars_tot, V)} = 'runs';
+    	vars_tot{strcmp(vars_tot, variable)} = 'runs';
     end
     S = cell2struct(D_tot, vars_tot);
-    save(model_file_name, '-struct', 'S');%, '-v7.3');
+    if(all(all(S.time(2:end, :)==S.time(1,:))))
+        S.time = S.time(1,:);
+    else
+        fprintf('Time inconsistent\n')
+    end
+    if(isfield(S, 'lon'))
+        if(all(all(all(S.lon(1,:,:)==S.lon(2:end,:,:)))))
+            S.lon = S.lon(1,:,:);
+        else
+            fprintf('lon inconsistent\n')
+        end
+        if(all(all(all(S.lat(1,:,:)==S.lat(2:end,:,:)))))
+            S.lat = S.lat(1,:,:);
+        else
+            fprintf('lat inconsistent\n')
+        end
+    end
+    save(model_file_name, '-struct', 'S', '-v7.3');
+    fprintf('Saving file %s\n', model_file_name);
     clear D_tot, vars_tot;
 end
 
@@ -187,7 +219,7 @@ function [model_names] = make_model_and_p_name(file, var)
     model = fields{2+var_length};%1 when CMIP5!
     run = fields{3+var_length};%2 when CMIP5!
     run_stats = split(run, ["p", "f"]);
-    model_and_p = [model, ' p', run_stats{2}];
+    model_and_p = [model, ' p', run_stats{end}];
     institution = fields{1+var_length};
     model_names = {institution, model_and_p, run};
 end

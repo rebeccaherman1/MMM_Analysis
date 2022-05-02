@@ -1,5 +1,9 @@
 function [fname, fldr] = make_data_filename(variable, start_month, end_month, expt, stage)
-    fldr = ['data/', variable, '/', num2str(start_month), '-', num2str(end_month), '/'];
+    if ischar(start_month)
+        fldr = ['data/', variable, '/', start_month, '/'];
+    else
+        fldr = ['data/', variable, '/', num2str(start_month), '-', num2str(end_month), '/'];
+    end
     if(strcmp(expt, 'observations'))
 	fl = expt;
     else

@@ -11,9 +11,9 @@ were skipped and why.
 clear
 
 %customizable variables
-get_observations = true;
-get_simulations = false;
-scenarios = {'historical'};%,'historicalAerosol','historicalNat','historicalGHG','piControl'};%'historicalMisc' is volcanoes only.  
+get_observations = false;
+get_simulations = true;
+scenarios = {'historical','historicalAerosol','historicalNat','historicalGHG','piControl'};%'historicalMisc' is volcanoes only.  
 %there are additional amip simulations which I downloaded onto a Lamont
 %server which can be accessed here, called 'amip', 'PSL-FACTS', and
 %'VanillaAMIP'. They are not included here because they were too short and
@@ -21,7 +21,7 @@ scenarios = {'historical'};%,'historicalAerosol','historicalNat','historicalGHG'
 %institution file for those.
 shortcuts = {'h', 'a', 'n', 'g', 'piC'};
 %make sure the shortcuts match the scenarios if they are modified.
-variable = 'ts';
+variable = 'pr';
 start_month = 7;
 end_month = 9;
 
