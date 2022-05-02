@@ -1,6 +1,6 @@
 %For TS just looks at NARI.
 mic=false;
-tosave = true;
+tosave = false;
 
 realm = 'cmip6';
 variable = 'pr';
@@ -68,7 +68,7 @@ N = 500;
 
 %TODO add NARI for amip figures.
 %TODO do I want to see fig 1 for SST? or the other figures are enough?
-
+%{
 close all;
  %hold off; clf; 
 
@@ -104,7 +104,7 @@ if(strcmp(variable, 'pr') && ~short)
         saveas(1, fname_f, 'png');
     end
 end
-
+%}
 %% MAKE FIGURE 4
 %TODO if I want to be able to make these figures for TS, I have to make
 %multiple subplots and add a for loop over I. 

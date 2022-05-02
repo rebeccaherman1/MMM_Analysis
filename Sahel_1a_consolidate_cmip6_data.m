@@ -21,7 +21,6 @@ variable = 'ts';%'evspsbl';%
 %location = 'Sahel'; Not currently used. Perhaps use ~strcmp(location, Sahel) for the ocean basins instead of strcmp(variable, ts)
 start_month = 7;
 end_month = 9;
-
 skipped_vars = cell(1,6);
 
 for i = 1:length(scenarios)
@@ -82,7 +81,7 @@ for i = 1:length(scenarios)
 %	Time = floor(Time/12)+1901;
 
 	%if the variable is ts, combine the basins into one array called VARIABLE.
-        if(contains(variable, 'ts'))
+        if(strcmp(variable, 'ts'))
 	    %Add p1 if missing.
 	    %if(~any(contains(vars, 'p1')) & contains(vars, 'NA') & contains(vars, 'GT'))
 		%p1 = D{strcmp(vars, 'NA')} + D{strcmp(vars, 'GT')};

@@ -165,6 +165,7 @@ if(get_simulations)
         fprintf("Accessing scenario %s\n", scenario);
         fprintf("Opening file %s_models.txt\n", scenario);
         models = fopen(['data/',variable, '/',scenario, '_models.txt']);
+        %models = fopen(['data/',scenario, '_models.txt']);
 
         file_name = fgetl(models);
         next_line=1;
@@ -334,6 +335,9 @@ function[umbrella_names] = find_umbrella_names(used_models, umbrella)
        umbrella_names = umbrella.institutions(Loc,1);
    %case for cmip5
    else
+       %TODO I missed that some models would have more than one institution
+       %label, and that this approach takes the order of my list of
+       %umbrella models!
        for k = 1:length(umbrella.models)
            umbrella_names(contains(used_models, umbrella.models(k)), 1) = umbrella.abbrev(k);
        end

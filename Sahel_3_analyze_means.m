@@ -3,7 +3,7 @@ N = 500;
 
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
-realm = 'cmip6';
+realm = 'cmip5';
 short = false;
 start_month = 7;
 end_month = 9;
@@ -63,8 +63,8 @@ for v = 1:length(variables)
         obs_anomaly = obs.var-mean(obs.var);
         timeframe_obs = (obs.T >= start_year & obs.T <= end_year);
         ref_T_years = obs.T(timeframe_obs); 
-        o = obs_anomaly(:,timeframe_obs,1); %TODO change this back to :!
-        o_s = smooth(o, 20);
+        o = obs_anomaly(:,timeframe_obs,:); 
+        o_s = smoothdata(o, 2, 'movmean',20);
     end
     for j = 1:length(scenarios)
         scenario = scenarios{j};
@@ -108,6 +108,9 @@ for v = 1:length(variables)
             else
                 hall2 = hall;
             end
+            if(size(hall2.time,1)==1)
+                hall2.time = repmat(hall2.time, size(hall2.model,1),1);
+            end
             hall = struct2table(hall2);
             hall = hall(ismember(hall.model(:,1), common_models),:);
         end
@@ -131,8 +134,8 @@ for v = 1:length(variables)
             hm = h.GMs(:,T_m, ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
         else
             hm = h.GMs(:,T_m, :);
-            hm_s = smoothdata(hm, 2, 'movmean', 20);
         end
+        hm_s = smoothdata(hm, 2, 'movmean', 20);
         %above: selecting the basins for which I've downloaded
         %observations.
         trust = h.trust;
@@ -145,7 +148,11 @@ for v = 1:length(variables)
         %hall
         if(~contains(scenario, 'fast'))
             %select the basins for which I have observations
-            runs = hall.runs(:,T_m,:);
+            if(strcmp(variable, 'ts'))
+                runs = hall.runs(:,T_m, ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
+            else
+                runs = hall.runs(:,T_m,:);
+            end
             if(strcmp(v, 'ts'))
                 runs = hall.runs(:,:,ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
             end
