@@ -11,8 +11,8 @@ were skipped and why.
 clear
 
 %customizable variables
-get_observations = true;
-get_simulations = false;
+get_observations = false;
+get_simulations = true;
 scenarios = {'historical'};%,'historicalAerosol','historicalNat','historicalGHG','piControl'};%'historicalMisc' is volcanoes only.  
 %there are additional amip simulations which I downloaded onto a Lamont
 %server which can be accessed here, called 'amip', 'PSL-FACTS', and
@@ -21,7 +21,7 @@ scenarios = {'historical'};%,'historicalAerosol','historicalNat','historicalGHG'
 %institution file for those.
 shortcuts = {'h', 'a', 'n', 'g', 'piC'};
 %make sure the shortcuts match the scenarios if they are modified.
-variable = 'ts';
+variable = 'pr';
 start_month = 7;
 end_month = 9;
 
@@ -77,7 +77,7 @@ if(strcmp(variable, 'ts'))
                         '%7B/lat/cosd/%7D/',... box size changes with lat
                         '%5Blon/lat%5D/weighted-average/']; % zonal and meridional average
     land_mask = [... %used for GT in simulations where ts includes land measurements
-                'SOURCES/.WORLDBATH/.bath/',... 
+                '/SOURCES/.WORLDBATH/.bath/',... 
                 'X/%28lon%29renameGRID/',...
                 'Y/%28lat%29renameGRID',...
                 '%5Blon/lat%5DregridLinear/',...
@@ -164,7 +164,7 @@ if(get_simulations)
         end
         fprintf("Accessing scenario %s\n", scenario);
         fprintf("Opening file %s_models.txt\n", scenario);
-        models = fopen(['data/',variable, '/',scenario, '_models.txt']);
+        models = fopen(['data/',scenario, '_models.txt']);
 
         file_name = fgetl(models);
         next_line=1;
@@ -204,6 +204,7 @@ if(get_simulations)
                             non_standardized_run = flux_to_rainfall(non_standardized_run)';
                             s3=1;
                         else
+                                     [url_setup,model_name, '/.',r, '/.', variable, url_end]
                             url_GT = [url_setup,model_name, '/.',r, '/.', variable, url_end_GT];
                             non_standardized_run = [non_standardized_run, ncread(url, variable)];
                             non_standardized_run(:,3) = non_standardized_run(:,1)-non_standardized_run(:,2);
@@ -334,6 +335,9 @@ function[umbrella_names] = find_umbrella_names(used_models, umbrella)
        umbrella_names = umbrella.institutions(Loc,1);
    %case for cmip5
    else
+       %TODO I missed that some models would have more than one institution
+       %label, and that this approach takes the order of my list of
+       %umbrella models!
        for k = 1:length(umbrella.models)
            umbrella_names(contains(used_models, umbrella.models(k)), 1) = umbrella.abbrev(k);
        end

@@ -27,24 +27,24 @@ for i = 1:length(scenarios)
     %create folder and filename where compiled data will be saved
     [model_file_name, fldr_name] = make_data_filename(variable, start_month, end_month, short_names{i}, 'all');
     if ~exist(fldr_name, 'dir')
-	mkdir(fldr_name);
+        mkdir(fldr_name);
     end
     %get list of files to compile
     folder = ['~/netcdf/cmip', num2str(generation),'/preprocessed/', scenarios{i}, '/', num2str(start_month), '-', num2str(end_month)];
     files = split(ls(folder));
     files = files(contains(files, [variable, '_']));
     if(~contains(variable, 'bndries'))
-	files = files(~contains(files, 'bndries'));
+        files = files(~contains(files, 'bndries'));
     end
     if(length(files)==0)
-	fprintf('No files exist for variable %s\n', variable);
-	continue;
+        fprintf('No files exist for variable %s\n', variable);
+        continue;
     end
     for file = files'
         fopen_name = [folder, '/', file{:}];
         %ncdisp(fopen_name)
         INFO = ncinfo(fopen_name);
-	vars = {INFO.Variables.Name};
+        vars = {INFO.Variables.Name};
 %	if strcmp(variable, 'ts') && ~any(contains(vars, {'SA'})) || contains(fopen_name, 'CSIRO')
 %	    fprintf("skipping file %s\n", file{:})
 %	    continue;
@@ -52,21 +52,21 @@ for i = 1:length(scenarios)
 	    fprintf("processing file %s\n", file{:})
 %	end
 	%downloads all available data into a cell array of varying length
-	Dims = {INFO.Variables.Dimensions};
-	D = cell(length(vars), 1);
-	for v = 1:length(vars)
-	    d = ncread(fopen_name, vars{v});
-	    Lengths = [Dims{v}.Length];
-	    dims = {Dims{v}.Name};
-	    %make sure the first dimension has length 1 and that time is the second dimension.
-	    D{v} = permute(d, [length(Lengths)+1, find(strcmp(dims, 'time') | strcmp(dims, 'year')),...
-		                   find(~(strcmp(dims, 'time') | strcmp(dims, 'year')))]);
-	end
-	%rename 'year' to 'time' if needed
-	if(any(contains(vars, 'year')))
-	    vars{strcmp(vars, 'year')} = 'time';
+        Dims = {INFO.Variables.Dimensions};
+        D = cell(length(vars), 1);
+        for v = 1:length(vars)
+            d = ncread(fopen_name, vars{v});
+            Lengths = [Dims{v}.Length];
+            dims = {Dims{v}.Name};
+            %make sure the first dimension has length 1 and that time is the second dimension.
+            D{v} = permute(d, [length(Lengths)+1, find(strcmp(dims, 'time') | strcmp(dims, 'year')),...
+                               find(~(strcmp(dims, 'time') | strcmp(dims, 'year')))]);
         end
-	Time = D{strcmp(vars, 'time')};
+        %rename 'year' to 'time' if needed
+        if(any(contains(vars, 'year')))
+            vars{strcmp(vars, 'year')} = 'time';
+            end
+        Time = D{strcmp(vars, 'time')};
 
 	%REMOVE THIS LINE
 %	Time = floor(Time/12)+1901;

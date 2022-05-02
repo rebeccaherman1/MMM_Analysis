@@ -3,7 +3,7 @@ N = 500;
 
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
-realm = 'cmip6';
+realm = 'cmip5';
 short = false;
 start_month = 7;
 end_month = 9;
@@ -15,12 +15,12 @@ switch realm
     case 'cmip5'
         scenarios = {'h', 'a', 'n', 'g'};
         end_year = 2003;
-        variables = {'pr'};%, 'ts'};
+        variables = {'ts'};%'pr'};%, 
     case 'cmip6'
         scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};
         %scenarios = {'cmip6_hfast', 'cmip6_afast', 'cmip6_nfast', 'cmip6_gfast'};
         end_year = 2014; 
-        variables = {'pr'};%'pr', 
+        variables = {'ts'};%'pr', 
     case 'amip'
         scenarios = {'amip-hist', 'amip-piF','cmip6_fast'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
         end_year = 2014; 
@@ -63,8 +63,8 @@ for v = 1:length(variables)
         obs_anomaly = obs.var-mean(obs.var);
         timeframe_obs = (obs.T >= start_year & obs.T <= end_year);
         ref_T_years = obs.T(timeframe_obs); 
-        o = obs_anomaly(:,timeframe_obs,1); %TODO change this back to :!
-        o_s = smooth(o, 20);
+        o = obs_anomaly(:,timeframe_obs,:); 
+        o_s = smoothdata(o, 2, 'movmean',20);
     end
     for j = 1:length(scenarios)
         scenario = scenarios{j};
@@ -108,6 +108,9 @@ for v = 1:length(variables)
             else
                 hall2 = hall;
             end
+            if(size(hall2.time,1)==1)
+                hall2.time = repmat(hall2.time, size(hall2.model,1),1);
+            end
             hall = struct2table(hall2);
             hall = hall(ismember(hall.model(:,1), common_models),:);
         end
@@ -131,21 +134,25 @@ for v = 1:length(variables)
             hm = h.GMs(:,T_m, ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
         else
             hm = h.GMs(:,T_m, :);
-            hm_s = smoothdata(hm, 2, 'movmean', 20);
         end
+        hm_s = smoothdata(hm, 2, 'movmean', 20);
         %above: selecting the basins for which I've downloaded
         %observations.
         trust = h.trust;
 
         [r, e, mmm] = calc_stats(hm, trust, o);
         MMM.r = r; MMM.e = e; MMM.MMM = mmm; Analysis.MMM = mmm;
-        [r_s, e_s, mmm_s] = calc_stats(hm_s, trust, o_s');
+        [r_s, e_s, mmm_s] = calc_stats(hm_s, trust, o_s);
         MMM_s.r = r_s; MMM_s.e = e_s; MMM_s.MMM = mmm_s;
 
         %hall
         if(~contains(scenario, 'fast'))
             %select the basins for which I have observations
-            runs = hall.runs(:,T_m,:);
+            if(strcmp(variable, 'ts'))
+                runs = hall.runs(:,T_m, ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
+            else
+                runs = hall.runs(:,T_m,:);
+            end
             if(strcmp(v, 'ts'))
                 runs = hall.runs(:,:,ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
             end
@@ -169,7 +176,7 @@ for v = 1:length(variables)
         end
 
         Analysis.historical_bootstrapped = bootstrap_model(N, o, hm, trust);
-        Analysis.historical_bootstrapped_s = bootstrap_model(N, o_s', hm_s, trust);
+        Analysis.historical_bootstrapped_s = bootstrap_model(N, o_s, hm_s, trust);
 
         %TODO could alternately use ISFIELD and then I wouldn't have to
         %define the realm at the top...
@@ -186,7 +193,7 @@ for v = 1:length(variables)
             fprintf('skipping piC simulations which are too short:')
             h.piC_models(skip_models,:)
             [Analysis.piC_resampled_bootstrapped_s, ~] = ...
-                sample_model(N, o_s',...
+                sample_model(N, o_s,...
                 smoothdata(sl, 2, 'movmean', 20),...
                 h.piC_trust, dt);
         %{
