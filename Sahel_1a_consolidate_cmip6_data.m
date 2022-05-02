@@ -17,7 +17,7 @@ else
 	scenarios = {'historical','historicalAerosol','historicalNat', 'historicalGHG'};%};%, , 'amip-hist', 'historicalGHG'};%,
 	short_names = {'h','a','n', 'g',};%};%, , 'amip-hist', 'g_test'}%'g'};%'cmip6_h',
 end
-variable = 'pr';%'evspsbl';%
+variable = 'ts';%'evspsbl';%
 %location = 'Sahel'; Not currently used. Perhaps use ~strcmp(location, Sahel) for the ocean basins instead of strcmp(variable, ts)
 start_month = 7;
 end_month = 9;
