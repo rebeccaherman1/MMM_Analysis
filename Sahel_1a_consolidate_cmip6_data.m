@@ -14,7 +14,7 @@ if(generation==6)
 	end_year = 2014;
 else
 	end_year = 2003;
-	scenarios = {'historical'}%;,'historicalAerosol','historicalNat', 'historicalGHG'};%};%, , 'amip-hist', 'historicalGHG'};%,
+	scenarios = {'historical','historicalAerosol','historicalNat', 'historicalGHG'};%};%, , 'amip-hist', 'historicalGHG'};%,
 	short_names = {'h','a','n', 'g',};%};%, , 'amip-hist', 'g_test'}%'g'};%'cmip6_h',
 end
 variable = 'pr';%'evspsbl';%
