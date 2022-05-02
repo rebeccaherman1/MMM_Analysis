@@ -14,10 +14,10 @@ if(generation==6)
 	end_year = 2014;
 else
 	end_year = 2003;
-	scenarios = {'historicalGHG'}%;,'historicalAerosol','historicalNat', 'historicalGHG'};%};%, , 'amip-hist', 'historicalGHG'};%,
-	short_names = {'g'};%,'a','n', 'g',};%};%, , 'amip-hist', 'g_test'}%'g'};%'cmip6_h',
+	scenarios = {'historical'}%;,'historicalAerosol','historicalNat', 'historicalGHG'};%};%, , 'amip-hist', 'historicalGHG'};%,
+	short_names = {'h','a','n', 'g',};%};%, , 'amip-hist', 'g_test'}%'g'};%'cmip6_h',
 end
-variable = 'ts';%'evspsbl';%
+variable = 'pr';%'evspsbl';%
 %location = 'Sahel'; Not currently used. Perhaps use ~strcmp(location, Sahel) for the ocean basins instead of strcmp(variable, ts)
 start_month = 7;
 end_month = 9;
@@ -27,17 +27,15 @@ for i = 1:length(scenarios)
     fprintf('\nSCENARIO %s\n', scenarios{i}')
     %create folder and filename where compiled data will be saved
     [model_file_name, fldr_name] = make_data_filename(variable, start_month, end_month, short_names{i}, 'all');
-    fldr_name = ['data/', variable, '/', num2str(start_month), '-', num2str(end_month), '/trying_wrong_NA/'];
-    model_file_name = [fldr_name, 'g_all.mat'];
     if ~exist(fldr_name, 'dir')
 	mkdir(fldr_name);
     end
     fprintf([fldr_name, '\n'])
     %get list of files to compile
     if(ischar(start_month))
-        folder = ['~/netcdf/cmip', num2str(generation),'/preprocessed/trying_wrong_NA/', scenarios{i}, '/', start_month];
+        folder = ['~/netcdf/cmip', num2str(generation),'/preprocessed/', scenarios{i}, '/', start_month];
     else
-        folder = ['~/netcdf/cmip', num2str(generation),'/preprocessed/trying_wrong_NA/', scenarios{i}, '/', num2str(start_month), '-', num2str(end_month)];
+        folder = ['~/netcdf/cmip', num2str(generation),'/preprocessed/', scenarios{i}, '/', num2str(start_month), '-', num2str(end_month)];
     end
     files = split(ls(folder));
     files = files(startsWith(files, [variable, '_']));
