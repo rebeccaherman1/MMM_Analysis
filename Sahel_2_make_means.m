@@ -9,8 +9,9 @@
 tosave = true;
 start_month = 7;
 end_month = 9;
+gts = true;
 
-realm = 'cmip5';
+realm = 'cmip6';
 switch realm
     case 'amip'
         scenarios = {'amip-piF', 'amip-hist'};
@@ -18,23 +19,32 @@ switch realm
     case 'cmip5'
         scenarios = {'h', 'a', 'n', 'g'};
         piCs = 'piC';
-        variables = {'pr'};%'ts'}; %, 
+        variables = {'pr','ts'}; %, 
     case 'cmip6'
-        scenarios = {'cmip6_h'};%,'cmip6_a', 'cmip6_n', 'cmip6_g'};
+        scenarios = {'cmip6_h','cmip6_a', 'cmip6_n', 'cmip6_g'};
         piCs = 'cmip6_piC';
-        variables = {'ts'};%'pr', 
+        variables = {'pr','ts'}; 
     otherwise
         fprintf("what do you want?")
 end
+CM = scenarios{2};
+if(gts)
+    variables = {'globalts'};
+    scenarios = scenarios(1);
+end   
+
 %TODO decide if I want nanmean or not
 vert_mean = @(X) mean(X,1); vert_sum = @(X) sum(X,1);
 vert_nan_mean = @(X) nanmean(X,1); vert_nan_sum = @(X) nansum(X,1);
 
 for v = 1:length(variables)
     var = variables{v};
-    AA = load(make_data_filename(var, start_month, end_month, scenarios{2}, 'all'));%'a', 'MM'));%
+    if(strcmp(var, 'globalts'))
+    	AA = load(make_data_filename('pr', 7,9, CM, 'all'));%'MM'));%
+    else
+        AA = load(make_data_filename(var, start_month, end_month, CM, 'all'));%'a', 'MM'));%
+    end
     %AA = load(make_data_filename('ts', start_month, end_month, 'cmip6_h', 'all'));%'a', 'MM'));%
-    %AA = load(make_data_filename('pr', 7,9, strrep(scenarios{1}, 'h', 'a'), 'all'));%'MM'));%
     common_models = unique(AA.model(:,1)); %just model for CMIP6?
     if(any(strcmp(common_models, 'CESM')) & strcmp(realm, 'cmip5') & strcmp(variable, 'globalts'))
         common_models{strcmp(common_models, 'CESM')}='NCAR';
@@ -52,11 +62,7 @@ for v = 1:length(variables)
         scenario = scenarios{j};
         fprintf("Accessing scenario %s variable %s\n", scenario, var);
 
-        if(strcmp(var, 'globalts'))
-            fn = make_data_filename(var, 'various', end_month, scenario, 'all');
-        else
-            fn = make_data_filename(var, start_month, end_month, scenario, 'all');
-        end
+        fn = make_data_filename(var, start_month, end_month, scenario, 'all');
         h = load(fn);
         if(isfield(h, 'indices'))
             h_indices = h.indices;
@@ -87,7 +93,7 @@ for v = 1:length(variables)
             NanSims = h.model(any(any(isnan(h.runs),2),3),:);
             File.NanSims = NanSims;
             File.time = h.time(1,:);
-            if(exist('indices', 'var'))
+            if(exist('h_indices', 'var'))
                 File.indices = h_indices;
             end
 	    if(isfield('h', 'lat'))

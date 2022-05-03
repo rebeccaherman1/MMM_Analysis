@@ -7,10 +7,10 @@
 %the global version is not working because the different models have different grids. I need to regrid at some point.
 
 clear
-generation = 5;
+generation = 6;
 if(generation==6)
-	scenarios = {'historical'};%'hist-aer','hist-nat', ,};%};%, , 'amip-hist', 'historicalGHG'};%,
-	short_names = {'cmip6_h'};%'cmip6_a','cmip6_n', 'cmip6_g',};%};%, , 'amip-hist', 'g_test'}%'g'};%'cmip6_h',
+	scenarios = {'historical','hist-aer','hist-nat', 'hist-GHG','piControl'};%};%, , 'amip-hist', };%,
+	short_names = {'cmip6_h','cmip6_a','cmip6_n', 'cmip6_g','cmip6_piC'};%};%, , 'amip-hist', 'g_test'}%'g'};%'cmip6_h',
 	end_year = 2014;
 else
 	end_year = 2003;
