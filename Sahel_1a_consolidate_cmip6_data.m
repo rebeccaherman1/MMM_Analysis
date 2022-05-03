@@ -213,10 +213,10 @@ function [model_names] = make_model_and_p_name(file, var)
 % special version for PSL-FACTS
     var_length = length(split(var, [".", "_"]));
     fields = split(file, [".", "_"]);
-    model = fields{2+var_length};%1 when CMIP5!
-    run = fields{3+var_length};%2 when CMIP5!
+    model = fields{2+var_length};
+    run = fields{3+var_length};
     run_stats = split(run, ["p", "f"]);
-    model_and_p = [model, ' p', run_stats{end}];
+    model_and_p = [model, ' p', run_stats{2}];
     institution = fields{1+var_length};
     model_names = {institution, model_and_p, run};
 end
