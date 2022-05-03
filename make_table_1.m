@@ -1,12 +1,13 @@
 cmip5_scenarios = {'h', 'a', 'n', 'g'};
 cmip6_scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};
 amip_scenarios = {'amip-hist', 'amip-piF'};
+v = 'ts';
 
 r = cmip5_scenarios;
 L = length(r);
 sims = cell(1, L);
 for s = 1:L
-    sims(s) = {load(['data/ts/7-9/', r{s}, '_all.mat'])};
+    sims(s) = {load(['data/',v,'/7-9/', r{s}, '_all.mat'])};
 end
 if(L>=4)
     common_models = intersect(intersect(unique(sims{1}.model(:,1)), unique(sims{2}.model(:,1))), unique(sims{4}.model(:,1))); 

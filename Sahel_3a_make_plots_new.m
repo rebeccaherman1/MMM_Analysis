@@ -1,10 +1,10 @@
 clear
 historical = true;
-tosave = false;
+tosave = true;
 start_year = 1901;
 anomaly_years = 1901:1920;
 variable = 'pr';
-realm = 'cmip6';
+realm = 'cmip5';
 start_month = 7;
 end_month = 9;
 %TODO add NARI for amip figures.
@@ -93,7 +93,7 @@ end
 
 %% Make Fig2
 
-figure(3); hold off; clf; hold on; 
+figure(2); hold off; clf; hold on; 
 
 N_indiv = nan(1,length(scenarios));
 for j = 1:length(scenarios)
@@ -248,8 +248,8 @@ for j = 1:length(scenarios)
         if(pC)
             %p_stds = fill([ref_T_years';flipud(ref_T_years')],[pC_down(:,:,i)';flipud(pC_up(:,:,i)')],'y','FaceAlpha', .3 ,'linestyle','none');
             %p_stds.HandleVisibility = 'off';
-            plot([ref_T_years(1), ref_T_years(end)], [1,1]*pC_up(:,:,i), 'k', 'LineStyle', ls, 'HandleVisibility', 'off')
-            plot([ref_T_years(1), ref_T_years(end)], [1,1]*pC_down(:,:,i), 'k', 'LineStyle', ls, 'HandleVisibility', 'off')
+            plot([ref_T_years(1), 2014], [1,1]*pC_up(:,:,i), 'k', 'LineStyle', ls, 'HandleVisibility', 'off')
+            plot([ref_T_years(1), 2014], [1,1]*pC_down(:,:,i), 'k', 'LineStyle', ls, 'HandleVisibility', 'off')
         end
         if(historical)
             %I've already smoothed it now!

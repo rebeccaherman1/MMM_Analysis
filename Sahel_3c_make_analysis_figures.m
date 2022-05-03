@@ -1,8 +1,8 @@
 %For TS just looks at NARI.
 mic=false;
-tosave = false;
+tosave = true;
 
-realm = 'cmip6';
+realm = 'cmip5';
 variable = 'pr';
 start_year = 1901; end_year = 2014;
 short = false;

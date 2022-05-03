@@ -70,8 +70,8 @@ for v = 1:length(variables)
         scenario = scenarios{j};
         fprintf("Accessing scenario %s\n", scenario);
 
-	h = load(make_data_filename(variable, start_month, end_month, scenario,'GM'));
-	fname = make_analysis_filename(variable, scenario, ref_T_years(1), ref_T_years(end), N);
+        h = load(make_data_filename(variable, start_month, end_month, scenario,'GM'));
+        fname = make_analysis_filename(variable, scenario, ref_T_years(1), ref_T_years(end), N);
         if(~contains(scenario, 'fast'))
             hall = load(make_data_filename(variable, start_month, end_month, scenario, 'all'));
         end
@@ -79,6 +79,9 @@ for v = 1:length(variables)
             h_indices = h.indices(1,:);
             h = rmfield(h, 'indices');
             hall = rmfield(hall, 'indices');
+        end
+        if(isfield(h, 'MMM'))
+            h = rmfield(h, {'MMM'});
         end
         if(isfield(h, 'piC_GMs'))
             h_T_piC = struct2table(rmfield(h, {'GMs', 'models', 'trust', 'time'}));
@@ -142,7 +145,7 @@ for v = 1:length(variables)
 
         [r, e, mmm] = calc_stats(hm, trust, o);
         MMM.r = r; MMM.e = e; MMM.MMM = mmm; Analysis.MMM = mmm;
-        [r_s, e_s, mmm_s] = calc_stats(hm_s, trust, o_s');
+        [r_s, e_s, mmm_s] = calc_stats(hm_s, trust, o_s);
         MMM_s.r = r_s; MMM_s.e = e_s; MMM_s.MMM = mmm_s;
 
         %hall
@@ -176,7 +179,7 @@ for v = 1:length(variables)
         end
 
         Analysis.historical_bootstrapped = bootstrap_model(N, o, hm, trust);
-        Analysis.historical_bootstrapped_s = bootstrap_model(N, o_s', hm_s, trust);
+        Analysis.historical_bootstrapped_s = bootstrap_model(N, o_s, hm_s, trust);
 
         %TODO could alternately use ISFIELD and then I wouldn't have to
         %define the realm at the top...
@@ -193,7 +196,7 @@ for v = 1:length(variables)
             fprintf('skipping piC simulations which are too short:')
             h.piC_models(skip_models,:)
             [Analysis.piC_resampled_bootstrapped_s, ~] = ...
-                sample_model(N, o_s',...
+                sample_model(N, o_s,...
                 smoothdata(sl, 2, 'movmean', 20),...
                 h.piC_trust, dt);
         %{
