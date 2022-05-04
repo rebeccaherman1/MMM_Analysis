@@ -2,7 +2,7 @@
 mic=false;
 tosave = true;
 
-realm = 'cmip5';
+realm = 'cmip6';
 variable = 'pr';
 start_year = 1901; end_year = 2014;
 short = false;
@@ -68,7 +68,7 @@ N = 500;
 
 %TODO add NARI for amip figures.
 %TODO do I want to see fig 1 for SST? or the other figures are enough?
-%{
+
 close all;
  %hold off; clf; 
 
@@ -82,18 +82,18 @@ if(strcmp(variable, 'pr') && ~short)
     openfig(fname);
     hold on;
 
-    MMM = 'MMM'; hbs = 'historical_bootstrapped';
+    MMM = 'MMM'; hbs = 'historical_bootstrapped'; indv = 'indiv'; ir = 'indiv_runs';
     if(smth)
-        tmp = arrayfun(@(X) append(X, '_s'), {MMM, hbs});
-        [MMM,hbs] = tmp{:};
+        tmp = arrayfun(@(X) append(X, '_s'), {MMM, hbs, indv, ir});
+        [MMM,hbs,indv, ir] = tmp{:};
     end
      
-    r = A.(MMM).r; r_indiv = A.indiv.r; r_bootstrap = A.(hbs).rs; r_r = A.indiv_runs.r; 
-    e = A.(MMM).e; e_indiv = A.indiv.e; e_bootstrap = A.(hbs).es; e_r = A.indiv_runs.e;
+    r = A.(MMM).r; r_indiv = A.(indv).r; r_bootstrap = A.(hbs).rs; r_r = A.(ir).r; 
+    e = A.(MMM).e; e_indiv = A.(indv).e; e_bootstrap = A.(hbs).es; e_r = A.(ir).e;
     %indiv_plot(r_r, 3); hold on; indiv_plot(e_r, 4); hold on;
     indiv_plot(r_indiv, 3, mdgnd); hold on; analysis_plot(r, r_bootstrap, colors{1}, styles{1}, 'MMM', 1, 2, 3);
     indiv_plot(e_indiv, 4, mdgnd); hold on; analysis_plot(e, e_bootstrap, colors{1}, styles{1}, 'MMM', 1, 2, 4);
-    finishfig(1,2,3,'c. Correlation with 20C Observations', '', 0, 'northwest'); 
+    finishfig(1,2,3,'c. Correlation with 20C Observations', '', 0, 'northeast'); 
     finishfig(1,2,4,'d. RMSE with 20C Observations', 'Fraction of Observed Variance', 1, 'northeast');
     if(tosave)
         fname_f = ['figures/', variable, '/', single_scenario, '_Fig1_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N)];
@@ -104,7 +104,7 @@ if(strcmp(variable, 'pr') && ~short)
         saveas(1, fname_f, 'png');
     end
 end
-%}
+
 %% MAKE FIGURE 4
 %TODO if I want to be able to make these figures for TS, I have to make
 %multiple subplots and add a for loop over I. 
@@ -152,8 +152,8 @@ if(contains(realm, 'cmip'))
             end
         end
     end
-    finishfig(F,1,1,'a. Correlation with 20C Observations', '', 0); 
-    finishfig(F,1,2,'b. sRMSE with 20C Observations', '', 1);
+    finishfig(F,1,1,'a. Correlation with 20C Observations', '', 0, 'northwest', [0,8]); 
+    finishfig(F,1,2,'b. sRMSE with 20C Observations', '', 1, 'northwest');
     if(tosave)
         savefig(['figures/', variable, '/', realm, '_Fig4', '_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.fig']);
     end
@@ -274,13 +274,16 @@ function[] = analysis_plot(v, bootstrap, color, style, name, fig_num, sp_x, sp_n
     hold on;
 end
 
-function[] = finishfig(fig_num, sp_x, sp_num, t, xl, s, l)
+function[] = finishfig(fig_num, sp_x, sp_num, t, xl, s, l, ylm)
     if(nargin < 7)
         l = 0;
     end
     figure(fig_num); 
     if(fig_num ~= 21); subplot(sp_x,2,sp_num); end %TODO 
     set(gca,'FontSize',16); ylabel('Density'); 
+    if(nargin==8)
+        ylim(ylm);
+    end
     yl = ylim;
     plot(s*[1,1], yl, 'k-', 'HandleVisibility','off');
     if(nargin >= 7), location = l; elseif(s), location = 'northeast'; else, location = 'northwest'; end

@@ -3,11 +3,12 @@ N = 500;
 
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
-realm = 'cmip5';
+realm = 'cmip6';
 short = false;
 start_month = 7;
 end_month = 9;
 use_fast = false;
+global fltr; fltr = 20;
 
 global start_year end_year ref_T_years
 start_year = 1901;
@@ -17,10 +18,10 @@ switch realm
         end_year = 2003;
         variables = {'pr'};%, 'ts'};
     case 'cmip6'
-        scenarios = {'cmip6_h'};%'cmip6_hfast', 'cmip6_afast', 'cmip6_nfast', 'cmip6_gfast'};
+        scenarios = {'cmip6_h','cmip6_a', 'cmip6_n', 'cmip6_g'};
         %scenarios = {'cmip6_hfast', 'cmip6_afast', 'cmip6_nfast', 'cmip6_gfast'};
         end_year = 2014; 
-        variables = {'globalts'};%'pr', 
+        variables = {'pr'};%'pr', 
     case 'amip'
         scenarios = {'amip-hist', 'amip-piF','cmip6_fast'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
         end_year = 2014; 
@@ -64,7 +65,7 @@ for v = 1:length(variables)
         timeframe_obs = (obs.T >= start_year & obs.T <= end_year);
         ref_T_years = obs.T(timeframe_obs); 
         o = obs_anomaly(:,timeframe_obs,:); 
-        o_s = smoothdata(o, 2, 'movmean',20);
+        o_s = smoothdata(o, 2, 'movmean',fltr);
     end
     for j = 1:length(scenarios)
         scenario = scenarios{j};
@@ -138,7 +139,7 @@ for v = 1:length(variables)
         else
             hm = h.GMs(:,T_m, :);
         end
-        hm_s = smoothdata(hm, 2, 'movmean', 20);
+        hm_s = smoothdata(hm, 2, 'movmean', fltr);
         %above: selecting the basins for which I've downloaded
         %observations.
         trust = h.trust;
@@ -161,6 +162,9 @@ for v = 1:length(variables)
             end
             runs_r = m_corrcoef(runs, o); runs_e = rmse(runs, o);
             indiv_runs.r = runs_r; indiv_runs.e = runs_e; indiv.models = hall.model;
+            runs_s = smoothdata(runs, 2, 'movmean', fltr);
+            indiv_runs_s.r = m_corrcoef(runs_s, o_s);
+            indiv_runs_s.e = rmse(runs_s, o_s);
         end
 
         ir = m_corrcoef(hm, o); ie = rmse(hm, o);
@@ -168,6 +172,12 @@ for v = 1:length(variables)
         [~, r_order] = sort(ir, 'descend'); best_r = h.models(r_order);
         [~, e_order] = sort(ie, 'ascend'); best_e = h.models(e_order);
         indiv.best_models_r = best_r; indiv.best_models_e = best_e;
+        
+        ir_s = m_corrcoef(hm_s, o_s); ie_s = rmse(hm_s, o_s);
+        indiv_s.r = ir_s; indiv_s.e = ie_s; indiv_s.models = h.models;
+        [~, r_order_s] = sort(ir_s, 'descend'); best_r_s = h.models(r_order_s);
+        [~, e_order_s] = sort(ie_s, 'ascend'); best_e_s = h.models(e_order_s);
+        indiv_s.best_models_r = best_r_s; indiv_s.best_models_e = best_e_s;
 
         [r_sanity, e_sanity, ~] = calc_stats(zeros(size(o)), 1, o);
         sanity.r = r_sanity; sanity.e = e_sanity;
@@ -176,6 +186,8 @@ for v = 1:length(variables)
         Analysis.MMM_s = MMM_s;
         if(~contains(scenario, 'fast'))
             Analysis.indiv = indiv; Analysis.indiv_runs = indiv_runs;
+            Analysis.indiv_s = indiv_s;
+            Analysis.indiv_runs_s = indiv_runs_s;
         end
 
         Analysis.historical_bootstrapped = bootstrap_model(N, o, hm, trust);
@@ -197,7 +209,7 @@ for v = 1:length(variables)
             h.piC_models(skip_models,:)
             [Analysis.piC_resampled_bootstrapped_s, ~] = ...
                 sample_model(N, o_s,...
-                smoothdata(sl, 2, 'movmean', 20),...
+                smoothdata(sl, 2, 'movmean', fltr),...
                 h.piC_trust, dt);
         %{
         else
@@ -240,6 +252,7 @@ function [r, e, mmm] = calc_stats(means, trust, obs)
 end
 
 function [all] = bootstrap_model(N, obs, GMs, trust, fl, dt)
+    global fltr;
     run_length = length(obs); %sum(T);
     num_models=length(trust);
     [s1,s2,s3]=size(GMs);
@@ -278,7 +291,7 @@ function [all] = bootstrap_model(N, obs, GMs, trust, fl, dt)
         rs(bs,:,:) = r; es(bs,:,:) = e;
     end
     [CI_low, CI_high] = confidence_interval(mmms);
-    [CI_low_s, CI_high_s] = confidence_interval(smoothdata(mmms, 2, 'movmean', 20));
+    [CI_low_s, CI_high_s] = confidence_interval(smoothdata(mmms, 2, 'movmean', fltr));
     b_means = mmms; mids = mean(mmms, 1);
     
     all.b_means = b_means; all.rs = rs; all.es = es; all.high = CI_high; all.low = CI_low;
@@ -289,6 +302,7 @@ end
 function [all, too_short] = sample_model(N, obs, GMs, trust, dt, fl)
 %TODO: can I modify the internal function to just truncate the observations
 %when the piC simulations are too short, instead of excluding them???
+    global fltr;
     length_run = length(obs); %sum(T);
     length_of_GMs = sum(~isnan(GMs(:,:,1)),2);
     too_short = length_of_GMs<length_run;
@@ -329,7 +343,7 @@ function [all, too_short] = sample_model(N, obs, GMs, trust, dt, fl)
         rs(bs,:,:) = r; es(bs,:,:) = e; 
     end
     [CI_low, CI_high] = confidence_interval(mmms); mids = mean(mmms, 1);
-    [CI_low_s, CI_high_s] = confidence_interval(smoothdata(mmms, 2, 'movmean', 20));
+    [CI_low_s, CI_high_s] = confidence_interval(smoothdata(mmms, 2, 'movmean', fltr));
     r_means = mmms;
     %r_means, rs, es, CI_low, CI_high
     all.r_means = r_means; all.rs = rs; all.es = es; all.low = CI_low; all.high = CI_high;

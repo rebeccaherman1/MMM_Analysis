@@ -15,13 +15,18 @@ end_month = 9;
 %TODO make new case for CMIP6 (and CMIP5?) fast.
 fltr = 20;
 gry = [0.65,0.65,0.65]; ls = '-'; lw = 2;
+v_xticks = [1912,1920,1940,1963,1982,1991,2000];
+v_xticklabels = {'- Katmai (1912)','1920','1940','+ Agung (1963)',...
+    '- El Chichon (1982)','+ Pinatubo (1991)','2000'};
+v_xta = 40;
+
 switch realm
     case 'cmip6'
         %TODO this isn't generally for fast... make it its own special
         %case.
         %scenarios = {'cmip6_hfast','cmip6_afast','cmip6_nfast','cmip6_gfast'};%'amip'};%,; 
         scenarios = {'cmip6_h','cmip6_a','cmip6_n','cmip6_g'};%'amip'};%,; 
-        scenario_names = {'ALL 6', 'AA 6', 'NAT 6', 'GHG 6'};
+        scenario_names = {'a. ALL', 'b. AA', 'c. NAT', 'd. GHG'};
         pC = true;
         scenario_colors = {'b', 'm', [0.60,0.20,0.00], [0.00,0.80,0.00], 'c'};
         long_colors = {'blue', 'magenta', 'red', 'green', 'cyan'};
@@ -131,7 +136,15 @@ for j = 1:length(scenarios)
     end
     if(historical)
         mmm_v = A.(MMM).MMM; mmm_anomaly = mmm_v-mean(mmm_v,2); 
-        r = A.MMM_s.r; rmsd = A.MMM_s.e;
+        if(not(strcmp(realm, 'amip')))
+            r_nm = ', r_L_F=';
+            sRMSE_nm = ', sRMSE_L_F=';
+            r = A.MMM_s.r; rmsd = A.MMM_s.e;
+        else
+            r_nm = ', r=';
+            sRMSE_nm = ', sRMSE=';
+            r = A.MMM.r; rmsd = A.MMM.e;
+        end
         if(contains(scenario, 'n'))
             anomaly_diff = mean(mmm_anomaly(:,20:60,:),2);
         else
@@ -206,18 +219,23 @@ for j = 1:length(scenarios)
         p_actual_s = plot(ref_T_years, tp, '-', 'color', tc);%, 'LineWidth', lw);
         %formatting stuffs
         if(I==1)
-            title([scenario_names{j}, ', N=', num2str(N_indiv(j)), ', r=', num2str(r_ttl, '%5.2f'), ', sRMSE=', num2str(rmsd, '%5.2f')], 'color', scenario_colors{j})
+            title([scenario_names{j}, r_nm, num2str(r_ttl, '%5.2f'), sRMSE_nm, num2str(rmsd, '%5.2f')], 'color', scenario_colors{j})%', N=', num2str(N_indiv(j)), 
             ylabel('Precipitation Anomaly (mm/day)')
         else
             if(i==1)
-                ylabel([scenario_names{j}, ', N=', num2str(N_indiv(j))], 'color', scenario_colors{j})
+                ylabel(scenario_names{j}, 'color', scenario_colors{j})%', N=', num2str(N_indiv(j))
             end
-            ttl = ['r=', num2str(r_ttl, '%5.2f'), ', sRMSE=', num2str(e_ttl, '%5.2f')];%\color{', long_colors{j}, '} 
+            ttl = ['r=', num2str(r_ttl, '%5.2f'), sRMSE_nm, num2str(e_ttl, '%5.2f')];%\color{', long_colors{j}, '} 
             if(j==1)
                 ttl = {['{\color{black}', A.indices{i},'}'], ttl};
             end
             title(ttl, 'Color', scenario_colors{j})
         end 
+        if(contains(scenario, {'n', 'fast'}))
+            xticks(v_xticks);
+            xticklabels(v_xticklabels);
+            xtickangle(v_xta);
+        end
         %left ordinates
         if(zoom)
             yl = 1.25;
