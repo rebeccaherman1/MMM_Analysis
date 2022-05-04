@@ -1,4 +1,6 @@
 end_yr = 2014;
+sims = {'amip-piF', 'amip-hist', 'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};
+%sims = {'h', 'a', 'n', 'g'};
 
 obs = load('data/pr/7-9/observations.mat');
 obs = obs.var(1901<=obs.T & obs.T <= end_yr);
@@ -10,8 +12,7 @@ C = cov(NARI', obs');
 t = C(1,2)/C(1,1);
 fprintf('For obs: %f\n\n', t)
 
-sims = {'amip-piF', 'amip-hist', 'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};
-%sims = {'h', 'a', 'n', 'g'};
+
 t_values = nan(1, length(sims));
 for s = 1:length(sims)
     sm = sims{s};
@@ -46,19 +47,21 @@ for s = 1:length(sims)
     fprintf('For %s:\n %f, [%f, %f]\n %f +/- %f\n %f +/- %f\n\n', sm, t, t_lo, t_hi, t_hat, t_2sig_hat, t_mid, t_2sig_med)
 end
 
-H = load('data/pr/7-9/cmip6_a_GM.mat');
+A = load('data/pr/7-9/cmip6_a_GM.mat');
+H = load('data/pr/7-9/cmip6_h_MM.mat');
 indiv_pr = load('data/pr/7-9/cmip6_piC_all.mat');
 indiv_ts = load('data/ts/7-9/cmip6_piC_all.mat');
 %prm = arrayfun(@(rw) strjoin(indiv_pr.model(rw,:), ' '), (1:size(indiv_pr.model,1))', 'UniformOutput', false);
 %tsm = arrayfun(@(rw) strjoin(indiv_ts.model(rw,:), ' '), (1:size(indiv_ts.model,1))', 'UniformOutput', false);
 PT = table(indiv_pr.model(:,1), indiv_pr.model(:,2), indiv_pr.model(:,3), indiv_pr.runs, 'VariableNames', {'institution', 'model', 'run', 'pr'}); 
 TT = table(indiv_ts.model(:,1), indiv_ts.model(:,2), indiv_ts.model(:,3), indiv_ts.runs(:,:,3), 'VariableNames', {'institution', 'model', 'run', 'ts'});
-TT = TT(ismember(TT.institution, H.models(:,1)),:);
+TT = TT(ismember(TT.institution, A.models(:,1)),:);
+TT = TT(ismember(TT.model, H.models(:,2)),:);
 T_both = innerjoin(PT, TT, 'Keys', {'institution', 'model', 'run'});
 T_both.pr(T_both.pr==0)=nan;
 T_both.ts(T_both.ts==0)=nan;
 %what models are missing?
-H.models(~ismember(H.models, T_both.model),:)
+A.models(~ismember(A.models, T_both.model),:)
 %{
 pr_inc = contains(prm, tsm); [prM, prI] = sort(prm(pr_inc));
 ts_inc = contains(tsm, prm); [tsM, tsI] = sort(tsm(ts_inc));
@@ -77,13 +80,41 @@ for i = 1:height(T_both)
 end
 T_both.tc = t_indiv;
 
-[model_names, ~, model_groupings] = unique(T_both.model); 
+[model_names, I, model_groupings] = unique(T_both.model); 
 MM_tc = splitapply(@mean, T_both.tc, model_groupings);
-[institution_names, ~, institution_groupings] = unique(model_names);
+[institution_names, ~, institution_groupings] = unique(T_both.institution(I));
 IM_tc = splitapply(@mean, MM_tc, institution_groupings);
 TC = table(institution_names, IM_tc, 'VariableNames', {'institution', 'Teleconnection'});
 [~,I] = sort(abs(TC.Teleconnection-t_values(1)));
 TC(I,:)
 
-[lo, hi] = confidence_interval(t_indiv);
+HA = load(['Analysis/pr/',sims{end-3},'_1901-',num2str(end_yr),'_N500.mat']);
+stts = table(HA.indiv_s.models, HA.indiv_s.r, HA.indiv_s.e,...
+    'VariableNames', {'institution', 'r', 'e'});
+H_ts = load('data/ts/7-9/cmip6_h_GM.mat');
+H_pr = load('data/pr/7-9/cmip6_h_GM.mat');
+H_tc = nan(size(H_ts.GMs,1),1);
+for i = 1:size(H_ts.GMs,1)
+    ts_m = H_ts.GMs(i,:,3);
+    p_m = H_pr.GMs(i,:);
+    C = cov(ts_m', p_m');
+    H_tc(i) = C(1,2)/C(1,1);
+end
+H_tc = table(H_ts.models, H_tc, 'VariableNames', {'institution', 'hist-tel'});
+
+J = innerjoin(TC, stts);
+J = join(J, H_tc)
+figure()
+subplot(1,2,1)
+scatter(J.Teleconnection, J.r, 'filled')
+xlabel('NARI Teleconnection Strength')
+ylabel('r_L_F')
+hold on; yl = ylim; plot(t_values(1)*[1,1], yl, 'k-');
+subplot(1,2,2)
+scatter(J.Teleconnection, J.e, 'filled')
+xlabel('NARI Teleconnection Strength')
+ylabel('sRMSE_L_F')
+hold on; yl = ylim; plot(t_values(1)*[1,1], yl, 'k-');
+
+[lo, hi] = confidence_interval(MM_tc);
 fprintf('For piC simulations:\n %f [%f, %f]\n %f +/- %f\n %f +/- %f\n\n', mean(t_indiv), lo, hi, mean(t_indiv), 2*std(t_indiv), mean([lo, hi]), mean([mean([lo, hi])-lo, hi-mean([lo, hi])]))

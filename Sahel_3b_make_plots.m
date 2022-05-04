@@ -1,4 +1,4 @@
-save = true;
+save = false;
 start_year=1901;
 anomaly_years = 1901:1950;
 %should work with TS if I pick a basin now, but no need to make this figure
@@ -16,7 +16,7 @@ for i = 1:length(scenarios)
     scenario = scenarios{i};
     switch scenario
         case {'cmip6_h','h',}
-            variables = {'pr'};%, 'ts'}; TODO not currently implemented for ts
+            variables = {'ts'};%, 'ts'}; TODO not currently implemented for ts
             %for ts, we don't need the standardized anomalies. we can just
             %do anomalies, correlation, and rmse. would have to make
             %changes in the following file as well.

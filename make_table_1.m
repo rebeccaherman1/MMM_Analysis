@@ -1,7 +1,7 @@
 cmip5_scenarios = {'h', 'a', 'n', 'g'};
 cmip6_scenarios = {'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};
 amip_scenarios = {'amip-hist', 'amip-piF'};
-v = 'pr';
+v = 'ts';
 
 r = cmip6_scenarios;
 L = length(r);

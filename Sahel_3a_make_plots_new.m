@@ -1,6 +1,6 @@
 clear
 historical = true;
-tosave = true;
+tosave = false;
 start_year = 1901;
 anomaly_years = 1901:1920;
 variable = 'pr';

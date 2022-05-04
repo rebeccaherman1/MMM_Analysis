@@ -3,7 +3,7 @@ N = 500;
 
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
-realm = 'cmip6';
+realm = 'cmip5';
 short = false;
 start_month = 7;
 end_month = 9;
@@ -16,12 +16,12 @@ switch realm
     case 'cmip5'
         scenarios = {'h', 'a', 'n', 'g'};
         end_year = 2003;
-        variables = {'pr'};%, 'ts'};
+        variables = {'pr', 'ts'};
     case 'cmip6'
         scenarios = {'cmip6_h','cmip6_a', 'cmip6_n', 'cmip6_g'};
         %scenarios = {'cmip6_hfast', 'cmip6_afast', 'cmip6_nfast', 'cmip6_gfast'};
         end_year = 2014; 
-        variables = {'pr'};%'pr', 
+        variables = {'pr','ts'}
     case 'amip'
         scenarios = {'amip-hist', 'amip-piF','cmip6_fast'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
         end_year = 2014; 
@@ -94,8 +94,8 @@ for v = 1:length(variables)
             %doing it this way disgards models which don't provide a piC
             %simulation. These will be disregarded anyway because common
             %models is defined by AA piC simulations.
-            h_new = join(h_T_piC, h_T, 'LeftKeys', 'piC_models', 'RightKeys', 'models');
-            h_new.models = h_new.piC_models;
+            h_new = innerjoin(h_T, h_T_piC, 'LeftKeys', 'models', 'RightKeys', 'piC_models');
+            h_new.models = h_new.models;
         else
             h_new = h_T;
         end
@@ -205,8 +205,6 @@ for v = 1:length(variables)
                 sample_model(N, o,...
                 sl,...
                 h.piC_trust, dt);
-            fprintf('skipping piC simulations which are too short:')
-            h.piC_models(skip_models,:)
             [Analysis.piC_resampled_bootstrapped_s, ~] = ...
                 sample_model(N, o_s,...
                 smoothdata(sl, 2, 'movmean', fltr),...

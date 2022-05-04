@@ -11,7 +11,7 @@ start_month = 7;
 end_month = 9;
 gts = false;
 
-realm = 'cmip6';
+realm = 'cmip5';
 switch realm
     case 'amip'
         scenarios = {'amip-piF', 'amip-hist'};
@@ -23,7 +23,7 @@ switch realm
     case 'cmip6'
         scenarios = {'cmip6_h','cmip6_a', 'cmip6_n', 'cmip6_g'};
         piCs = 'cmip6_piC';
-        variables = {'pr'};%,'ts'}; 
+        variables = {'pr','ts'}; 
     otherwise
         fprintf("what do you want?")
 end
@@ -46,18 +46,6 @@ for v = 1:length(variables)
     end
     %AA = load(make_data_filename('ts', start_month, end_month, 'cmip6_h', 'all'));%'a', 'MM'));%
     common_models = unique(AA.model(:,1)); %just model for CMIP6?
-    if(any(strcmp(common_models, 'CESM')) && strcmp(realm, 'cmip5') && strcmp(variable, 'globalts'))
-        common_models{strcmp(common_models, 'CESM')}='NCAR';
-    end
-    if(any(strcmp(common_models, 'CanESM')) && strcmp(realm, 'cmip5') && strcmp(variable, 'globalts'))
-        common_models{strcmp(common_models, 'CanESM')}='CCCma';
-    end
-    if(any(strcmp(common_models, 'GISS')) && strcmp(realm, 'cmip5') && strcmp(variable, 'globalts'))
-        common_models{strcmp(common_models, 'GISS')}='NASA';
-    end
-    if(any(strcmp(common_models, 'NorESM')) && strcmp(realm, 'cmip5') && strcmp(variable, 'globalts'))
-        common_models{strcmp(common_models, 'NorESM')}='Nor';
-    end
     for j = 1:length(scenarios)
         clear MM GM
         scenario = scenarios{j};
@@ -104,7 +92,22 @@ for v = 1:length(variables)
         end
 	
         if(~strcmp(realm, 'amip') && ~contains(var, 'global'))
-            piC = load(make_data_filename(var, start_month, end_month, piCs, 'all')); piC.runs(piC.runs==0)=NaN; piC_lengths = sum(~isnan(piC.runs(:,:,1)), 2);
+            piC = load(make_data_filename(var, start_month, end_month, piCs, 'all')); 
+            piC.runs(piC.runs==0)=NaN; piC_lengths = sum(~isnan(piC.runs(:,:,1)), 2);
+            
+            if(any(strcmp(piC.model(:,1), 'CESM')))
+                piC.model(strcmp(piC.model(:,1), 'CESM'),1)={'NCAR'};
+            end
+            if(any(strcmp(piC.model(:,1), 'CanESM')))
+                piC.model(strcmp(piC.model(:,1), 'CanESM'),1)={'CCCma'};
+            end
+            if(any(strcmp(piC.model(:,1), 'GISS')))
+                piC.model(strcmp(piC.model(:,1), 'GISS'),1)={'NASA'};
+            end
+            if(any(strcmp(piC.model(:,1), 'NorESM')))
+                piC.model(strcmp(piC.model(:,1), 'NorESM'),1)={'Nor'};
+            end
+            
             %T_piC = table(piC.model, piC.runs, piC.time, piC_lengths, 'VariableNames', {'model', 'runs', 'time', 'length'});
             T_piC = table(piC.model, piC.runs, piC_lengths, 'VariableNames', {'model', 'runs', 'length'});
             if(any(strcmp(T_piC.model(:,1), 'CESM')))
@@ -120,10 +123,15 @@ for v = 1:length(variables)
                 T_piC.model(strcmp(T_piC.model(:,1), 'NorESM'),1)={'Nor'};
             end
             %CHANGED THIS
-            relevant_pC_models = ismember(T_piC.model(:,2),model_names);
+            if(strcmp(realm, 'cmip5'))
+                npcm = 1; M_N = MM.models;
+            else
+                npcm = 2; M_N = model_names;
+            end
+            relevant_pC_models = ismember(T_piC.model(:,npcm),M_N);
             T_piC = T_piC(relevant_pC_models, :); 
             %before I do this! let me pretend I have more runs!!!!!
-            [Lia, Locb] = ismember(T_piC.model(:,2), model_names);
+            [Lia, Locb] = ismember(T_piC.model(:,npcm), model_names);
             Locb2 = Locb; Locb2(~Lia)=1; %momentarily lose the 0s so that matlab doesn't crash
             num_pC_reps = num_runs(Locb2); num_pC_reps(~Lia)=1; %replace those numbers with just one repetition
             T_piC = repelem(T_piC, num_pC_reps, 1);
@@ -196,7 +204,7 @@ for v = 1:length(variables)
             end
         end
 	
-        if(~strcmp(realm, 'amip') && ~contains(variables, 'global'))
+        if(~strcmp(realm, 'amip') && ~any(contains(variables, 'global')))
             [GM.piC_models, I, model_groupings] = unique(MM.piC_models(:,1)); nGM = max(model_groupings);
             weights=splitapply(vert_sum, MM.piC_trust, model_groupings);
             GM.piC_GMs = splitapply(vert_sum, MM.piC_trust.*MM.piC_MMs./weights(model_groupings), model_groupings);
