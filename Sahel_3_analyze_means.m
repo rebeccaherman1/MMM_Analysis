@@ -35,203 +35,207 @@ mkdir('analysis')
 %HBs = cell(length(scenarios), 1);
 %Ms = cell(length(scenarios), 1);
 
-for v = 1:length(variables)
-    variable = variables{v};
-    s2 = load(make_data_filename(variable, start_month, end_month, scenarios{2}, 'GM'));%'a', 'GM'));%
-    if(~strcmp(realm, 'amip'))
-        common_models = s2.piC_models(:,1); %AA
-    else
-        %I could probably do something similar for the coupled simulations too. 
-        s1 = load(make_data_filename(variable, start_month, end_month, scenarios{1}, 'GM'));
-        %make fast file
-        T_fast = innerjoin(struct2table(rmfield(s1, {'time'})), struct2table(rmfield(s2, {'time'})), 'Keys', 'models');       
-        T_fast.trust = min(T_fast.trust_left, T_fast.trust_right);
-        T_fast.GMs = T_fast.GMs_left - T_fast.GMs_right;
-        T_fast = table2struct(T_fast, 'ToScalar', true);
-        T_fast = rmfield(T_fast, {'GMs_left', 'GMs_right', 'trust_left', 'trust_right'});
-        common_models = T_fast.models;
-        T_fast.time = repmat(s1.time(1,:), length(common_models), 1);
-        save('data/pr/cmip6_fast_GM.mat', '-struct', 'T_fast')
-    end
-    
-    mkdir(['analysis/', variable])
-    if(use_fast)
-        F = load('Analysis/pr/cmip6_fast_1901-2014_N500.mat');
-        ref_T_years = 1901:2014;
-        o = F.MMM.MMM - mean(F.MMM.MMM, 2);
-    else
-        obs = load(make_data_filename(variable, start_month, end_month, 'observations'));
-        obs_anomaly = obs.var-mean(obs.var);
-        timeframe_obs = (obs.T >= start_year & obs.T <= end_year);
-        ref_T_years = obs.T(timeframe_obs); 
-        o = obs_anomaly(:,timeframe_obs,:); 
-        o_s = smoothdata(o, 2, 'movmean',fltr);
-    end
-    for j = 1:length(scenarios)
-        scenario = scenarios{j};
-        fprintf("Accessing scenario %s\n", scenario);
+%for v = 1:length(variables)
+%variable = variables{v};
+s2 = load(make_data_filename_all(start_month, end_month, scenarios{2}, 'GM'));%'a', 'GM'));%
+if(~strcmp(realm, 'amip'))
+    common_models = s2.piC_model(:,1); %AA
+else
+    %I could probably do something similar for the coupled simulations too. 
+    s1 = load(make_data_filename(variable, start_month, end_month, scenarios{1}, 'GM'));
+    %make fast file
+    T_fast = innerjoin(struct2table(rmfield(s1, {'time'})), struct2table(rmfield(s2, {'time'})), 'Keys', 'models');       
+    T_fast.trust = min(T_fast.trust_left, T_fast.trust_right);
+    T_fast.GMs = T_fast.GMs_left - T_fast.GMs_right;
+    T_fast = table2struct(T_fast, 'ToScalar', true);
+    T_fast = rmfield(T_fast, {'GMs_left', 'GMs_right', 'trust_left', 'trust_right'});
+    common_models = T_fast.model;
+    T_fast.time = repmat(s1.time(1,:), length(common_models), 1);
+    save('data/pr/cmip6_fast_GM.mat', '-struct', 'T_fast')
+end
+%mkdir(['analysis/', variable])1
 
-        h = load(make_data_filename(variable, start_month, end_month, scenario,'GM'));
-        fname = make_analysis_filename(variable, scenario, ref_T_years(1), ref_T_years(end), N);
-        if(~contains(scenario, 'fast'))
-            hall = load(make_data_filename(variable, start_month, end_month, scenario, 'all'));
-        end
-        if(isfield(h, 'indices'))
-            h_indices = h.indices(1,:);
-            h = rmfield(h, 'indices');
+if(use_fast)
+    F = load('Analysis/pr/cmip6_fast_1901-2014_N500.mat');
+    ref_T_years = 1901:2014;
+    o = F.MMM.MMM - mean(F.MMM.MMM, 2);
+else
+    obs = load(make_data_filename_all(start_month, end_month, 'observations'));
+    timeframe_obs = (obs.T >= start_year & obs.T <= end_year);
+    ref_T_years = obs.T(timeframe_obs); 
+    for v = 1:length(variables)
+        var = variables{v};
+        obs_anomaly = obs.(var)-mean(obs.(var)(:,timeframe_obs,:),2);
+        obs_anomaly_s = smoothdata(obs_anomaly, 2, 'movmean',fltr);
+        o_s.(var) = obs_anomaly_s(:,timeframe_obs,:);
+        o.(var) = obs_anomaly(:,timeframe_obs,:);
+    end
+end
+
+for j = 1:length(scenarios)
+    scenario = scenarios{j};
+    fprintf("Accessing scenario %s\n", scenario);
+
+    h = load(make_data_filename_all(start_month, end_month, scenario,'GM'));
+    fname = make_analysis_filename_all(scenario, ref_T_years(1), ref_T_years(end), N);
+    %TODO These are totally variable specific!
+    if(~contains(scenario, 'fast'))
+        hall = load(make_data_filename(variables{1}, start_month, end_month, scenario, 'all'));
+        hall2 = load(make_data_filename(variables{2}, start_month, end_month, scenario, 'all'));
+        if(isfield(hall, 'indices'))
             hall = rmfield(hall, 'indices');
         end
-        if(isfield(h, 'MMM'))
-            h = rmfield(h, {'MMM'});
+        if(isfield(hall2, 'indices'))
+            hall2 = rmfield(hall2, 'indices');
         end
-        if(isfield(h, 'piC_GMs'))
-            h_T_piC = struct2table(rmfield(h, {'GMs', 'models', 'trust', 'time'}));
-            h = rmfield(h, {'piC_GMs', 'piC_models', 'piC_trust'});
-        end
-        %create table for h
-        h_T = struct2table(rmfield(h, {'time'}));
-        if(exist('h_T_piC', 'var'))
-            %doing it this way disgards models which don't provide a piC
-            %simulation. These will be disregarded anyway because common
-            %models is defined by AA piC simulations.
-            h_new = innerjoin(h_T, h_T_piC, 'LeftKeys', 'models', 'RightKeys', 'piC_models');
-            h_new.models = h_new.models;
-        else
-            h_new = h_T;
-        end
-        if(size(h.time, 1) < length(h.models))
-            h.time = repmat(h.time, length(h_new.models), 1);
-        end
-        h_new.time = h.time;
-        h_new = h_new(ismember(h_new.models, common_models),:);
-        
-        %create table for h_all
-        if(~contains(scenario, 'fast'))
-            if(isfield(hall,'indices'))
-                hall2 = rmfield(hall, 'indices');
-            else
-                hall2 = hall;
-            end
-            if(size(hall2.time,1)==1)
-                hall2.time = repmat(hall2.time, size(hall2.model,1),1);
-            end
-            hall = struct2table(hall2);
-            hall = hall(ismember(hall.model(:,1), common_models),:);
-        end
-
-        if(exist('h_indices', 'var'))
-            h_new = table2struct(h_new, 'ToScalar', true);
-            h_new.indices = h_indices;
-            if(~strcmp(scenario, 'cmip6_fast'))
-                hall = table2struct(hall, 'ToScalar', true);
-                hall.indices = h_indices;
-            end
-            clear h_indices
-        end
-        h = h_new;
-            
-        %num_models = length(h.models); %num_pC_models = length(h.piC_models); 
-        Analysis = matfile(fname, 'Writable', true);
-
-        T_m = ismember(single(h.time(1,:)),ref_T_years);
-        if(strcmp(variable, 'ts'))
-            hm = h.GMs(:,T_m, ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
-        else
-            hm = h.GMs(:,T_m, :);
-        end
-        hm_s = smoothdata(hm, 2, 'movmean', fltr);
-        %above: selecting the basins for which I've downloaded
-        %observations.
-        trust = h.trust;
-
-        [r, e, mmm] = calc_stats(hm, trust, o);
-        MMM.r = r; MMM.e = e; MMM.MMM = mmm; Analysis.MMM = mmm;
-        [r_s, e_s, mmm_s] = calc_stats(hm_s, trust, o_s);
-        MMM_s.r = r_s; MMM_s.e = e_s; MMM_s.MMM = mmm_s;
-
-        %hall
-        if(~contains(scenario, 'fast'))
-            %select the basins for which I have observations
-            if(strcmp(variable, 'ts'))
-                runs = hall.runs(:,T_m, ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
-            else
-                runs = hall.runs(:,T_m,:);
-            end
-            if(strcmp(v, 'ts'))
-                runs = hall.runs(:,:,ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
-            end
-            runs_r = m_corrcoef(runs, o); runs_e = rmse(runs, o);
-            indiv_runs.r = runs_r; indiv_runs.e = runs_e; indiv.models = hall.model;
-            runs_s = smoothdata(runs, 2, 'movmean', fltr);
-            indiv_runs_s.r = m_corrcoef(runs_s, o_s);
-            indiv_runs_s.e = rmse(runs_s, o_s);
-        end
-
-        ir = m_corrcoef(hm, o); ie = rmse(hm, o);
-        indiv.r = ir; indiv.e = ie; indiv.models = h.models;
-        [~, r_order] = sort(ir, 'descend'); best_r = h.models(r_order);
-        [~, e_order] = sort(ie, 'ascend'); best_e = h.models(e_order);
-        indiv.best_models_r = best_r; indiv.best_models_e = best_e;
-        
-        ir_s = m_corrcoef(hm_s, o_s); ie_s = rmse(hm_s, o_s);
-        indiv_s.r = ir_s; indiv_s.e = ie_s; indiv_s.models = h.models;
-        [~, r_order_s] = sort(ir_s, 'descend'); best_r_s = h.models(r_order_s);
-        [~, e_order_s] = sort(ie_s, 'ascend'); best_e_s = h.models(e_order_s);
-        indiv_s.best_models_r = best_r_s; indiv_s.best_models_e = best_e_s;
-
-        [r_sanity, e_sanity, ~] = calc_stats(zeros(size(o)), 1, o);
-        sanity.r = r_sanity; sanity.e = e_sanity;
-
-        Analysis.MMM = MMM; Analysis.sanity = sanity; Analysis.N = N; 
-        Analysis.MMM_s = MMM_s;
-        if(~contains(scenario, 'fast'))
-            Analysis.indiv = indiv; Analysis.indiv_runs = indiv_runs;
-            Analysis.indiv_s = indiv_s;
-            Analysis.indiv_runs_s = indiv_runs_s;
-        end
-
-        Analysis.historical_bootstrapped = bootstrap_model(N, o, hm, trust);
-        Analysis.historical_bootstrapped_s = bootstrap_model(N, o_s, hm_s, trust);
-
-        %TODO could alternately use ISFIELD and then I wouldn't have to
-        %define the realm at the top...
-        if(~strcmp(realm, 'amip'))
-            if(strcmp(variable, 'ts'))
-                sl = h.piC_GMs(:,:,ismember(h.indices(1,:),{'NA', 'GT', 'NARI'}));
-            else
-                sl = h.piC_GMs;
-            end
-            [Analysis.piC_resampled_bootstrapped, skip_models] = ...
-                sample_model(N, o,...
-                sl,...
-                h.piC_trust, dt);
-            [Analysis.piC_resampled_bootstrapped_s, ~] = ...
-                sample_model(N, o_s,...
-                smoothdata(sl, 2, 'movmean', fltr),...
-                h.piC_trust, dt);
-        %{
-        else
-            HBs{j} = Analysis.historical_bootstrapped;
-            Ms{j} = Analysis.MMM;
-        %}        
-        end
-        
-        if(isfield(h, 'indices'))
-            Analysis.indices = h.indices(1,ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
-        end
+        hall = mk_tbl(hall);
+        hall2 = mk_tbl(rmfield(hall2, 'time'));
+        hall.Properties.VariableNames{strcmp(hall.Properties.VariableNames, 'runs')} = variables{1};
+        hall2.Properties.VariableNames{strcmp(hall2.Properties.VariableNames, 'runs')} = variables{2};
+        hall = innerjoin(hall, hall2, 'Keys', {'institution', 'model', 'run'});
+        hall = hall(ismember(hall.institution, common_models),:);
     end
+    if(isfield(h, 'indices'))
+        h_indices = h.indices(1,:);
+        h = rmfield(h, 'indices');
+    end
+    flds = fieldnames(h);
+    if any(contains(flds,'MMM'))
+        h = rmfield(h, flds(contains(flds, 'MMM')));
+    end
+    flds = fieldnames(h);
+    if any(contains(flds,'piC'))
+        h_T_piC = struct2table(rmfield(h, flds(~contains(flds, 'piC'))));
+    end
+    %create table for h
+    h_T = struct2table(rmfield(h, [{'time'}; flds(contains(flds, 'piC'))]));
+    if(exist('h_T_piC', 'var'))
+        h_new = innerjoin(h_T, h_T_piC, 'LeftKeys', 'model', 'RightKeys', 'piC_model');
+    else
+        h_new = h_T;
+    end
+    if(size(h.time, 1) < length(h.model))
+        h.time = repmat(h.time, length(h_new.model), 1);
+    end
+    h_new.time = h.time;
+    h_new = h_new(ismember(h_new.model, common_models),:);
+
+    %I think I want to keep the table for now and do this later?
     %{
-    if(strcmp(realm, 'amip'))
-        R = matfile(['analysis/', variable, '/cmip6_fast_', num2str(ref_T_years(1)), '-', num2str(ref_T_years(end)), '_N', num2str(N)], 'Writable', true);
-        HB.b_means = HBs{1}.b_means - HBs{2}.b_means;
-        [HB.low, HB.high] = confidence_interval(HB.b_means);
-        [HB.rs, HB.es, ~] = calc_stats(HB.b_means, 1, o);
-        M.MMM = Ms{1}.MMM - Ms{2}.MMM; M.MMM = M.MMM - mean(M.MMM, 2);
-        [M.r, M.e, M.mmm] = calc_stats(M.MMM, 1, o);
-        R.historical_bootstrapped = HB; R.MMM = M;
+    if(exist('h_indices', 'var'))
+        h_new = table2struct(h_new, 'ToScalar', true);
+        h_new.indices = h_indices;
+        if(~strcmp(scenario, 'cmip6_fast'))
+            hall = table2struct(hall, 'ToScalar', true);
+            hall.indices = h_indices;
+        end
+        clear h_indices
     end
     %}
+    h = h_new;
+
+    %num_models = length(h.model); %num_pC_models = length(h.piC_model); 
+    Analysis = matfile(fname, 'Writable', true);
+
+    T_m = ismember(single(h.time(1,:)),ref_T_years);
+    if(strcmp(variable, 'ts'))
+        hm = h.GMs(:,T_m, ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
+    else
+        hm = h.GMs(:,T_m, :);
+    end
+    hm_s = smoothdata(hm, 2, 'movmean', fltr);
+    %above: selecting the basins for which I've downloaded
+    %observations.
+    trust = h.trust;
+
+    [r, e, mmm] = calc_stats(hm, trust, o);
+    MMM.r = r; MMM.e = e; MMM.MMM = mmm; Analysis.MMM = mmm;
+    [r_s, e_s, mmm_s] = calc_stats(hm_s, trust, o_s);
+    MMM_s.r = r_s; MMM_s.e = e_s; MMM_s.MMM = mmm_s;
+
+    %hall
+    if(~contains(scenario, 'fast'))
+        %select the basins for which I have observations
+        if(strcmp(variable, 'ts'))
+            runs = hall.runs(:,T_m, ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
+        else
+            runs = hall.runs(:,T_m,:);
+        end
+        if(strcmp(v, 'ts'))
+            runs = hall.runs(:,:,ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
+        end
+        runs_r = m_corrcoef(runs, o); runs_e = rmse(runs, o);
+        indiv_runs.r = runs_r; indiv_runs.e = runs_e; indiv.model = hall.model;
+        runs_s = smoothdata(runs, 2, 'movmean', fltr);
+        indiv_runs_s.r = m_corrcoef(runs_s, o_s);
+        indiv_runs_s.e = rmse(runs_s, o_s);
+    end
+
+    ir = m_corrcoef(hm, o); ie = rmse(hm, o);
+    indiv.r = ir; indiv.e = ie; indiv.model = h.model;
+    [~, r_order] = sort(ir, 'descend'); best_r = h.model(r_order);
+    [~, e_order] = sort(ie, 'ascend'); best_e = h.model(e_order);
+    indiv.best_models_r = best_r; indiv.best_models_e = best_e;
+
+    ir_s = m_corrcoef(hm_s, o_s); ie_s = rmse(hm_s, o_s);
+    indiv_s.r = ir_s; indiv_s.e = ie_s; indiv_s.model = h.model;
+    [~, r_order_s] = sort(ir_s, 'descend'); best_r_s = h.model(r_order_s);
+    [~, e_order_s] = sort(ie_s, 'ascend'); best_e_s = h.model(e_order_s);
+    indiv_s.best_models_r = best_r_s; indiv_s.best_models_e = best_e_s;
+
+    [r_sanity, e_sanity, ~] = calc_stats(zeros(size(o)), 1, o);
+    sanity.r = r_sanity; sanity.e = e_sanity;
+
+    Analysis.MMM = MMM; Analysis.sanity = sanity; Analysis.N = N; 
+    Analysis.MMM_s = MMM_s;
+    if(~contains(scenario, 'fast'))
+        Analysis.indiv = indiv; Analysis.indiv_runs = indiv_runs;
+        Analysis.indiv_s = indiv_s;
+        Analysis.indiv_runs_s = indiv_runs_s;
+    end
+
+    Analysis.historical_bootstrapped = bootstrap_model(N, o, hm, trust);
+    Analysis.historical_bootstrapped_s = bootstrap_model(N, o_s, hm_s, trust);
+
+    %TODO could alternately use ISFIELD and then I wouldn't have to
+    %define the realm at the top...
+    if(~strcmp(realm, 'amip'))
+        if(strcmp(variable, 'ts'))
+            sl = h.piC_GMs(:,:,ismember(h.indices(1,:),{'NA', 'GT', 'NARI'}));
+        else
+            sl = h.piC_GMs;
+        end
+        [Analysis.piC_resampled_bootstrapped, skip_models] = ...
+            sample_model(N, o,...
+            sl,...
+            h.piC_trust, dt);
+        [Analysis.piC_resampled_bootstrapped_s, ~] = ...
+            sample_model(N, o_s,...
+            smoothdata(sl, 2, 'movmean', fltr),...
+            h.piC_trust, dt);
+    %{
+    else
+        HBs{j} = Analysis.historical_bootstrapped;
+        Ms{j} = Analysis.MMM;
+    %}        
+    end
+
+    if(isfield(h, 'indices'))
+        Analysis.indices = h.indices(1,ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
+    end
 end
+%{
+if(strcmp(realm, 'amip'))
+    R = matfile(['analysis/', variable, '/cmip6_fast_', num2str(ref_T_years(1)), '-', num2str(ref_T_years(end)), '_N', num2str(N)], 'Writable', true);
+    HB.b_means = HBs{1}.b_means - HBs{2}.b_means;
+    [HB.low, HB.high] = confidence_interval(HB.b_means);
+    [HB.rs, HB.es, ~] = calc_stats(HB.b_means, 1, o);
+    M.MMM = Ms{1}.MMM - Ms{2}.MMM; M.MMM = M.MMM - mean(M.MMM, 2);
+    [M.r, M.e, M.mmm] = calc_stats(M.MMM, 1, o);
+    R.historical_bootstrapped = HB; R.MMM = M;
+end
+    %}
+%end
 
 %% functions
 
@@ -364,3 +368,25 @@ function [error] = rmse(data_m, data_v)
     data_m = data_m-mean(data_m, 2); data_v = data_v - mean(data_v,2);
     error = mean((data_m - data_v).^2,2).^(.5)./std(data_v,1,2);
 end    
+
+function [ht] = mk_tbl(h)
+    global h_indices, global lat, global lon
+    flds = fieldnames(h);
+    M = flds{contains(flds, 'model')};
+    ht = table(h.(M)(:,1), h.(M)(:,2),... h.model(:,3),h.runs,...
+        'VariableNames', {'institution', 'model'});%, 'run', 'runs'});
+    if(size(h.(M),2)>2)
+        ht.run = h.(M)(:,3);
+    end
+    for f = 1:length(flds)
+        fld = flds{f};
+        if(strcmp(fld, M))
+        elseif(strcmp(fld, 'time'))
+            ht.time = repmat(h.time, size(h.model, 1)/size(h.time,1),1);
+        elseif(strcmp(fld, 'indices'))
+        elseif(strcmp(fld, 'lat'))
+        else
+            ht.(fld) = h.(fld);
+        end
+    end
+end

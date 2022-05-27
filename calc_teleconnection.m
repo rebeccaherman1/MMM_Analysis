@@ -1,6 +1,6 @@
-end_yr = 2014;
-sims = {'amip-piF', 'amip-hist', 'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'};
-%sims = {'h', 'a', 'n', 'g'};
+%sims = {'amip-piF', 'amip-hist', 'cmip6_h', 'cmip6_a', 'cmip6_n', 'cmip6_g'}; end_yr = 2014;
+sims = {'h', 'a', 'n', 'g'}; end_yr = 2003;
+
 
 obs = load('data/pr/7-9/observations.mat');
 obs = obs.var(1901<=obs.T & obs.T <= end_yr);
@@ -51,6 +51,24 @@ A = load('data/pr/7-9/cmip6_a_GM.mat');
 H = load('data/pr/7-9/cmip6_h_MM.mat');
 indiv_pr = load('data/pr/7-9/cmip6_piC_all.mat');
 indiv_ts = load('data/ts/7-9/cmip6_piC_all.mat');
+indivs = {indiv_pr, indiv_ts};
+for i = 1:length(indivs)
+    indiv = indivs{i};
+    if(any(strcmp(indiv.model(:,1), 'CESM')))
+        indiv.model(strcmp(indiv.model(:,1), 'CESM'),1)={'NCAR'};
+    end
+    if(any(strcmp(indiv.model(:,1), 'CanESM')))
+        indiv.model(strcmp(indiv.model(:,1), 'CanESM'),1)={'CCCma'};
+    end
+    if(any(strcmp(indiv.model(:,1), 'GISS')))
+        indiv.model(strcmp(indiv.model(:,1), 'GISS'),1)={'NASA'};
+    end
+    if(any(strcmp(indiv.model(:,1), 'NorESM')))
+        indiv.model(strcmp(indiv.model(:,1), 'NorESM'),1)={'Nor'};
+    end
+end
+
+
 %prm = arrayfun(@(rw) strjoin(indiv_pr.model(rw,:), ' '), (1:size(indiv_pr.model,1))', 'UniformOutput', false);
 %tsm = arrayfun(@(rw) strjoin(indiv_ts.model(rw,:), ' '), (1:size(indiv_ts.model,1))', 'UniformOutput', false);
 PT = table(indiv_pr.model(:,1), indiv_pr.model(:,2), indiv_pr.model(:,3), indiv_pr.runs, 'VariableNames', {'institution', 'model', 'run', 'pr'}); 
@@ -90,7 +108,7 @@ TC(I,:)
 
 HA = load(['Analysis/pr/',sims{end-3},'_1901-',num2str(end_yr),'_N500.mat']);
 stts = table(HA.indiv_s.models, HA.indiv_s.r, HA.indiv_s.e,...
-    'VariableNames', {'institution', 'r', 'e'});
+    'VariableNames', {'institution', 'r', 'e'})
 H_ts = load('data/ts/7-9/cmip6_h_GM.mat');
 H_pr = load('data/pr/7-9/cmip6_h_GM.mat');
 H_tc = nan(size(H_ts.GMs,1),1);
