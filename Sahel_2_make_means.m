@@ -13,7 +13,7 @@ gts = false;
 
 global h_indices, global lat, global lon
 
-realm = 'cmip5';
+realm = 'cmip6';
 switch realm
     case 'amip'
         scenarios = {'amip-piF', 'amip-hist'};
@@ -59,7 +59,7 @@ for j = 1:length(scenarios)
         fprintf('time does not line up!')
     end
 
-    if(~strcmp(realm, 'amip') && ~contains(var, 'global'))
+    if(~strcmp(realm, 'amip') && ~gts)
         piC = mk_tbl_joined(variables, start_month, end_month, piCs, 'all');
         if ismember('time', piC.Properties.VariableNames)
             piC = removevars(piC, 'time');
@@ -133,19 +133,20 @@ for j = 1:length(scenarios)
         [has_piC, usd] = ismember(MM.model(:,2), MM.piC_model(:,2));
         for v = 1:length(variables)
             var = variables{v};
-            MM.([var,'_clim'])(has_piC,:,:) = nanmean(MM.([var,'_piC_MMs'])(usd(has_piC), :), 2);
+            MM.([var,'_clim'])(has_piC,:,:) = nanmean(MM.([var,'_piC_MMs'])(usd(has_piC), :,:), 2);
         end
         %for models with no piC simulation, estimate clim using an
         %average.
         if(any(~has_piC))
             leftovers = MM.model(~has_piC,1);
-            lo = nan(length(leftovers), length(variables));
+            lo = cell(length(variables),1); %nan(length(leftovers), length(variables));
             for v = 1:length(variables)
                 var = variables{v};
+                lo{v} = nan(length(leftovers), size(MM.([var,'_MMs']),3));
                 for l = 1:length(leftovers)
-                    lo(l,v) = nanmean(MM.([var,'_piC_MMs'])(strcmp(MM.piC_model(:,1), leftovers{l}),:),[1,2]);
+                    lo{v}(l,:) = nanmean(MM.([var,'_piC_MMs'])(strcmp(MM.piC_model(:,1), leftovers{l}),:,:),[1,2]);
                 end
-                MM.([var,'_clim'])(~has_piC,:,:) = lo(:,v);%cell2mat(leftovers);
+                MM.([var,'_clim'])(~has_piC,:,:) = lo{v};%cell2mat(leftovers);
                 MM.([var,'_MMs']) = MM.([var,'_MMs']) - MM.([var,'_clim']);
             end
         end
