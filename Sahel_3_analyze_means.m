@@ -3,25 +3,26 @@ N = 500;
 
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
-realm = 'cmip5';
+realm = 'cmip6';
 short = false;
 start_month = 7;
 end_month = 9;
-use_fast = false;
+use_fast = true;
 global fltr; fltr = 20;
 
 global start_year end_year ref_T_years
 start_year = 1901;
 switch realm
     case 'cmip5'
-        scenarios = {'h', 'a', 'n', 'g'};
+        %scenarios = {'h', 'a', 'n', 'g'};
+        scenarios = {'hfast', 'afast', 'nfast', 'gfast'};
         end_year = 2003;
-        variables = {'pr', 'ts'};
+        variables = {'pr'};%, 'ts'};
     case 'cmip6'
         scenarios = {'cmip6_h','cmip6_a', 'cmip6_n', 'cmip6_g'};
         %scenarios = {'cmip6_hfast', 'cmip6_afast', 'cmip6_nfast', 'cmip6_gfast'};
         end_year = 2014; 
-        variables = {'pr','ts'}
+        variables = {'ts'};
     case 'amip'
         scenarios = {'amip-hist', 'amip-piF','cmip6_fast'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
         end_year = 2014; 
@@ -57,16 +58,20 @@ for v = 1:length(variables)
     mkdir(['analysis/', variable])
     if(use_fast)
         F = load('Analysis/pr/cmip6_fast_1901-2014_N500.mat');
-        ref_T_years = 1901:2014;
-        o = F.MMM.MMM - mean(F.MMM.MMM, 2);
+        obs_anomaly = F.MMM.MMM - mean(F.MMM.MMM, 2);
+        F.time = 1901:2014;
+        timeframe_obs = (F.time >= start_year & F.time <= end_year);
+        ref_T_years = F.time(timeframe_obs); 
     else
         obs = load(make_data_filename(variable, start_month, end_month, 'observations'));
         obs_anomaly = obs.var-mean(obs.var);
         timeframe_obs = (obs.T >= start_year & obs.T <= end_year);
-        ref_T_years = obs.T(timeframe_obs); 
-        o = obs_anomaly(:,timeframe_obs,:); 
-        o_s = smoothdata(o, 2, 'movmean',fltr);
+       ref_T_years = obs.T(timeframe_obs); 
     end
+ 
+    o = obs_anomaly(:,timeframe_obs,:); 
+    o_s = smoothdata(o, 2, 'movmean',fltr);
+    
     for j = 1:length(scenarios)
         scenario = scenarios{j};
         fprintf("Accessing scenario %s\n", scenario);

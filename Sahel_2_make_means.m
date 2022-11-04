@@ -11,7 +11,7 @@ start_month = 7;
 end_month = 9;
 gts = false;
 
-realm = 'cmip5';
+realm = 'cmip6';
 switch realm
     case 'amip'
         scenarios = {'amip-piF', 'amip-hist'};
@@ -23,7 +23,7 @@ switch realm
     case 'cmip6'
         scenarios = {'cmip6_h','cmip6_a', 'cmip6_n', 'cmip6_g'};
         piCs = 'cmip6_piC';
-        variables = {'pr','ts'}; 
+        variables = {'ts'}; %'pr',
     otherwise
         fprintf("what do you want?")
 end
@@ -110,18 +110,6 @@ for v = 1:length(variables)
             
             %T_piC = table(piC.model, piC.runs, piC.time, piC_lengths, 'VariableNames', {'model', 'runs', 'time', 'length'});
             T_piC = table(piC.model, piC.runs, piC_lengths, 'VariableNames', {'model', 'runs', 'length'});
-            if(any(strcmp(T_piC.model(:,1), 'CESM')))
-                T_piC.model(strcmp(T_piC.model(:,1), 'CESM'),1)={'NCAR'};
-            end
-            if(any(strcmp(T_piC.model(:,1), 'CanESM')))
-                T_piC.model(strcmp(T_piC.model(:,1), 'CanESM'),1)={'CCCma'};
-            end
-            if(any(strcmp(T_piC.model(:,1), 'GISS')))
-                T_piC.model(strcmp(T_piC.model(:,1), 'GISS'),1)={'NASA'};
-            end
-            if(any(strcmp(T_piC.model(:,1), 'NorESM')))
-                T_piC.model(strcmp(T_piC.model(:,1), 'NorESM'),1)={'Nor'};
-            end
             %CHANGED THIS
             if(strcmp(realm, 'cmip5'))
                 npcm = 1; M_N = MM.models;

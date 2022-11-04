@@ -1,14 +1,15 @@
-save = false;
+save = true;
 start_year=1901;
 anomaly_years = 1901:1950;
 %should work with TS if I pick a basin now, but no need to make this figure
 %for that.
 start_month = 7;%7
 end_month = 9;%9
+smth = false;
 
 %TODO put colors other than blue for the different scenarios!
 %scenarios = {'cmip6_hfast', 'cmip6_afast', 'cmip6_nfast', 'cmip6_gfast'};
-scenarios = {'cmip6_h'};%'amip-hist','amip-piF'};
+scenarios = {'h'};%'amip-hist','amip-piF'};
 
 global ref_T_years
     
@@ -16,7 +17,7 @@ for i = 1:length(scenarios)
     scenario = scenarios{i};
     switch scenario
         case {'cmip6_h','h',}
-            variables = {'ts'};%, 'ts'}; TODO not currently implemented for ts
+            variables = {'pr'};%, 'ts'}; TODO not currently implemented for ts
             %for ts, we don't need the standardized anomalies. we can just
             %do anomalies, correlation, and rmse. would have to make
             %changes in the following file as well.
@@ -33,10 +34,10 @@ for i = 1:length(scenarios)
             mdgnd = max(min(clr*1.5, [1,1,1]), [.4,.6,.4]);
             bckgnd = max(clr/max(clr), [.9,.8,.8]);
     end
-    if(strcmp(scenario, 'h'))
-        end_year = 2003;
-    else
+    if(contains(scenario, '6'))
         end_year = 2014;
+    else
+        end_year = 2003;
     end
     fprintf("Accessing historical scenario %s\n", scenario);
     
@@ -94,27 +95,52 @@ for i = 1:length(scenarios)
         loc_mean = mean(runs_smth, 2);        
         runs_smth_s = smoothdata((runs_smth-loc_mean)./std(runs_smth, 0, 2)+loc_mean, 2, 'movmean', 5);
         runs_smth = smoothdata(runs_smth, 2, 'movmean', 5);
-        [L,H] = confidence_interval(runs_smth, 1);
-        [L_s, H_s] = confidence_interval(runs_smth_s,1);
-        sf = @(X) smoothdata(smoothdata(X, 2, 'movmean', 20), 2, 'movmean', 5);
-        L = sf(L); H = sf(H); L_s = sf(L_s); H_s = sf(H_s);
+        if(smth)
+            [L,H] = confidence_interval(runs_smth, 1);
+            [L_s, H_s] = confidence_interval(runs_smth_s,1);
+            sf = @(X) smoothdata(smoothdata(X, 2, 'movmean', 20), 2, 'movmean', 5);
+            L = sf(L); H = sf(H); L_s = sf(L_s); H_s = sf(H_s);
+        else
+            [L,H] = confidence_interval(runs_anomalies, 1);
+            [L_s, H_s] = confidence_interval(runs_standardized,1);
+        end
     end
 
+        if(smth)
+            DOI = 'indiv_s';
+            DOGM_s = GM_smth_s;
+            DOMMM_s = MMM_smth_s;
+            DOprcp_s = prcp_smth_s;
+            DOruns = runs_smth;
+            DOGM = GM_smth;
+            DOMMM = MMM_smth;
+            DOprcp = prcp_smth;
+        else
+            DOI = 'indiv';
+            DOGM_s = GM_standardized;
+            DOMMM_s = MMM_standardized;
+            DOprcp_s = prcp_standardized;
+            DOruns = runs_standardized;
+            DOGM = GM_anomalies;
+            DOMMM = MMM_anomaly;
+            DOprcp = prcp_anomaly;
+        end
+    
         figure(1); hold off; clf;
 
         Indx = size(MMM, 3);
         for dx = 1:Indx
             subplot(2*Indx,2,2*dx-1)
             set(gca,'FontSize',16); %set(gca,'LineWidth',2);
-            title('a. Standardized');
+            %title('a. Standardized');
             ylabel("Standardized Precipitation Anomaly"); hold on;
             
-            plot(ref_T_years,runs_smth_s(:,:,dx), '-', 'Color', bckgnd, 'LineWidth', .1, 'HandleVisibility', 'off'); 
+            plot(ref_T_years,DOruns(:,:,dx), '-', 'Color', bckgnd, 'LineWidth', .1, 'HandleVisibility', 'off'); 
             plot(ref_T_years, L_s(:,:,dx), 'k:', 'LineWidth',2)
             plot(ref_T_years, H_s(:,:,dx), 'k:', 'LineWidth',2)
-            for gm = 1:size(GM_smth_s,1)
+            for gm = 1:size(DOGM_s,1)
                 mod_name = G.models{gm};
-                if(strcmp(mod_name, GA.indiv_s.best_models_r{1}))
+                if(strcmp(mod_name, GA.(DOI).best_models_r{1}))
                     cm = [0.47,0.67,0.19];
                     hv = 'on';
                     lw = 2;
@@ -123,11 +149,11 @@ for i = 1:length(scenarios)
                     hv = 'off';
                     lw = 1;
                 end
-                plot(ref_T_years,GM_smth_s(gm,:,dx), 'Color', cm, 'LineStyle', '-',...
+                plot(ref_T_years,DOGM_s(gm,:,dx), 'Color', cm, 'LineStyle', '-',...
                 'LineWidth', lw, 'HandleVisibility', hv, 'DisplayName', mod_name);
             end
-            plot(ref_T_years,MMM_smth_s(:,:,dx),'Color', clr, 'LineStyle', '-', 'LineWidth', 2, 'HandleVisibility', 'off');
-            plot(ref_T_years,prcp_smth_s(:,:,dx), 'k-', 'LineWidth', 2, 'HandleVisibility', 'off');
+            plot(ref_T_years,DOMMM_s(:,:,dx),'Color', clr, 'LineStyle', '-', 'LineWidth', 2, 'HandleVisibility', 'off');
+            plot(ref_T_years,DOprcp_s(:,:,dx), 'k-', 'LineWidth', 2, 'HandleVisibility', 'off');
             %plot(ref_T_years,cru_standardized, '--', 'Color', .8*[1,1,1], 'HandleVisibility', 'off');
             %ylim([-4,4]); 
             xlim([start_year, end_year]);
@@ -136,12 +162,12 @@ for i = 1:length(scenarios)
             set(gca,'FontSize',16); %set(gca,'LineWidth',2);
             title('b. Anomalies');
             ylabel("Precipitation Anomaly (mm/day)"); 
-            p_runs_s = plot(ref_T_years,runs_smth(:,:,dx), '-', 'Color', bckgnd, 'LineWidth', .1);
+            p_runs_s = plot(ref_T_years,DOruns(:,:,dx), '-', 'Color', bckgnd, 'LineWidth', .1);
             plot(ref_T_years, L(:,:,dx), 'k:', 'LineWidth',2, 'HandleVisibility', 'off')
             plot(ref_T_years, H(:,:,dx), 'k:', 'LineWidth',2, 'HandleVisibility', 'off')
-            for gm = 1:size(GM_smth,1)
+            for gm = 1:size(DOGM,1)
                 mod_name = G.models{gm};
-                if(strcmp(mod_name, GA.indiv_s.best_models_e{1}))
+                if(strcmp(mod_name, GA.(DOI).best_models_e{1}))
                     cm = [0.47,0.67,0.19];
                     hv = 'on';
                     lw=2;
@@ -150,13 +176,14 @@ for i = 1:length(scenarios)
                     hv = 'off';
                     lw=1;
                 end
-                p_gm_s = plot(ref_T_years,GM_smth(gm,:,dx), '-', 'Color', cm,...
+                p_gm_s = plot(ref_T_years,DOGM(gm,:,dx), '-', 'Color', cm,...
                     'LineWidth', lw,'HandleVisibility', 'off', 'DisplayName', G.models{gm});
             end
-            p_mmm_s = plot(ref_T_years,MMM_smth(:,:,dx),'-', 'Color', clr, 'LineWidth', 2);
-            p_actual_s = plot(ref_T_years,prcp_smth(:,:,dx), 'k-', 'LineWidth', 2);
+            p_mmm_s = plot(ref_T_years,DOMMM(:,:,dx),'-', 'Color', clr, 'LineWidth', 2);
+            p_actual_s = plot(ref_T_years,DOprcp(:,:,dx), 'k-', 'LineWidth', 2);
             %p_actual_s_cru = plot(ref_T_years,cru_anomaly, '--', 'Color', .8*[1,1,1]);
-            xlim([start_year, end_year]); yl = ylim; yl = max(abs(yl)); ylim([-yl,yl]);
+            xlim([start_year, end_year]); 
+            %yl = ylim; yl = max(abs(yl)); ylim([-yl,yl]);
 
             legend([p_runs_s(1), p_gm_s(1), p_mmm_s, p_actual_s], 'Runs', 'IMs', 'MMM', 'GPCC', 'Location', 'southwest');%, p_actual_s_cru]'northwest'); 'CRU', %
         end

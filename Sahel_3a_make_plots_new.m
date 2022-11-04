@@ -3,8 +3,8 @@ historical = true;
 tosave = false;
 start_year = 1901;
 anomaly_years = 1901:1920;
-variable = 'pr';
-realm = 'cmip5';
+variable = 'ts';
+realm = 'cmip6';
 start_month = 7;
 end_month = 9;
 %TODO add NARI for amip figures.
@@ -32,6 +32,7 @@ switch realm
         long_colors = {'blue', 'magenta', 'red', 'green', 'cyan'};
         end_year = 2014;
     case 'cmip5'
+        %scenarios = {'hfast', 'afast', 'nfast', 'gfast'};
         scenarios = {'h', 'a', 'n', 'g'};
         scenario_names = {'ALL', 'AA', 'NAT', 'GHG'};
         pC = true;
@@ -59,8 +60,10 @@ global ref_T_years;
 
 %{
 F = load('Analysis/pr/cmip6_fast_1901-2014_N500.mat');
-ref_T_years = 1901:2014;
-var_unstandardized = F.MMM.MMM;
+F.T = 1901:2014;
+ref_T_years = start_year:end_year;
+var_unstandardized = F.MMM.MMM(ismember(F.T,ref_T_years));
+var_smthd = smooth(var_unstandardized,fltr)';
 %}
 O = load(sprintf('data/%s/7-9/observations.mat', variable));
 ref_T_years = O.T(ismember(O.T, start_year:end_year));
@@ -69,7 +72,7 @@ ref_T_years = O.T(ismember(O.T, start_year:end_year));
 var_smthd = smoothdata(O.var, 2, 'movmean', fltr);
 var_smthd = var_smthd(:, ismember(O.T, start_year:end_year),:);
 var_unstandardized = O.var(:,ismember(O.T, start_year:end_year),:);
-
+%}
 %obs = load(make_data_filename(variable, start_month, end_month, 'observations'));
 %timeframe = (obs.T >= start_year & obs.T <= end_year);
 %ref_T_years = obs.T(timeframe); %TODO this is inconsistent
@@ -81,7 +84,7 @@ smthd_anomaly = var_smthd - mean(var_smthd(:, ismember(ref_T_years, anomaly_year
 var_std = std(var_unstandardized,0,2);
 var_standardized = var_anomaly./var_std;
 
-if(~strcmp(realm, 'amip'))
+if(~strcmp(realm, 'amip') && ~contains(scenarios{1}, 'fast'))
     gA = load(make_analysis_filename(variable,scenarios{contains(scenarios, 'g')}, start_year, end_year, N));
     gt = start_year:end_year;
     g_tf = ismember(gt, ref_T_years);
@@ -103,7 +106,7 @@ figure(2); hold off; clf; hold on;
 N_indiv = nan(1,length(scenarios));
 for j = 1:length(scenarios)
     scenario = char(scenarios(j));
-    smth = strcmp(scenario, 'a') || contains(scenario, {'_a', 'g', 'amip', 'fast'});
+    smth = strcmp(scenario, 'a') || strcmp(scenario, 'afast') || contains(scenario, {'_a', 'g', 'amip', '_f'});%, 'fast'});
     fprintf("Accessing historical scenario %s\n", scenario);
     A = load(make_analysis_filename(variable, scenario, start_year, end_year, N));
     if(strcmp(variable, 'ts'))
@@ -129,22 +132,22 @@ for j = 1:length(scenarios)
             pC_up = A.piC_last.high;     
             pC_scale = mean(std(A.piC_last.r_means, 0, 2));         
         else
-            pC_down = mean(A.piC_resampled_bootstrapped.(DU{1}));
-            pC_up   = mean(A.piC_resampled_bootstrapped.(DU{2}));
-            pC_scale = mean(std(A.piC_resampled_bootstrapped.r_means, 0, 2));
+            pC_down = nanmean(A.piC_resampled_bootstrapped.(DU{1}));
+            pC_up   = nanmean(A.piC_resampled_bootstrapped.(DU{2}));
+            pC_scale = nanmean(std(A.piC_resampled_bootstrapped.r_means, 0, 2));
         end
     end
     if(historical)
         mmm_v = A.(MMM).MMM; mmm_anomaly = mmm_v-mean(mmm_v,2); 
-        if(not(strcmp(realm, 'amip')))
+        %if(not(strcmp(realm, 'amip')))
             r_nm = ', r_L_F=';
             sRMSE_nm = ', sRMSE_L_F=';
             r = A.MMM_s.r; rmsd = A.MMM_s.e;
-        else
-            r_nm = ', r=';
-            sRMSE_nm = ', sRMSE=';
-            r = A.MMM.r; rmsd = A.MMM.e;
-        end
+        %else
+        %    r_nm = ', r=';
+        %    sRMSE_nm = ', sRMSE=';
+        %    r = A.MMM.r; rmsd = A.MMM.e;
+        %end
         if(contains(scenario, 'n'))
             anomaly_diff = mean(mmm_anomaly(:,20:60,:),2);
         else
@@ -212,14 +215,14 @@ for j = 1:length(scenarios)
         if(smth)
             tp = smoothdata(tp, 1, 'movmean', 5);
         end
-        if(strcmp(scenario, 'h') || contains(scenario, '_h'))
+        if(strcmp(scenario, 'h') || contains(scenario, '_h') || strcmp(scenario, 'hfast'))
             plot(ref_T_years, smthd, '-', 'color', 'k');%*.8/.65
             tc = gry;
         end
         p_actual_s = plot(ref_T_years, tp, '-', 'color', tc);%, 'LineWidth', lw);
         %formatting stuffs
         if(I==1)
-            title([scenario_names{j}, r_nm, num2str(r_ttl, '%5.2f'), sRMSE_nm, num2str(rmsd, '%5.2f')], 'color', scenario_colors{j})%', N=', num2str(N_indiv(j)), 
+            title([scenario_names{j}, r_nm, num2str(r_ttl, '%5.2f'), sRMSE_nm, num2str(rmsd, '%5.2f')], 'color', scenario_colors{j})%', N=', num2str(N_indiv(j)),
             ylabel('Precipitation Anomaly (mm/day)')
         else
             if(i==1)
@@ -231,7 +234,8 @@ for j = 1:length(scenarios)
             end
             title(ttl, 'Color', scenario_colors{j})
         end 
-        if(contains(scenario, {'n', 'fast'}))
+        N_indiv(j)
+        if(contains(scenario, {'n'}) && ~strcmp(variable, 'ts'))%, 'fast'}))
             xticks(v_xticks);
             xticklabels(v_xticklabels);
             xtickangle(v_xta);
@@ -316,25 +320,25 @@ if(strcmp(realm, 'amip'))
     corr(mmm', A.MMM.MMM')
     %}
     sst_obs = load(make_data_filename('ts', start_month, end_month, 'observations')); 
-    if(smth)
+    if(0)
         NARI = smooth(smooth(sst_obs.var(:,:,3), fltr),5);
     else
         NARI = sst_obs.var(:,:,3);
     end
     NARI = NARI(ismember(sst_obs.T, ref_T_years));
-    %NARI = NARI - mean(NARI(ismember(ref_T_years, anomaly_years)));
+    NARI = NARI - mean(NARI(ismember(ref_T_years, anomaly_years)));
     NARI_color = [0.30,0.75,0.93];%0.07,0.62,1.00];
     subplot(yn, xn, 1); yl = ylim;
-    yyaxis right; set(gca, 'ycolor', NARI_color); ylabel('NARI (C)');
-    ylim(yl./.87 + mean(NARI(ismember(ref_T_years, anomaly_years))))
+    yyaxis right; set(gca, 'ycolor', NARI_color); ylabel('NARI Anomaly (C)');
+    ylim(yl./.87) %mean(NARI(ismember(ref_T_years, anomaly_years)))
     plot(ref_T_years, NARI, '-', 'Color', NARI_color, 'DisplayName', 'NARI')
 end
 %}
 if(tosave)
-    savefig(2, ['figures/', variable, '/', realm, '_Fig2_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N)]);
-    saveas(2, ['figures/', variable, '/', realm, '_Fig2_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N)], 'png');
+    savefig(2, ['figures/', variable, '/LF/', realm, '_Fig2_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N)]);
+    saveas(2, ['figures/', variable, '/LF/', realm, '_Fig2_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N)], 'png');
 else
-    fprintf(['figures/', variable, '/', realm, '_Fig2_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '\n']);
+    fprintf(['figures/', variable, '/LF/', realm, '_Fig2_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '\n']);
 end
 
 

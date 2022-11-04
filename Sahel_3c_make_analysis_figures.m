@@ -1,9 +1,9 @@
 %For TS just looks at NARI.
 mic=false;
-tosave = true;
+tosave = false;
 
 realm = 'cmip6';
-variable = 'pr';
+variable = 'ts';
 start_year = 1901; end_year = 2014;
 short = false;
 smth = 1;
@@ -130,30 +130,36 @@ if(contains(realm, 'cmip'))
                 aname = make_analysis_filename(variable, scenario, start_year, end_year, N);
                 A = load(aname);
 
-                r = A.(MMM).r; r_bootstrap = A.(hbs).rs; 
-                e = A.(MMM).e; e_bootstrap = A.(hbs).es; 
+                rf = A.(MMM).r; r_bootstrapf = A.(hbs).rs; 
+                ef = A.(MMM).e; e_bootstrapf = A.(hbs).es; 
                 
                 if(strcmp(variable, 'ts'))
-                    r = r(:,:,3); r_bootstrap = r_bootstrap(:,:,3);
-                    e = e(:,:,3); e_bootstrap = e_bootstrap(:,:,3);
+                    sp_x = 3;
+                else
+                    sp_x = 1;
                 end
-
-                analysis_plot(r, r_bootstrap, color, style, name, F, 1, 1);
-                analysis_plot(e, e_bootstrap, color, style, name, F, 1, 2); 
                 
-                if(isfield(A, 'piC_resampled_bootstrapped')) %UMMMM why does amip-piF have piC??? it shouldn't....
-                    r_resample = A.(rbs).rs; e_resample = A.(rbs).es; 
-                    if(strcmp(variable, 'ts'))
-                        r_resample = r_resample(:,:,3); e_resample = e_resample(:,:,3);
+                for bsn = 1:sp_x
+                    r = rf(:,:,bsn); r_bootstrap = r_bootstrapf(:,:,bsn);
+                    e = ef(:,:,bsn); e_bootstrap = e_bootstrapf(:,:,bsn);
+
+                    analysis_plot(r, r_bootstrap, color, style, name, F, sp_x, 2*bsn-1);
+                    analysis_plot(e, e_bootstrap, color, style, name, F, sp_x, 2*bsn); 
+                
+                    if(isfield(A, 'piC_resampled_bootstrapped')) %UMMMM why does amip-piF have piC??? it shouldn't....
+                        r_resample = A.(rbs).rs; e_resample = A.(rbs).es; 
+                        r_resample = r_resample(:,:,bsn); e_resample = e_resample(:,:,bsn);
+                        analysis_plot(r, r_resample, color, style, 'Pre-Industrial Control', F, sp_x, 2*bsn-1)
+                        analysis_plot(e, e_resample, color, style, 'Pre-Industrial Control', F, sp_x, 2*bsn)
                     end
-                    analysis_plot(r, r_resample, color, style, 'Pre-Industrial Control', F, 1, 1)
-                    analysis_plot(e, e_resample, color, style, 'Pre-Industrial Control', F, 1, 2)
                 end
             end
         end
     end
-    finishfig(F,1,1,'a. Correlation with 20C Observations', '', 0, 'northwest', [0,8]); 
-    finishfig(F,1,2,'b. sRMSE with 20C Observations', '', 1, 'northwest');
+    for bsn=1:sp_x
+        finishfig(F,sp_x,2*bsn-1,'a. Correlation with 20C Observations', '', 0, 'northwest', [0,8]); 
+        finishfig(F,sp_x,2*bsn,'b. sRMSE with 20C Observations', '', 1, 'northwest');
+    end
     if(tosave)
         savefig(['figures/', variable, '/', realm, '_Fig4', '_', num2str(start_year), '-', num2str(end_year), '_N', num2str(N), '.fig']);
     end
