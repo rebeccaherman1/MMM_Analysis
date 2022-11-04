@@ -3,7 +3,7 @@ N = 500;
 
 dt = "";%, "detrended"];
 %fl = "last";%, "first"];
-realm = 'cmip5';
+realm = 'cmip6';
 short = false;
 start_month = 7;
 end_month = 9;
@@ -21,7 +21,7 @@ switch realm
         scenarios = {'cmip6_h','cmip6_a', 'cmip6_n', 'cmip6_g'};
         %scenarios = {'cmip6_hfast', 'cmip6_afast', 'cmip6_nfast', 'cmip6_gfast'};
         end_year = 2014; 
-        variables = {'pr','ts'}
+        variables = {'pr','ts'};
     case 'amip'
         scenarios = {'amip-hist', 'amip-piF','cmip6_fast'};%'a6'};%'e'};%'h'};%,'a','n','g'};%'amip',; 
         end_year = 2014; 
@@ -103,22 +103,18 @@ for j = 1:length(scenarios)
     if any(contains(flds,'MMM'))
         h = rmfield(h, flds(contains(flds, 'MMM')));
     end
-    flds = fieldnames(h);
-    if any(contains(flds,'piC'))
-        h_T_piC = struct2table(rmfield(h, flds(~contains(flds, 'piC'))));
-    end
-    %create table for h
-    h_T = struct2table(rmfield(h, [{'time'}; flds(contains(flds, 'piC'))]));
-    if(exist('h_T_piC', 'var'))
-        h_new = innerjoin(h_T, h_T_piC, 'LeftKeys', 'model', 'RightKeys', 'piC_model');
-    else
-        h_new = h_T;
-    end
     if(size(h.time, 1) < length(h.model))
-        h.time = repmat(h.time, length(h_new.model), 1);
+        h.time = repmat(h.time, length(h.model), 1);
     end
-    h_new.time = h.time;
-    h_new = h_new(ismember(h_new.model, common_models),:);
+    vn = fieldnames(h);
+    ts_vars = vn(contains(vn, 'ts'))';
+    for tv = 1:length(ts_vars)
+        h.(ts_vars{tv}) = h.(ts_vars{tv})(:,:,ismember(h_indices, {'NA', 'GT', 'NARI'}));
+    end
+    h_indices = {'NA', 'GT', 'NARI'};
+    %create table 
+    h_T = struct2table(rmfield(h, {'piC_model', 'model'}), 'RowNames', h.model);
+    h_T = h_T(ismember(h_T.Properties.RowNames, common_models),:);
 
     %I think I want to keep the table for now and do this later?
     %{
@@ -132,21 +128,20 @@ for j = 1:length(scenarios)
         clear h_indices
     end
     %}
-    h = h_new;
+    h = h_T;
 
     %num_models = length(h.model); %num_pC_models = length(h.piC_model); 
     Analysis = matfile(fname, 'Writable', true);
 
-    T_m = ismember(single(h.time(1,:)),ref_T_years);
-    if(strcmp(variable, 'ts'))
-        hm = h.GMs(:,T_m, ismember(h.indices(1,:), {'NA', 'GT', 'NARI'}));
-    else
-        hm = h.GMs(:,T_m, :);
-    end
-    hm_s = smoothdata(hm, 2, 'movmean', fltr);
-    %above: selecting the basins for which I've downloaded
-    %observations.
-    trust = h.trust;
+    vn = h.Properties.VariableNames;
+    GM_vars = vn(contains(vn, 'GMs'))';
+    T_m = ismember(single(h.time(1,:)),ref_T_years); %Assumes all time is the same
+    hm_s = varfun(@(X) smoothdata(X(:,T_m,:), 2, 'movmean', fltr), h(:,GM_vars));
+    hm_s.Properties.VariableNames = append(GM_vars, '_s');
+    
+    %repeated bc 2 variables
+    trust = h(:, {'trust', 'trust', 'piC_trust', 'piC_trust'});
+    hm = removevars(h, vn(~contains(vn, 'GMs')));
 
     [r, e, mmm] = calc_stats(hm, trust, o);
     MMM.r = r; MMM.e = e; MMM.MMM = mmm; Analysis.MMM = mmm;
@@ -242,10 +237,11 @@ end
 %T can be a logical array or a range.
 %TODO put detrending in here
 function [r, e, mmm] = calc_stats(means, trust, obs)
-    weights = trust / sum(trust);
+    weights = varfun(@(X) X / sum(X), trust);
     %mmm_std = mean(std(means,0,2));
-    mmm = sum(weights.*means,1);
-    e = rmse(mmm, obs);
+    mmm = cell2table(arrayfun(@(X) sum(weights{:,X}.*means{:,X},1), 1:size(means,2), 'UniformOutput', false));
+    mmm.Properties.VariableNames = means.Properties.VariableNames;
+    e = varfun(@(X) rmse(X, obs), mmm);
     [~,~,s3]=size(means);
     r=nan([1,1,s3]);
     for i=1:s3
